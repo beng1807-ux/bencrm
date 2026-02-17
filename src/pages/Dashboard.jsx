@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 const PRIMARY = '#e94f1c';
 
 export default function Dashboard() {
+  const [settings, setSettings] = useState({});
   const [stats, setStats] = useState({ totalLeads: 0, activeEvents: 0, pendingPayments: 0, thisMonthRevenue: 0, newLeads: 0, upcomingEvents: 0 });
   const [nextEvent, setNextEvent] = useState(null);
   const [nextEventCustomer, setNextEventCustomer] = useState(null);
