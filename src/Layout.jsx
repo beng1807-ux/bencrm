@@ -118,11 +118,9 @@ export default function Layout({ children, currentPageName }) {
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors duration-200 ${
                       isActive
                         ? 'text-white'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     style={isActive ? { backgroundColor: primaryColor } : {}}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = primaryColor; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = ''; }}
                   >
                     <Icon size={20} />
                     <span>{item.name}</span>
