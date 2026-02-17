@@ -246,14 +246,29 @@ export default function Customers() {
 
   const deleteLead = async (leadId) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק?')) return;
-    try {
-      await base44.entities.Lead.delete(leadId);
-      await loadLeads();
-      toast.success('הרשומה נמחקה');
-      setDetailsOpen(false);
-    } catch {
-      toast.error('שגיאה במחיקה');
-    }
+    await base44.entities.Lead.delete(leadId);
+    await loadLeads();
+    toast.success('הרשומה נמחקה');
+    setDetailsOpen(false);
+  };
+
+  const deleteSelected = async () => {
+    if (!confirm(`למחוק ${multiSelected.size} רשומות?`)) return;
+    await Promise.all([...multiSelected].map(id => base44.entities.Lead.delete(id)));
+    setMultiSelected(new Set());
+    await loadLeads();
+    toast.success('רשומות נמחקו');
+  };
+
+  const toggleSelect = (id) => setMultiSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const selectAll = (list) => setMultiSelected(prev => prev.size === list.length ? new Set() : new Set(list.map(l => l.id)));
+
+  const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
+  const saveEdit = async () => {
+    await base44.entities.Lead.update(editData.id, editData);
+    await loadLeads();
+    setEditOpen(false);
+    toast.success('עודכן בהצלחה');
   };
 
   const createLead = async () => {
