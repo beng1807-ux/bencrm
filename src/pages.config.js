@@ -47,32 +47,34 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Dashboard from './pages/Dashboard';
 import BookingForm from './pages/BookingForm';
-import Leads from './pages/Leads';
 import Customers from './pages/Customers';
-import Tasks from './pages/Tasks';
-import Events from './pages/Events';
-import EventCalendar from './pages/EventCalendar';
 import DJs from './pages/DJs';
+import Dashboard from './pages/Dashboard';
+import EventCalendar from './pages/EventCalendar';
+import Events from './pages/Events';
+import Leads from './pages/Leads';
 import Management from './pages/Management';
-import MyShows from './pages/MyShows';
 import MyAvailability from './pages/MyAvailability';
+import MyShows from './pages/MyShows';
+import Tasks from './pages/Tasks';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
     "BookingForm": BookingForm,
-    "Leads": Leads,
     "Customers": Customers,
-    "Tasks": Tasks,
-    "Events": Events,
-    "EventCalendar": EventCalendar,
     "DJs": DJs,
+    "Dashboard": Dashboard,
+    "EventCalendar": EventCalendar,
+    "Events": Events,
+    "Leads": Leads,
     "Management": Management,
-    "MyShows": MyShows,
     "MyAvailability": MyAvailability,
+    "MyShows": MyShows,
+    "Tasks": Tasks,
+    "Home": Home,
 }
 
 export const pagesConfig = {
