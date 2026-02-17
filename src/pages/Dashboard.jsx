@@ -132,13 +132,13 @@ export default function Dashboard() {
         {/* --- Stats col (4) --- */}
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
           {[
-            { label: 'לידים חדשים', value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, icon: (
+            { label: labelNewLeads, value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
             )},
-            { label: 'אירועים קרובים', value: stats.upcomingEvents, sub: `${stats.activeEvents} אירועים פעילים`, icon: (
+            { label: labelUpcoming, value: stats.upcomingEvents, sub: `${stats.activeEvents} אירועים פעילים`, icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             )},
-            { label: 'הכנסה חודשית', value: `₪${stats.thisMonthRevenue.toLocaleString()}`, sub: `${stats.pendingPayments} ממתינים לתשלום`, icon: (
+            { label: labelRevenue, value: `₪${stats.thisMonthRevenue.toLocaleString()}`, sub: `${stats.pendingPayments} ממתינים לתשלום`, icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             )},
           ].map((s, i) => (
@@ -206,7 +206,7 @@ export default function Dashboard() {
         <div className="col-span-12 lg:col-span-7">
           <div className="bg-white p-6 rounded-xl border shadow-sm h-full" style={{ borderColor: `${PRIMARY}10` }}>
             <div className="flex items-center justify-between mb-8">
-              <h3 className="font-bold text-[#181311]">פילוח לידים שבועי</h3>
+              <h3 className="font-bold text-[#181311]">{labelChart}</h3>
               <span className="text-xs font-bold text-[#886c63]">7 ימים אחרונים</span>
             </div>
             <div className="flex items-end justify-between gap-3 h-48 px-2">
@@ -228,7 +228,7 @@ export default function Dashboard() {
         {/* --- Recent Activity (5) --- */}
         <div className="col-span-12 lg:col-span-5">
           <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col h-full" style={{ borderColor: `${PRIMARY}10` }}>
-            <h3 className="font-bold text-[#181311] mb-6">פעילות אחרונה</h3>
+            <h3 className="font-bold text-[#181311] mb-6">{labelActivity}</h3>
             <div className="space-y-3 flex-1 overflow-y-auto">
               {recentActivity.length > 0 ? recentActivity.map((log, i) => {
                 const s = activityStyle(log.action);
