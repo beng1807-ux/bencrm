@@ -47,16 +47,16 @@ export default function Home() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (isAuth) {
-          navigate(createPageUrl('Dashboard'));
+          window.location.href = createPageUrl('Dashboard');
+          return;
         }
       } catch (err) {
         // User not authenticated, show booking form
-      } finally {
-        setCheckingAuth(false);
       }
+      setCheckingAuth(false);
     };
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   const handleContentChange = (content) => {
     setFormData(prev => ({
