@@ -340,6 +340,15 @@ export default function Customers() {
         </div>
       </div>
 
+      {/* Multi-select delete */}
+      {multiSelected.size > 0 && (
+        <div className="flex items-center gap-3">
+          <Button variant="destructive" size="sm" onClick={deleteSelected}>
+            <Trash2 className="w-4 h-4 ml-1" />מחק {multiSelected.size} נבחרים
+          </Button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative">
