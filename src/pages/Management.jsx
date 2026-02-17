@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 export default function Management() {
   const [settings, setSettings] = useState(null);
   const [navSettings, setNavSettings] = useState(null);
+  const [customerSettings, setCustomerSettings] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,16 +26,18 @@ export default function Management() {
 
   const loadData = async () => {
     try {
-      const [settingsList, templatesData, packagesData, navList] = await Promise.all([
+      const [settingsList, templatesData, packagesData, navList, customerSettingsList] = await Promise.all([
         base44.entities.AppSettings.list(),
         base44.entities.MessageTemplate.list(),
         base44.entities.Package.list(),
         base44.entities.NavSettings.list(),
+        base44.entities.CustomerSettings.list(),
       ]);
       setSettings(settingsList[0] || {});
       setTemplates(templatesData);
       setPackages(packagesData);
       setNavSettings(navList[0] || {});
+      setCustomerSettings(customerSettingsList[0] || {});
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('שגיאה בטעינת נתונים');
@@ -78,6 +81,20 @@ export default function Management() {
         setNavSettings(created);
       }
       toast.success('הגדרות הניווט נשמרו');
+    } catch (error) {
+      toast.error('שגיאה בשמירה');
+    }
+  };
+
+  const saveCustomerSettings = async () => {
+    try {
+      if (customerSettings.id) {
+        await base44.entities.CustomerSettings.update(customerSettings.id, customerSettings);
+      } else {
+        const created = await base44.entities.CustomerSettings.create(customerSettings);
+        setCustomerSettings(created);
+      }
+      toast.success('הגדרות הלקוחות נשמרו');
     } catch (error) {
       toast.error('שגיאה בשמירה');
     }
@@ -132,11 +149,12 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
           <TabsTrigger value="branding">מיתוג</TabsTrigger>
+          <TabsTrigger value="customers">לקוחות</TabsTrigger>
           <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
           <TabsTrigger value="nav">סרגל ניווט</TabsTrigger>
         </TabsList>
@@ -405,6 +423,118 @@ export default function Management() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <CardTitle>הגדרות דף הלקוחות</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="border-b pb-6">
+                <h3 className="font-semibold mb-4">כותרות ותיאור</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label>כותרת הדף</Label>
+                    <Input
+                      value={customerSettings?.customers_title || 'לקוחות'}
+                      onChange={e => setCustomerSettings({...customerSettings, customers_title: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תת-כותרת הדף</Label>
+                    <Input
+                      value={customerSettings?.customers_subtitle || 'ניהול כל הלקוחות שלך'}
+                      onChange={e => setCustomerSettings({...customerSettings, customers_subtitle: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-b pb-6">
+                <h3 className="font-semibold mb-4">תוויות שדות בכרטיס</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>תווית שדה שם</Label>
+                    <Input
+                      value={customerSettings?.customer_card_name_label || 'שם'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_name_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תווית שדה טלפון</Label>
+                    <Input
+                      value={customerSettings?.customer_card_phone_label || 'טלפון'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_phone_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תווית שדה אימייל</Label>
+                    <Input
+                      value={customerSettings?.customer_card_email_label || 'אימייל'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_email_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תווית שדה הערות</Label>
+                    <Input
+                      value={customerSettings?.customer_card_notes_label || 'הערות'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_notes_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תווית סך אירועים</Label>
+                    <Input
+                      value={customerSettings?.customer_card_total_events_label || 'סך אירועים'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_total_events_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>תווית סך הכנסות</Label>
+                    <Input
+                      value={customerSettings?.customer_card_total_revenue_label || 'סך הכנסות'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_card_total_revenue_label: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-b pb-6">
+                <h3 className="font-semibold mb-4">סטטוסים</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>סטטוס פעיל</Label>
+                    <Input
+                      value={customerSettings?.customer_status_active || 'פעיל'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_status_active: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>סטטוס לא פעיל</Label>
+                    <Input
+                      value={customerSettings?.customer_status_inactive || 'לא פעיל'}
+                      onChange={e => setCustomerSettings({...customerSettings, customer_status_inactive: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={saveCustomerSettings} className="w-full bg-orange-500 hover:bg-orange-600">
+                שמור הגדרות לקוחות
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="nav">
           <Card>
             <CardHeader>
