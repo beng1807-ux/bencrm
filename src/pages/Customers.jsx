@@ -69,8 +69,7 @@ function KanbanColumn({ col, leads, onCardClick, phase }) {
 }
 
 // ── KanbanCard ───────────────────────────────────────────────────
-function KanbanCard({ lead, colKey, onClick }) {
-  const isCustomer = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL','EVENT_DONE'].includes(colKey);
+function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSelect }) {
   const isDone = colKey === 'EVENT_DONE';
   const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌', label: lead.event_type };
 
@@ -78,17 +77,25 @@ function KanbanCard({ lead, colKey, onClick }) {
     <div
       onClick={onClick}
       className={`bg-white p-4 rounded-xl shadow-sm cursor-pointer transition-all group
-        border border-transparent hover:border-primary/20 hover:shadow-md
+        border hover:shadow-md
+        ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:border-primary/20'}
         ${isDone ? 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0' : ''}`}
     >
       <div className="flex justify-between items-start mb-2">
-        <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug">
-          {lead.contact_name}
-          {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
-        </h4>
-        {lead.guests_count > 150 && (
-          <span className="text-[10px] bg-orange-100 text-primary font-bold px-2 py-0.5 rounded-full flex-shrink-0 mr-2">VIP</span>
-        )}
+        <div className="flex items-center gap-2 min-w-0">
+          <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => { e.stopPropagation(); onSelect(lead.id); }} className="flex-shrink-0" />
+          <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug truncate">
+            {lead.contact_name}
+            {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
+          </h4>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0 mr-1">
+          {lead.guests_count > 150 && (
+            <span className="text-[10px] bg-orange-100 text-primary font-bold px-2 py-0.5 rounded-full">VIP</span>
+          )}
+          <button onClick={e => { e.stopPropagation(); onEdit(lead); }} className="p-1 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={e => { e.stopPropagation(); onDelete(lead.id); }} className="p-1 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-3.5 h-3.5" /></button>
+        </div>
       </div>
       <div className="flex flex-col gap-1.5 text-sm text-[#886c63]">
         <div className="flex items-center gap-1.5">
