@@ -267,6 +267,12 @@ export default function Management() {
         </TabsContent>
 
         <TabsContent value="packages">
+          <div className="mb-4">
+            <Button onClick={() => savePackage({ item_type: 'PACKAGE', active: true, price: 0, item_name: 'חבילה חדשה' })} className="bg-orange-500 hover:bg-orange-600">
+              <PackageIcon className="w-4 h-4 ml-2" />
+              הוסף חבילה/תוספת
+            </Button>
+          </div>
           <div className="space-y-4">
             {packages.map(pkg => (
               <Card key={pkg.id}>

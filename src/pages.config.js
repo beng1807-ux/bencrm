@@ -53,12 +53,12 @@ import DJs from './pages/DJs';
 import Dashboard from './pages/Dashboard';
 import EventCalendar from './pages/EventCalendar';
 import Events from './pages/Events';
+import Home from './pages/Home';
 import Leads from './pages/Leads';
 import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
 import Tasks from './pages/Tasks';
-import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -69,12 +69,12 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "EventCalendar": EventCalendar,
     "Events": Events,
+    "Home": Home,
     "Leads": Leads,
     "Management": Management,
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
     "Tasks": Tasks,
-    "Home": Home,
 }
 
 export const pagesConfig = {

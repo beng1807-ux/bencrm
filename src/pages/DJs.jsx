@@ -15,6 +15,8 @@ export default function DJs() {
   const [selectedDJ, setSelectedDJ] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [djEvents, setDJEvents] = useState([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newDJ, setNewDJ] = useState({});
 
   useEffect(() => {
     loadDJs();
@@ -44,6 +46,23 @@ export default function DJs() {
     }
   };
 
+  const createDJ = async () => {
+    try {
+      await base44.entities.DJ.create({
+        ...newDJ,
+        user_id: 'temp_' + Date.now(),
+        status: 'ACTIVE',
+      });
+      await loadDJs();
+      toast.success('DJ חדש נוצר בהצלחה');
+      setCreateOpen(false);
+      setNewDJ({});
+    } catch (error) {
+      console.error('Error creating DJ:', error);
+      toast.error('שגיאה ביצירת DJ');
+    }
+  };
+
   const getStatusColor = (status) => {
     return status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
@@ -66,6 +85,10 @@ export default function DJs() {
           </h1>
           <p className="text-gray-600">ניהול צוות ה-DJ-ים</p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Plus className="w-4 h-4 ml-2" />
+          DJ חדש
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -194,6 +217,36 @@ export default function DJs() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create DJ Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>צור DJ חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>שם *</Label>
+              <Input value={newDJ.name || ''} onChange={e => setNewDJ({...newDJ, name: e.target.value})} />
+            </div>
+            <div>
+              <Label>טלפון *</Label>
+              <Input value={newDJ.phone || ''} onChange={e => setNewDJ({...newDJ, phone: e.target.value})} />
+            </div>
+            <div>
+              <Label>אימייל *</Label>
+              <Input type="email" value={newDJ.email || ''} onChange={e => setNewDJ({...newDJ, email: e.target.value})} />
+            </div>
+            <div>
+              <Label>הערות</Label>
+              <Textarea value={newDJ.notes || ''} onChange={e => setNewDJ({...newDJ, notes: e.target.value})} />
+            </div>
+            <Button onClick={createDJ} className="w-full bg-orange-500 hover:bg-orange-600">
+              צור DJ
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

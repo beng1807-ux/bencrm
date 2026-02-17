@@ -21,6 +21,8 @@ export default function Events() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({});
 
   useEffect(() => {
     loadData();
@@ -108,6 +110,28 @@ export default function Events() {
     }
   };
 
+  const createEvent = async () => {
+    try {
+      const priceTotal = calculatePrice(newEvent.package_id, newEvent.addon_ids);
+      await base44.entities.Event.create({
+        ...newEvent,
+        price_total: priceTotal,
+        deposit_amount: priceTotal * 0.3,
+        balance_amount: priceTotal,
+        payment_status: 'PENDING',
+        contract_status: 'DRAFT',
+        event_status: 'PENDING',
+      });
+      await loadData();
+      toast.success('אירוע חדש נוצר בהצלחה');
+      setCreateOpen(false);
+      setNewEvent({});
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error('שגיאה ביצירת האירוע');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'PENDING': 'bg-gray-100 text-gray-800',
@@ -138,9 +162,15 @@ export default function Events() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">אירועים</h1>
-        <p className="text-gray-600">ניהול אירועים ותשלומים</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">אירועים</h1>
+          <p className="text-gray-600">ניהול אירועים ותשלומים</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Calendar className="w-4 h-4 ml-2" />
+          אירוע חדש
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -380,6 +410,62 @@ export default function Events() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Event Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>צור אירוע חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>לקוח *</Label>
+                <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="בחר לקוח" /></SelectTrigger>
+                  <SelectContent>
+                    {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>תאריך *</Label>
+                <Input type="date" value={newEvent.event_date || ''} onChange={e => setNewEvent({...newEvent, event_date: e.target.value})} />
+              </div>
+              <div>
+                <Label>סוג אירוע *</Label>
+                <Select value={newEvent.event_type || ''} onValueChange={v => setNewEvent({...newEvent, event_type: v})}>
+                  <SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="בר מצווה">בר מצווה</SelectItem>
+                    <SelectItem value="בת מצווה">בת מצווה</SelectItem>
+                    <SelectItem value="חתונה">חתונה</SelectItem>
+                    <SelectItem value="יום הולדת">יום הולדת</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>חבילה *</Label>
+                <Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger>
+                  <SelectContent>
+                    {packages.filter(p => p.item_type === 'PACKAGE').map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>מיקום</Label>
+                <Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} />
+              </div>
+            </div>
+            <Button onClick={createEvent} className="w-full bg-orange-500 hover:bg-orange-600">
+              צור אירוע
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

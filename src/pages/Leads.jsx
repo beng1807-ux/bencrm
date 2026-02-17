@@ -19,6 +19,8 @@ export default function Leads() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newLead, setNewLead] = useState({});
 
   useEffect(() => {
     loadLeads();
@@ -91,6 +93,19 @@ export default function Leads() {
     }
   };
 
+  const createLead = async () => {
+    try {
+      await base44.entities.Lead.create(newLead);
+      await loadLeads();
+      toast.success('ליד חדש נוצר בהצלחה');
+      setCreateOpen(false);
+      setNewLead({});
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      toast.error('שגיאה ביצירת הליד');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'NEW': 'bg-blue-100 text-blue-800',
@@ -134,6 +149,10 @@ export default function Leads() {
           <h1 className="text-3xl font-bold text-gray-900">לידים</h1>
           <p className="text-gray-600">ניהול פניות וליידים</p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Plus className="w-4 h-4 ml-2" />
+          ליד חדש
+        </Button>
       </div>
 
       {/* Filters */}
@@ -303,6 +322,53 @@ export default function Leads() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Lead Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>צור ליד חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>שם איש קשר *</Label>
+                <Input value={newLead.contact_name || ''} onChange={e => setNewLead({...newLead, contact_name: e.target.value})} />
+              </div>
+              <div>
+                <Label>טלפון *</Label>
+                <Input value={newLead.phone || ''} onChange={e => setNewLead({...newLead, phone: e.target.value})} />
+              </div>
+              <div>
+                <Label>אימייל *</Label>
+                <Input type="email" value={newLead.email || ''} onChange={e => setNewLead({...newLead, email: e.target.value})} />
+              </div>
+              <div>
+                <Label>תאריך אירוע *</Label>
+                <Input type="date" value={newLead.event_date || ''} onChange={e => setNewLead({...newLead, event_date: e.target.value})} />
+              </div>
+              <div>
+                <Label>סוג אירוע *</Label>
+                <Select value={newLead.event_type || ''} onValueChange={v => setNewLead({...newLead, event_type: v})}>
+                  <SelectTrigger><SelectValue placeholder="בחר סוג אירוע" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="בר מצווה">בר מצווה</SelectItem>
+                    <SelectItem value="בת מצווה">בת מצווה</SelectItem>
+                    <SelectItem value="חתונה">חתונה</SelectItem>
+                    <SelectItem value="יום הולדת">יום הולדת</SelectItem>
+                    <SelectItem value="אירוע פרטי">אירוע פרטי</SelectItem>
+                    <SelectItem value="אירוע חברה">אירוע חברה</SelectItem>
+                    <SelectItem value="אחר">אחר</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={createLead} className="w-full bg-orange-500 hover:bg-orange-600">
+              צור ליד
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

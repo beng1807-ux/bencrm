@@ -17,6 +17,8 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [customerEvents, setCustomerEvents] = useState([]);
   const [customerMessages, setCustomerMessages] = useState([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({});
 
   useEffect(() => {
     loadCustomers();
@@ -66,6 +68,19 @@ export default function Customers() {
     }
   };
 
+  const createCustomer = async () => {
+    try {
+      await base44.entities.Customer.create(newCustomer);
+      await loadCustomers();
+      toast.success('לקוח חדש נוצר בהצלחה');
+      setCreateOpen(false);
+      setNewCustomer({});
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      toast.error('שגיאה ביצירת הלקוח');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -81,6 +96,10 @@ export default function Customers() {
           <h1 className="text-3xl font-bold text-gray-900">לקוחות</h1>
           <p className="text-gray-600">ניהול לקוחות ומעקב</p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <User className="w-4 h-4 ml-2" />
+          לקוח חדש
+        </Button>
       </div>
 
       {/* Search */}
@@ -226,6 +245,36 @@ export default function Customers() {
               </Tabs>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Customer Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>צור לקוח חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>שם *</Label>
+              <Input value={newCustomer.name || ''} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} />
+            </div>
+            <div>
+              <Label>טלפון *</Label>
+              <Input value={newCustomer.phone || ''} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} />
+            </div>
+            <div>
+              <Label>אימייל *</Label>
+              <Input type="email" value={newCustomer.email || ''} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} />
+            </div>
+            <div>
+              <Label>הערות</Label>
+              <Textarea value={newCustomer.notes || ''} onChange={e => setNewCustomer({...newCustomer, notes: e.target.value})} />
+            </div>
+            <Button onClick={createCustomer} className="w-full bg-orange-500 hover:bg-orange-600">
+              צור לקוח
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

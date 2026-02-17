@@ -4,12 +4,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ListChecks, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { ListChecks, CheckCircle, Circle, AlertCircle, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTask, setNewTask] = useState({});
 
   useEffect(() => {
     loadTasks();
@@ -36,6 +42,23 @@ export default function Tasks() {
     } catch (error) {
       console.error('Error updating task:', error);
       toast.error('שגיאה בעדכון המשימה');
+    }
+  };
+
+  const createTask = async () => {
+    try {
+      await base44.entities.Task.create({
+        ...newTask,
+        status: 'OPEN',
+        priority: newTask.priority || 'NORMAL',
+      });
+      await loadTasks();
+      toast.success('משימה חדשה נוצרה');
+      setCreateOpen(false);
+      setNewTask({});
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('שגיאה ביצירת המשימה');
     }
   };
 
@@ -80,6 +103,10 @@ export default function Tasks() {
             {openTasks.length} משימות פתוחות, {doneTasks.length} הושלמו
           </p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
+          <Plus className="w-4 h-4 ml-2" />
+          משימה חדשה
+        </Button>
       </div>
 
       {/* Open Tasks */}
@@ -155,6 +182,39 @@ export default function Tasks() {
           </div>
         </div>
       )}
+
+      {/* Create Task Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>צור משימה חדשה</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>כותרת *</Label>
+              <Input value={newTask.title || ''} onChange={e => setNewTask({...newTask, title: e.target.value})} />
+            </div>
+            <div>
+              <Label>עדיפות</Label>
+              <Select value={newTask.priority || 'NORMAL'} onValueChange={v => setNewTask({...newTask, priority: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOW">נמוכה</SelectItem>
+                  <SelectItem value="NORMAL">רגילה</SelectItem>
+                  <SelectItem value="HIGH">גבוהה</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>תאריך יעד</Label>
+              <Input type="datetime-local" value={newTask.due_at || ''} onChange={e => setNewTask({...newTask, due_at: e.target.value})} />
+            </div>
+            <Button onClick={createTask} className="w-full bg-orange-500 hover:bg-orange-600">
+              צור משימה
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
