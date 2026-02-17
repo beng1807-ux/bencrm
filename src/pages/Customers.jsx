@@ -270,38 +270,65 @@ export default function Customers() {
         </div>
       )}
 
-      {/* Kanban Board */}
-      <div className="flex gap-5 overflow-x-auto pb-6" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
-        {activeColumns.map((col, idx) => {
+      {/* Kanban Board — 3 columns per row, wraps to next row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {activeColumns.map((col) => {
           const colLeads = leadsForColumn(col.key);
           const isFirst = phaseFilter === 'ALL' && col.key === 'DEAL_CLOSED';
           return (
-            <React.Fragment key={col.key}>
+            <div key={col.key} className={`flex flex-col gap-3 ${isFirst ? 'lg:col-span-3' : ''}`}>
               {isFirst && (
-                <div className="flex-shrink-0 flex items-start pt-8">
-                  <div className="h-full border-l-2 border-dashed border-orange-300 mx-1" style={{ minHeight: 400 }} />
+                <div className="flex items-center gap-3 my-2">
+                  <div className="flex-1 border-t-2 border-dashed border-orange-300" />
+                  <span className="text-xs font-bold text-orange-400 whitespace-nowrap">← לקוחות פעילים</span>
+                  <div className="flex-1 border-t-2 border-dashed border-orange-300" />
                 </div>
               )}
-              <div className="flex-shrink-0 w-72 flex flex-col gap-3">
-                <div className="flex items-center gap-2 px-1">
-                  <span className={`w-2 h-2 rounded-full ${col.dot}`} />
-                  <span className="font-bold text-gray-800 text-sm">{col.label}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${col.phase === 'customer' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>
-                    {colLeads.length}
-                  </span>
+              {isFirst ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 col-span-3">
+                  {activeColumns.filter(c => c.phase === 'customer').map(customerCol => {
+                    const customerLeads = leadsForColumn(customerCol.key);
+                    return (
+                      <div key={customerCol.key} className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 px-1">
+                          <span className={`w-2 h-2 rounded-full ${customerCol.dot}`} />
+                          <span className="font-bold text-gray-800 text-sm">{customerCol.label}</span>
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600">{customerLeads.length}</span>
+                        </div>
+                        <div className="flex flex-col gap-3 min-h-[120px]">
+                          {customerLeads.length === 0 && (
+                            <div className="border-2 border-dashed border-gray-200 rounded-xl h-16 flex items-center justify-center opacity-40">
+                              <span className="text-xs text-gray-400">ריק</span>
+                            </div>
+                          )}
+                          {customerLeads.map(lead => (
+                            <CustomerCard key={lead.id} lead={lead} colKey={customerCol.key} onClick={() => openDetails(lead)} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex flex-col gap-3 min-h-[400px]">
-                  {colLeads.length === 0 && (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl h-20 flex items-center justify-center opacity-40">
-                      <span className="text-xs text-gray-400">ריק</span>
-                    </div>
-                  )}
-                  {colLeads.map(lead => (
-                    <CustomerCard key={lead.id} lead={lead} colKey={col.key} onClick={() => openDetails(lead)} />
-                  ))}
-                </div>
-              </div>
-            </React.Fragment>
+              ) : col.phase === 'lead' ? (
+                <>
+                  <div className="flex items-center gap-2 px-1">
+                    <span className={`w-2 h-2 rounded-full ${col.dot}`} />
+                    <span className="font-bold text-gray-800 text-sm">{col.label}</span>
+                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-500">{colLeads.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-3 min-h-[120px]">
+                    {colLeads.length === 0 && (
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl h-16 flex items-center justify-center opacity-40">
+                        <span className="text-xs text-gray-400">ריק</span>
+                      </div>
+                    )}
+                    {colLeads.map(lead => (
+                      <CustomerCard key={lead.id} lead={lead} colKey={col.key} onClick={() => openDetails(lead)} />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </div>
           );
         })}
       </div>
