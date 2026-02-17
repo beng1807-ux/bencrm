@@ -5,14 +5,12 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { event, data: lead } = await req.json();
 
-    // בדיקת הגדרות
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
 
-    // בדיקת כפילות
     const duplicates = await base44.asServiceRole.entities.Lead.filter({
       phone: lead.phone,
       event_date: lead.event_date,
@@ -26,7 +24,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ניסיון שליחת הודעה
     const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
       template_key: 'NEW_LEAD',
       active: true,
@@ -41,7 +38,6 @@ Deno.serve(async (req) => {
 
       try {
         if (settings.whatsapp_send_mode === 'לוג בלבד') {
-          // רישום לוג בלבד
           await base44.asServiceRole.entities.ConversationMessage.create({
             customer_id: lead.id,
             lead_id: lead.id,
@@ -55,37 +51,23 @@ Deno.serve(async (req) => {
             entity_name: 'Lead',
             entity_id: lead.id,
             action: 'SEND_MESSAGE',
-            diff_summary: 'הודעת NEW_LEAD נרשמה בלוג (לא נשלחה)',
+            diff_summary: 'הודעת NEW_LEAD נרשמה בלוג',
             metadata: { template_key: 'NEW_LEAD', simulated: true },
           });
         } else {
-          // כאן תהיה שליחה אמיתית דרך WhatsApp API
           throw new Error('WhatsApp API לא מחובר');
         }
       } catch (error) {
-        // רישום כשל
         await base44.asServiceRole.entities.AuditLog.create({
           entity_name: 'Lead',
           entity_id: lead.id,
           action: 'SEND_FAILED',
           diff_summary: `כשל בשליחת הודעה: ${error.message}`,
-          metadata: {
-            template_key: 'NEW_LEAD',
-            error_message: error.message,
-            reason: 'API לא מחובר',
-          },
-        });
-
-        await base44.asServiceRole.entities.Task.create({
-          title: `כשל בשליחת הודעה ל-${lead.contact_name}`,
-          related_lead_id: lead.id,
-          priority: 'HIGH',
-          status: 'OPEN',
+          metadata: { template_key: 'NEW_LEAD', error_message: error.message },
         });
       }
     }
 
-    // יצירת משימת מעקב
     await base44.asServiceRole.entities.Task.create({
       title: `מעקב ליד חדש - ${lead.contact_name}`,
       related_lead_id: lead.id,
@@ -95,7 +77,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error('Error in onNewLead:', error);
+    console.error('Error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
