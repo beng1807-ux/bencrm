@@ -44,7 +44,7 @@ export default function Layout({ children, currentPageName }) {
   const isAdmin = user?.role === 'admin';
   const isDJ = !isAdmin && djProfile;
 
-  const primaryColor = settings?.brand_primary_color || '#FF6B4A';
+  const primaryColor = settings?.brand_primary_color || '#e94f1c';
   const bgColor = settings?.brand_bg_color || '#F3F4F6';
   const headingColor = settings?.brand_heading_color || '#1E293B';
   const fontFamily = settings?.app_font || 'Rubik';

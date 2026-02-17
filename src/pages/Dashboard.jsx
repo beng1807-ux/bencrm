@@ -1,160 +1,248 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, DollarSign, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+
+const PRIMARY = '#e94f1c';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    totalLeads: 0,
-    activeEvents: 0,
-    pendingPayments: 0,
-    thisMonthRevenue: 0,
-    newLeads: 0,
-    upcomingEvents: 0,
-  });
+  const [stats, setStats] = useState({ totalLeads: 0, activeEvents: 0, pendingPayments: 0, thisMonthRevenue: 0, newLeads: 0, upcomingEvents: 0 });
+  const [nextEvent, setNextEvent] = useState(null);
+  const [nextEventCustomer, setNextEventCustomer] = useState(null);
+  const [weeklyLeads, setWeeklyLeads] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0 });
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    if (!nextEvent) return;
+    const tick = () => {
+      const diff = new Date(nextEvent.event_date) - new Date();
+      if (diff <= 0) return setCountdown({ days: 0, hours: 0, minutes: 0 });
+      setCountdown({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+      });
+    };
+    tick();
+    const iv = setInterval(tick, 30000);
+    return () => clearInterval(iv);
+  }, [nextEvent]);
 
-  const loadStats = async () => {
+  const loadData = async () => {
     try {
-      const [leads, events] = await Promise.all([
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+
+      const [leads, events, customers, auditLogs] = await Promise.all([
         base44.entities.Lead.list(),
         base44.entities.Event.list(),
+        base44.entities.Customer.list(),
+        base44.entities.AuditLog.list('-created_date', 5),
       ]);
 
       const now = new Date();
-      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const nextWeek = new Date(now);
-      nextWeek.setDate(nextWeek.getDate() + 7);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextWeek = new Date(now); nextWeek.setDate(nextWeek.getDate() + 7);
 
       const newLeads = leads.filter(l => l.status === 'NEW').length;
-      const activeEvents = events.filter(e => 
-        e.event_status !== 'COMPLETED' && e.event_status !== 'CANCELLED'
-      ).length;
-      const pendingPayments = events.filter(e => 
-        e.payment_status !== 'PAID_FULL'
-      ).length;
-      
-      const thisMonthEvents = events.filter(e => {
-        const eventDate = new Date(e.event_date);
-        return eventDate >= thisMonthStart && e.payment_status === 'PAID_FULL';
-      });
-      const thisMonthRevenue = thisMonthEvents.reduce((sum, e) => sum + (e.price_total || 0), 0);
-
-      const upcomingEvents = events.filter(e => {
-        const eventDate = new Date(e.event_date);
-        return eventDate >= now && eventDate <= nextWeek;
+      const activeEvents = events.filter(e => !['COMPLETED', 'CANCELLED'].includes(e.event_status)).length;
+      const pendingPayments = events.filter(e => e.payment_status !== 'PAID_FULL').length;
+      const thisMonthRevenue = events
+        .filter(e => new Date(e.event_date) >= monthStart && e.payment_status === 'PAID_FULL')
+        .reduce((s, e) => s + (e.price_total || 0), 0);
+      const upcomingEventsCount = events.filter(e => {
+        const d = new Date(e.event_date);
+        return d >= now && d <= nextWeek;
       }).length;
 
-      setStats({
-        totalLeads: leads.length,
-        activeEvents,
-        pendingPayments,
-        thisMonthRevenue,
-        newLeads,
-        upcomingEvents,
+      const futureEvents = events
+        .filter(e => new Date(e.event_date) >= now && e.event_status !== 'CANCELLED')
+        .sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+      if (futureEvents.length > 0) {
+        setNextEvent(futureEvents[0]);
+        setNextEventCustomer(customers.find(c => c.id === futureEvents[0].customer_id) || null);
+      }
+
+      // Weekly leads by day of week (last 7 days)
+      const weekly = [0, 0, 0, 0, 0, 0, 0];
+      leads.forEach(lead => {
+        const d = new Date(lead.created_date);
+        if ((now - d) < 7 * 86400000) weekly[d.getDay()]++;
       });
-    } catch (error) {
-      console.error('Error loading stats:', error);
+      setWeeklyLeads(weekly);
+      setRecentActivity(auditLogs);
+
+      setStats({ totalLeads: leads.length, activeEvents, pendingPayments, thisMonthRevenue, newLeads, upcomingEvents: upcomingEventsCount });
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const statCards = [
-    {
-      title: 'לידים חדשים',
-      value: stats.newLeads,
-      icon: Users,
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'אירועים פעילים',
-      value: stats.activeEvents,
-      icon: Calendar,
-      color: 'bg-green-500',
-    },
-    {
-      title: 'ממתינים לתשלום',
-      value: stats.pendingPayments,
-      icon: AlertCircle,
-      color: 'bg-orange-500',
-    },
-    {
-      title: 'הכנסות חודש זה',
-      value: `₪${stats.thisMonthRevenue.toLocaleString()}`,
-      icon: DollarSign,
-      color: 'bg-purple-500',
-    },
-  ];
+  const dayLabels = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
+  const maxW = Math.max(...weeklyLeads, 1);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
+  const activityStyle = (action) => {
+    const m = { CREATE: { bg: 'bg-emerald-100', txt: 'text-emerald-600', icon: '👤' }, UPDATE: { bg: 'bg-blue-100', txt: 'text-blue-600', icon: '✏️' }, DELETE: { bg: 'bg-red-100', txt: 'text-red-600', icon: '🗑️' }, SEND_MESSAGE: { bg: 'bg-orange-100', txt: 'text-orange-600', icon: '💬' } };
+    return m[action] || { bg: 'bg-gray-100', txt: 'text-gray-600', icon: '•' };
+  };
+
+  const relativeTime = (d) => {
+    const diff = Date.now() - new Date(d);
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `לפני ${m || 1} דקות`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `לפני ${h} שעות`;
+    return `לפני ${Math.floor(h / 24)} ימים`;
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }}></div>
+    </div>
+  );
+
+  const firstName = user?.full_name?.split(' ')[0] || 'בן';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Greeting */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">דשבורד</h1>
-        <p className="text-gray-600">סקירה כללית של המערכת</p>
+        <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">היי {firstName}, מה קורה היום?</h2>
+        <p className="mt-2 font-medium text-[#886c63]">הנה סקירה של מה שקורה בסטודיו שלך כרגע.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {stat.title}
-                </CardTitle>
-                <div className={`${stat.color} p-2 rounded-lg`}>
-                  <Icon className="h-4 w-4 text-white" />
+      {/* Bento Grid */}
+      <div className="grid grid-cols-12 gap-5">
+
+        {/* --- Stats col (4) --- */}
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+          {[
+            { label: 'לידים חדשים', value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, icon: (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            )},
+            { label: 'אירועים קרובים', value: stats.upcomingEvents, sub: `${stats.activeEvents} אירועים פעילים`, icon: (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            )},
+            { label: 'הכנסה חודשית', value: `₪${stats.thisMonthRevenue.toLocaleString()}`, sub: `${stats.pendingPayments} ממתינים לתשלום`, icon: (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            )},
+          ].map((s, i) => (
+            <div key={i} className="bg-white p-6 rounded-xl border shadow-sm flex items-center justify-between hover:-translate-y-0.5 transition-transform" style={{ borderColor: `${PRIMARY}15` }}>
+              <div>
+                <p className="text-sm font-bold text-[#886c63]">{s.label}</p>
+                <h3 className="text-3xl font-black text-[#181311] mt-1">{s.value}</h3>
+                <p className="mt-2 text-xs font-bold text-[#886c63]">{s.sub}</p>
+              </div>
+              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${PRIMARY}15` }}>
+                {s.icon}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* --- Next Event (8) --- */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="bg-white h-full rounded-xl overflow-hidden border shadow-sm relative" style={{ borderColor: `${PRIMARY}15`, background: `linear-gradient(135deg, ${PRIMARY}08 0%, white 55%)` }}>
+            {nextEvent ? (
+              <div className="h-full p-8 flex flex-col justify-between min-h-[280px]">
+                <div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}>
+                    אירוע הבא
+                  </span>
+                  <h3 className="text-3xl font-black mt-4 text-[#181311]">
+                    {nextEvent.event_type}{nextEventCustomer ? ` — ${nextEventCustomer.name}` : ''}
+                  </h3>
+                  <div className="flex flex-wrap gap-4 mt-4 text-[#886c63]">
+                    {nextEvent.location && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                        <span className="text-sm font-medium">{nextEvent.location}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      <span className="text-sm font-medium">{new Date(nextEvent.event_date).toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                <div className="flex items-end gap-6 mt-8">
+                  {[{ n: countdown.days, label: 'ימים' }, { n: countdown.hours, label: 'שעות' }, { n: countdown.minutes, label: 'דקות' }].map((c, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="text-3xl font-light self-start mt-1" style={{ color: `${PRIMARY}40` }}>:</span>}
+                      <div className="text-center">
+                        <p className="text-4xl font-black" style={{ color: PRIMARY }}>{String(c.n).padStart(2, '0')}</p>
+                        <p className="text-[10px] uppercase font-bold text-[#886c63]">{c.label}</p>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center p-8">
+                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}>אירוע הבא</span>
+                <p className="text-[#886c63] font-medium">אין אירועים קרובים</p>
+              </div>
+            )}
+            <span className="absolute -bottom-6 -left-4 text-[140px] select-none pointer-events-none" style={{ color: `${PRIMARY}06`, lineHeight: 1 }}>📅</span>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              אירועים קרובים (7 הימים הקרובים)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-center py-8">
-              {stats.upcomingEvents}
+        {/* --- Weekly Chart (7) --- */}
+        <div className="col-span-12 lg:col-span-7">
+          <div className="bg-white p-6 rounded-xl border shadow-sm h-full" style={{ borderColor: `${PRIMARY}10` }}>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-bold text-[#181311]">פילוח לידים שבועי</h3>
+              <span className="text-xs font-bold text-[#886c63]">7 ימים אחרונים</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-end justify-between gap-3 h-48 px-2">
+              {weeklyLeads.map((count, i) => {
+                const barH = Math.max((count / maxW) * 100, 4);
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full rounded-t-lg relative overflow-hidden" style={{ height: `${barH}%`, backgroundColor: `${PRIMARY}15` }}>
+                      {count > 0 && <div className="absolute bottom-0 w-full rounded-t-lg" style={{ height: '70%', backgroundColor: PRIMARY }}></div>}
+                    </div>
+                    <span className="text-[10px] font-bold text-[#886c63]">{dayLabels[i]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              סך כל לידים
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-center py-8">
-              {stats.totalLeads}
+        {/* --- Recent Activity (5) --- */}
+        <div className="col-span-12 lg:col-span-5">
+          <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col h-full" style={{ borderColor: `${PRIMARY}10` }}>
+            <h3 className="font-bold text-[#181311] mb-6">פעילות אחרונה</h3>
+            <div className="space-y-3 flex-1 overflow-y-auto">
+              {recentActivity.length > 0 ? recentActivity.map((log, i) => {
+                const s = activityStyle(log.action);
+                return (
+                  <div key={i} className="flex gap-3">
+                    <div className={`h-8 w-8 rounded-full ${s.bg} flex items-center justify-center shrink-0 text-sm`}>{s.icon}</div>
+                    <div className="bg-[#f8f6f6] p-3 rounded-2xl rounded-tr-none flex-1">
+                      <p className="text-xs font-bold text-[#181311]">{log.diff_summary || `${log.action} — ${log.entity_name}`}</p>
+                      <p className="text-[10px] text-[#886c63] mt-0.5">{relativeTime(log.created_date)}</p>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-sm">👋</div>
+                  <div className="bg-[#f8f6f6] p-3 rounded-2xl rounded-tr-none flex-1">
+                    <p className="text-xs font-bold text-[#181311]">ברוכים הבאים לסקיצה CRM</p>
+                    <p className="text-[10px] text-[#886c63] mt-0.5">המערכת מוכנה לעבודה</p>
+                  </div>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
