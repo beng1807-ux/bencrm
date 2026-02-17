@@ -100,13 +100,15 @@ export default function Layout({ children, currentPageName }) {
       >
         {/* Logo */}
         <header className="p-6 flex flex-col items-center border-b border-gray-50">
-          <div className="w-32">
-            <img
-              src={navSettings?.logo_url || ""}
-              alt="Logo"
-              className="w-full h-auto object-contain"
-            />
-          </div>
+          <div className="w-32 min-h-[40px]">
+                    {navSettings?.logo_url && (
+                      <img
+                        src={navSettings.logo_url}
+                        alt="Logo"
+                        className="w-full h-auto object-contain"
+                      />
+                    )}
+                  </div>
         </header>
 
         {/* Nav */}
