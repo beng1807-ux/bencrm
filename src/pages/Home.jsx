@@ -123,6 +123,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white p-4 py-12" dir="rtl">
       <div className="max-w-3xl mx-auto">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            onClick={() => base44.auth.redirectToLogin()}
+            className="text-sm"
+          >
+            כניסה למערכת
+          </Button>
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Music className="w-12 h-12 text-orange-500" />
