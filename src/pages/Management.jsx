@@ -13,9 +13,11 @@ import { toast } from 'sonner';
 
 export default function Management() {
   const [settings, setSettings] = useState(null);
+  const [navSettings, setNavSettings] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   useEffect(() => {
     loadData();
