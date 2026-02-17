@@ -48,14 +48,15 @@ export default function Layout({ children, currentPageName }) {
   const bgColor = settings?.brand_bg_color || '#F3F4F6';
   const fontFamily = settings?.app_font || 'Assistant';
 
+  const n = navSettings;
   const adminMenuItems = [
-    { name: 'לוח בקרה', page: 'Dashboard', icon: LayoutDashboard },
-    { name: 'לידים', page: 'Leads', icon: Users },
-    { name: 'לקוחות', page: 'Customers', icon: Briefcase },
-    { name: 'אירועים', page: 'Events', icon: Sparkles },
-    { name: 'יומן', page: 'EventCalendar', icon: Calendar },
-    { name: 'תקליטנים', page: 'DJs', icon: Music },
-    { name: 'משימות', page: 'Tasks', icon: ListChecks },
+    { name: n.nav_dashboard || 'לוח בקרה', page: 'Dashboard', icon: LayoutDashboard },
+    { name: n.nav_leads || 'לידים', page: 'Leads', icon: Users },
+    { name: n.nav_customers || 'לקוחות', page: 'Customers', icon: Briefcase },
+    { name: n.nav_events || 'אירועים', page: 'Events', icon: Sparkles },
+    { name: n.nav_calendar || 'יומן', page: 'EventCalendar', icon: Calendar },
+    { name: n.nav_djs || 'תקליטנים', page: 'DJs', icon: Music },
+    { name: n.nav_tasks || 'משימות', page: 'Tasks', icon: ListChecks },
   ];
 
   const djMenuItems = [
