@@ -530,6 +530,39 @@ export default function Customers() {
         </DialogContent>
       </Dialog>
 
+      {/* ── Edit Dialog ── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle>עריכת רשומה</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div><Label>שם איש קשר</Label><Input value={editData.contact_name || ''} onChange={e => setEditData({...editData, contact_name: e.target.value})} /></div>
+            <div><Label>טלפון</Label><Input value={editData.phone || ''} onChange={e => setEditData({...editData, phone: e.target.value})} /></div>
+            <div><Label>אימייל</Label><Input type="email" value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} /></div>
+            <div><Label>תאריך אירוע</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>
+            <div>
+              <Label>סוג אירוע</Label>
+              <Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{EVENT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>סטטוס</Label>
+              <Select value={editData.status || ''} onValueChange={v => setEditData({...editData, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ALL_COLS.map(c => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}
+                  <SelectItem value="CANCELLED">בוטל</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Create Dialog ── */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
