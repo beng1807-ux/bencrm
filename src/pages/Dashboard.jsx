@@ -110,13 +110,20 @@ export default function Dashboard() {
   );
 
   const firstName = user?.full_name?.split(' ')[0] || 'בן';
+  const greetingText = (settings.dashboard_greeting ?? 'היי {name}, מה קורה היום?').replace('{name}', firstName);
+  const subtitleText = settings.dashboard_subtitle ?? 'הנה סקירה של מה שקורה בסטודיו שלך כרגע.';
+  const labelNewLeads = settings.dashboard_stat_new_leads ?? 'לידים חדשים';
+  const labelUpcoming = settings.dashboard_stat_upcoming_events ?? 'אירועים קרובים';
+  const labelRevenue = settings.dashboard_stat_monthly_revenue ?? 'הכנסה חודשית';
+  const labelChart = settings.dashboard_chart_title ?? 'פילוח לידים שבועי';
+  const labelActivity = settings.dashboard_activity_title ?? 'פעילות אחרונה';
 
   return (
     <div className="space-y-8" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Greeting */}
       <div>
-        <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">היי {firstName}, מה קורה היום?</h2>
-        <p className="mt-2 font-medium text-[#886c63]">הנה סקירה של מה שקורה בסטודיו שלך כרגע.</p>
+        <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">{greetingText}</h2>
+        <p className="mt-2 font-medium text-[#886c63]">{subtitleText}</p>
       </div>
 
       {/* Bento Grid */}
