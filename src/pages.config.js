@@ -52,6 +52,12 @@ import BookingForm from './pages/BookingForm';
 import Leads from './pages/Leads';
 import Customers from './pages/Customers';
 import Tasks from './pages/Tasks';
+import Events from './pages/Events';
+import EventCalendar from './pages/EventCalendar';
+import DJs from './pages/DJs';
+import Management from './pages/Management';
+import MyShows from './pages/MyShows';
+import MyAvailability from './pages/MyAvailability';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +67,12 @@ export const PAGES = {
     "Leads": Leads,
     "Customers": Customers,
     "Tasks": Tasks,
+    "Events": Events,
+    "EventCalendar": EventCalendar,
+    "DJs": DJs,
+    "Management": Management,
+    "MyShows": MyShows,
+    "MyAvailability": MyAvailability,
 }
 
 export const pagesConfig = {

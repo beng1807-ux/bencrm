@@ -1,0 +1,370 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Settings, MessageSquare, Package as PackageIcon, Palette } from 'lucide-react';
+import { toast } from 'sonner';
+
+export default function Management() {
+  const [settings, setSettings] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [settingsList, templatesData, packagesData] = await Promise.all([
+        base44.entities.AppSettings.list(),
+        base44.entities.MessageTemplate.list(),
+        base44.entities.Package.list(),
+      ]);
+      setSettings(settingsList[0] || {});
+      setTemplates(templatesData);
+      setPackages(packagesData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('שגיאה בטעינת נתונים');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    try {
+      if (settings.id) {
+        await base44.entities.AppSettings.update(settings.id, settings);
+      } else {
+        const created = await base44.entities.AppSettings.create(settings);
+        setSettings(created);
+      }
+      toast.success('ההגדרות נשמרו בהצלחה');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('שגיאה בשמירת ההגדרות');
+    }
+  };
+
+  const saveTemplate = async (template) => {
+    try {
+      await base44.entities.MessageTemplate.update(template.id, template);
+      toast.success('התבנית נשמרה');
+      loadData();
+    } catch (error) {
+      console.error('Error saving template:', error);
+      toast.error('שגיאה בשמירת התבנית');
+    }
+  };
+
+  const savePackage = async (pkg) => {
+    try {
+      if (pkg.id) {
+        await base44.entities.Package.update(pkg.id, pkg);
+      } else {
+        await base44.entities.Package.create(pkg);
+      }
+      toast.success('החבילה נשמרה');
+      loadData();
+    } catch (error) {
+      console.error('Error saving package:', error);
+      toast.error('שגיאה בשמירת החבילה');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <Settings className="w-8 h-8" />
+          פאנל ניהול
+        </h1>
+        <p className="text-gray-600">ניהול הגדרות, תבניות ומחירון</p>
+      </div>
+
+      <Tabs defaultValue="settings" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
+          <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
+          <TabsTrigger value="packages">מחירון</TabsTrigger>
+          <TabsTrigger value="branding">מיתוג</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>הגדרות מערכת</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>שעת שליחה (שעה)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={settings.send_hour || 10}
+                    onChange={e => setSettings({...settings, send_hour: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <Label>שעת שליחה (דקות)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={settings.send_minute || 0}
+                    onChange={e => setSettings({...settings, send_minute: Number(e.target.value)})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>חסימת שליחה בשבת וחגים</Label>
+                  <Switch
+                    checked={settings.block_sabbath_and_holidays}
+                    onCheckedChange={v => setSettings({...settings, block_sabbath_and_holidays: v})}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>שליחה ביום עסקים הבא במקרה חסימה</Label>
+                  <Switch
+                    checked={settings.fallback_send_next_business_day}
+                    onCheckedChange={v => setSettings({...settings, fallback_send_next_business_day: v})}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>אוטומציות פעילות</Label>
+                  <Switch
+                    checked={settings.automations_enabled}
+                    onCheckedChange={v => setSettings({...settings, automations_enabled: v})}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="font-semibold mb-4">WhatsApp</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label>מצב שליחה</Label>
+                    <Select value={settings.whatsapp_send_mode} onValueChange={v => setSettings({...settings, whatsapp_send_mode: v})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="לוג בלבד">לוג בלבד (ברירת מחדל)</SelectItem>
+                        <SelectItem value="שליחה אמיתית">שליחה אמיתית</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="font-semibold mb-4">תזכורות תשלום</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>תזכורת 1 (ימים לפני)</Label>
+                    <Input
+                      type="number"
+                      value={settings.payment_reminder_1_days_before || 14}
+                      onChange={e => setSettings({...settings, payment_reminder_1_days_before: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>תזכורת 2 (ימים לפני)</Label>
+                    <Input
+                      type="number"
+                      value={settings.payment_reminder_2_days_before || 7}
+                      onChange={e => setSettings({...settings, payment_reminder_2_days_before: Number(e.target.value)})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="font-semibold mb-4">תזכורות אירועים</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>תזכורת אירוע (ימים לפני)</Label>
+                    <Input
+                      type="number"
+                      value={settings.event_reminder_days_before || 1}
+                      onChange={e => setSettings({...settings, event_reminder_days_before: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>תודה אחרי אירוע (ימים אחרי)</Label>
+                    <Input
+                      type="number"
+                      value={settings.thank_you_days_after || 1}
+                      onChange={e => setSettings({...settings, thank_you_days_after: Number(e.target.value)})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={saveSettings} className="w-full bg-orange-500 hover:bg-orange-600">
+                שמור הגדרות
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <div className="space-y-4">
+            {templates.map(template => (
+              <Card key={template.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{template.template_name}</span>
+                    <Switch
+                      checked={template.active}
+                      onCheckedChange={v => saveTemplate({...template, active: v})}
+                    />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={template.template_text}
+                    onChange={e => {
+                      const updated = templates.map(t => 
+                        t.id === template.id ? {...t, template_text: e.target.value} : t
+                      );
+                      setTemplates(updated);
+                    }}
+                    className="min-h-[120px]"
+                    dir="rtl"
+                  />
+                  <Button 
+                    onClick={() => saveTemplate(template)} 
+                    className="mt-3 bg-orange-500 hover:bg-orange-600"
+                    size="sm"
+                  >
+                    שמור תבנית
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="packages">
+          <div className="space-y-4">
+            {packages.map(pkg => (
+              <Card key={pkg.id}>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-4 gap-4">
+                    <Input
+                      value={pkg.item_name}
+                      onChange={e => {
+                        const updated = packages.map(p => 
+                          p.id === pkg.id ? {...p, item_name: e.target.value} : p
+                        );
+                        setPackages(updated);
+                      }}
+                      placeholder="שם"
+                    />
+                    <Input
+                      type="number"
+                      value={pkg.price}
+                      onChange={e => {
+                        const updated = packages.map(p => 
+                          p.id === pkg.id ? {...p, price: Number(e.target.value)} : p
+                        );
+                        setPackages(updated);
+                      }}
+                      placeholder="מחיר"
+                    />
+                    <Select
+                      value={pkg.item_type}
+                      onValueChange={v => {
+                        const updated = packages.map(p => 
+                          p.id === pkg.id ? {...p, item_type: v} : p
+                        );
+                        setPackages(updated);
+                      }}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PACKAGE">חבילה</SelectItem>
+                        <SelectItem value="ADDON">תוספת</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button onClick={() => savePackage(pkg)} size="sm" className="bg-orange-500 hover:bg-orange-600">
+                      שמור
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="branding">
+          <Card>
+            <CardHeader>
+              <CardTitle>מיתוג המערכת</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>שם האפליקציה</Label>
+                  <Input
+                    value={settings.app_name || ''}
+                    onChange={e => setSettings({...settings, app_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>שם הבעלים</Label>
+                  <Input
+                    value={settings.owner_name || ''}
+                    onChange={e => setSettings({...settings, owner_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>צבע ראשי</Label>
+                  <Input
+                    type="color"
+                    value={settings.brand_primary_color || '#FF6B4A'}
+                    onChange={e => setSettings({...settings, brand_primary_color: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>גופן</Label>
+                  <Select value={settings.app_font} onValueChange={v => setSettings({...settings, app_font: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Rubik">Rubik</SelectItem>
+                      <SelectItem value="Assistant">Assistant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button onClick={saveSettings} className="w-full bg-orange-500 hover:bg-orange-600">
+                שמור מיתוג
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
