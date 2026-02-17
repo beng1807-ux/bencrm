@@ -195,6 +195,9 @@ export default function Customers() {
   const [newLead, setNewLead] = useState({});
   const [leadEvents, setLeadEvents] = useState([]);
   const [leadMessages, setLeadMessages] = useState([]);
+  const [multiSelected, setMultiSelected] = useState(new Set());
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => { loadLeads(); }, []);
 
