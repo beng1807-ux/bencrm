@@ -174,8 +174,8 @@ export default function Leads() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">לידים</h1>
-          <p className="text-gray-500 text-sm mt-1">נהל ועקוב אחר הלידים שלך לאורך שלבי המכירה</p>
+          <h1 className="text-4xl font-black text-gray-900">לידים</h1>
+          <p className="text-gray-400 text-sm mt-1">נהל ועקוב אחר הלידים שלך לאורך שלבי המכירה</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-200 font-bold px-5">
           <Plus className="w-4 h-4 ml-2" />
