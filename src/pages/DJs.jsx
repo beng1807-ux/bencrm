@@ -1,252 +1,220 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Music, Phone, Mail, Calendar, Plus, Edit, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Music, Phone, Mail, Plus, Pencil, Trash2 } from 'lucide-react';
+import ViewToggle from '@/components/shared/ViewToggle';
 import { toast } from 'sonner';
+
+const PRIMARY = '#e94f1c';
 
 export default function DJs() {
   const [djs, setDJs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDJ, setSelectedDJ] = useState(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [djEvents, setDJEvents] = useState([]);
+  const [viewMode, setViewMode] = useState('cards');
+  const [selected, setSelected] = useState(new Set());
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState({});
   const [createOpen, setCreateOpen] = useState(false);
   const [newDJ, setNewDJ] = useState({});
 
-  useEffect(() => {
-    loadDJs();
-  }, []);
+  useEffect(() => { loadDJs(); }, []);
 
   const loadDJs = async () => {
     try {
       const data = await base44.entities.DJ.list('-created_date');
       setDJs(data);
-    } catch (error) {
-      console.error('Error loading DJs:', error);
-      toast.error('שגיאה בטעינת DJ-ים');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('שגיאה בטעינת DJ-ים'); }
+    finally { setLoading(false); }
   };
 
-  const openDJDetails = async (dj) => {
-    setSelectedDJ(dj);
-    setDetailsOpen(true);
-    
-    try {
-      const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
-      setDJEvents(events);
-    } catch (error) {
-      console.error('Error loading DJ events:', error);
-    }
+  const toggleSelect = (id, e) => { e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const toggleAll = () => setSelected(prev => prev.size === djs.length ? new Set() : new Set(djs.map(d => d.id)));
+
+  const openEdit = (dj, e) => { if (e) e.stopPropagation(); setEditData({...dj}); setEditOpen(true); };
+
+  const deleteDJ = async (id, e) => {
+    if (e) e.stopPropagation();
+    if (!confirm('למחוק DJ זה?')) return;
+    await base44.entities.DJ.delete(id);
+    await loadDJs();
+    toast.success('DJ נמחק');
+  };
+
+  const deleteSelected = async () => {
+    if (!confirm(`למחוק ${selected.size} DJ-ים?`)) return;
+    await Promise.all([...selected].map(id => base44.entities.DJ.delete(id)));
+    setSelected(new Set());
+    await loadDJs();
+    toast.success('DJ-ים נמחקו');
+  };
+
+  const saveEdit = async () => {
+    await base44.entities.DJ.update(editData.id, editData);
+    await loadDJs();
+    setEditOpen(false);
+    toast.success('DJ עודכן');
   };
 
   const createDJ = async () => {
-    try {
-      await base44.entities.DJ.create({
-        ...newDJ,
-        user_id: 'temp_' + Date.now(),
-        status: 'ACTIVE',
-      });
-      await loadDJs();
-      toast.success('DJ חדש נוצר בהצלחה');
-      setCreateOpen(false);
-      setNewDJ({});
-    } catch (error) {
-      console.error('Error creating DJ:', error);
-      toast.error('שגיאה ביצירת DJ');
-    }
+    await base44.entities.DJ.create({ ...newDJ, user_id: 'temp_' + Date.now(), status: 'ACTIVE' });
+    await loadDJs();
+    toast.success('DJ חדש נוצר');
+    setCreateOpen(false); setNewDJ({});
   };
 
-  const getStatusColor = (status) => {
-    return status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-  };
+  const getStatusColor = (s) => s === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700';
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }} /></div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-5" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Music className="w-8 h-8" />
-            DJ-ים
-          </h1>
-          <p className="text-gray-600">ניהול צוות ה-DJ-ים</p>
+          <h1 className="text-4xl font-extrabold text-[#181311] tracking-tight">תקליטנים</h1>
+          <p className="mt-1 font-medium text-[#886c63] text-sm">ניהול צוות ה-DJ-ים</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="bg-orange-500 hover:bg-orange-600">
-          <Plus className="w-4 h-4 ml-2" />
-          DJ חדש
+        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
+          <Plus className="w-4 h-4 ml-2" />DJ חדש
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {djs.map(dj => (
-          <Card key={dj.id} className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => openDJDetails(dj)}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Music className="w-6 h-6 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{dj.name}</h3>
-                  <Badge className={getStatusColor(dj.status)}>
-                    {dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Phone className="w-4 h-4" />
-                  {dj.phone}
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Mail className="w-4 h-4" />
-                  {dj.email}
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t">
-                  <span className="text-gray-600">אירועים: {dj.total_events || 0}</span>
-                  {dj.unavailable_dates?.length > 0 && (
-                    <span className="text-xs text-gray-500">
-                      {dj.unavailable_dates.length} תאריכים חסומים
-                    </span>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {djs.length === 0 && (
-          <Card className="col-span-full">
-            <CardContent className="py-12 text-center text-gray-500">
-              אין DJ-ים במערכת
-            </CardContent>
-          </Card>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        {selected.size > 0 && (
+          <Button variant="destructive" size="sm" onClick={deleteSelected}>
+            <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
+          </Button>
         )}
       </div>
 
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedDJ && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Music className="w-6 h-6" />
-                  {selectedDJ.name}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>טלפון</Label>
-                    <p className="mt-1 font-medium">{selectedDJ.phone}</p>
-                  </div>
-                  <div>
-                    <Label>אימייל</Label>
-                    <p className="mt-1 font-medium">{selectedDJ.email}</p>
-                  </div>
-                  <div>
-                    <Label>סטטוס</Label>
-                    <Badge className={getStatusColor(selectedDJ.status)}>
-                      {selectedDJ.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label>סך אירועים</Label>
-                    <p className="mt-1 font-medium">{selectedDJ.total_events || 0}</p>
-                  </div>
-                </div>
-
-                {selectedDJ.notes && (
-                  <div>
-                    <Label>הערות</Label>
-                    <p className="mt-1 text-sm bg-gray-50 p-3 rounded">{selectedDJ.notes}</p>
-                  </div>
-                )}
-
-                {selectedDJ.unavailable_dates?.length > 0 && (
-                  <div>
-                    <Label>תאריכים לא זמינים</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedDJ.unavailable_dates.map(date => (
-                        <Badge key={date} variant="secondary">
-                          {new Date(date).toLocaleDateString('he-IL')}
-                        </Badge>
-                      ))}
+      {/* Cards View */}
+      {viewMode === 'cards' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {djs.map(dj => {
+            const isSelected = selected.has(dj.id);
+            return (
+              <div key={dj.id}
+                className={`bg-white p-4 rounded-xl shadow-sm border transition-all hover:shadow-md cursor-pointer
+                  ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-[#e5dedc] hover:border-primary/20'}`}
+                onClick={() => openEdit(dj)}>
+                <div className="flex items-start gap-3">
+                  <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => toggleSelect(dj.id, e)} className="mt-1 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${PRIMARY}20` }}>
+                        <Music className="w-5 h-5" style={{ color: PRIMARY }} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-[#181311]">{dj.name}</h3>
+                        <Badge className={getStatusColor(dj.status)}>{dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}</Badge>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-sm text-[#886c63]">
+                      <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{dj.phone}</div>
+                      <div className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{dj.email}</div>
+                      <div className="flex items-center justify-between pt-2 border-t border-[#e5dedc]">
+                        <span>אירועים: {dj.total_events || 0}</span>
+                        {dj.unavailable_dates?.length > 0 && <span className="text-xs">{dj.unavailable_dates.length} תאריכים חסומים</span>}
+                      </div>
                     </div>
                   </div>
-                )}
-
-                <div className="border-t pt-6">
-                  <h3 className="font-semibold text-lg mb-4">אירועים משובצים</h3>
-                  <div className="space-y-2">
-                    {djEvents.map(event => (
-                      <Card key={event.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">{event.event_type}</p>
-                              <p className="text-sm text-gray-600">
-                                {new Date(event.event_date).toLocaleDateString('he-IL')}
-                              </p>
-                            </div>
-                            <Badge>{event.event_status}</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {djEvents.length === 0 && (
-                      <p className="text-center text-gray-500 py-8">אין אירועים משובצים</p>
-                    )}
+                  <div className="flex flex-col gap-1">
+                    <button onClick={e => openEdit(dj, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            );
+          })}
+          {djs.length === 0 && <div className="col-span-full bg-white rounded-xl p-12 text-center text-[#886c63] border border-[#e5dedc]">אין DJ-ים במערכת</div>}
+        </div>
+      )}
+
+      {/* Table View */}
+      {viewMode === 'table' && (
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#e5dedc] bg-[#f8f6f6] text-[#886c63] text-xs font-bold">
+                <th className="px-4 py-3"><Checkbox checked={selected.size === djs.length && djs.length > 0} onCheckedChange={toggleAll} /></th>
+                <th className="text-right px-4 py-3">שם</th>
+                <th className="text-right px-4 py-3">טלפון</th>
+                <th className="text-right px-4 py-3">אימייל</th>
+                <th className="text-right px-4 py-3">סטטוס</th>
+                <th className="text-right px-4 py-3">אירועים</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {djs.length === 0 && <tr><td colSpan={7} className="text-center text-[#886c63] py-10">אין DJ-ים</td></tr>}
+              {djs.map(dj => {
+                const isSelected = selected.has(dj.id);
+                return (
+                  <tr key={dj.id} className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
+                    onClick={() => openEdit(dj)}>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(dj.id, { stopPropagation: () => {} })} /></td>
+                    <td className="px-4 py-3 font-bold text-[#181311]">{dj.name}</td>
+                    <td className="px-4 py-3 text-[#886c63]">{dj.phone}</td>
+                    <td className="px-4 py-3 text-[#886c63]">{dj.email}</td>
+                    <td className="px-4 py-3"><Badge className={getStatusColor(dj.status)}>{dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}</Badge></td>
+                    <td className="px-4 py-3 text-[#886c63]">{dj.total_events || 0}</td>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1">
+                        <button onClick={e => openEdit(dj, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>עריכת DJ</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div><Label>שם</Label><Input value={editData.name || ''} onChange={e => setEditData({...editData, name: e.target.value})} /></div>
+            <div><Label>טלפון</Label><Input value={editData.phone || ''} onChange={e => setEditData({...editData, phone: e.target.value})} /></div>
+            <div><Label>אימייל</Label><Input type="email" value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} /></div>
+            <div>
+              <Label>סטטוס</Label>
+              <Select value={editData.status || 'ACTIVE'} onValueChange={v => setEditData({...editData, status: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">פעיל</SelectItem>
+                  <SelectItem value="INACTIVE">לא פעיל</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>הערות</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>
+            <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Create DJ Dialog */}
+      {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>צור DJ חדש</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>שם *</Label>
-              <Input value={newDJ.name || ''} onChange={e => setNewDJ({...newDJ, name: e.target.value})} />
-            </div>
-            <div>
-              <Label>טלפון *</Label>
-              <Input value={newDJ.phone || ''} onChange={e => setNewDJ({...newDJ, phone: e.target.value})} />
-            </div>
-            <div>
-              <Label>אימייל *</Label>
-              <Input type="email" value={newDJ.email || ''} onChange={e => setNewDJ({...newDJ, email: e.target.value})} />
-            </div>
-            <div>
-              <Label>הערות</Label>
-              <Textarea value={newDJ.notes || ''} onChange={e => setNewDJ({...newDJ, notes: e.target.value})} />
-            </div>
-            <Button onClick={createDJ} className="w-full bg-orange-500 hover:bg-orange-600">
-              צור DJ
-            </Button>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>DJ חדש</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div><Label>שם *</Label><Input value={newDJ.name || ''} onChange={e => setNewDJ({...newDJ, name: e.target.value})} /></div>
+            <div><Label>טלפון *</Label><Input value={newDJ.phone || ''} onChange={e => setNewDJ({...newDJ, phone: e.target.value})} /></div>
+            <div><Label>אימייל *</Label><Input type="email" value={newDJ.email || ''} onChange={e => setNewDJ({...newDJ, email: e.target.value})} /></div>
+            <div><Label>הערות</Label><Textarea value={newDJ.notes || ''} onChange={e => setNewDJ({...newDJ, notes: e.target.value})} /></div>
+            <Button onClick={createDJ} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>צור DJ</Button>
           </div>
         </DialogContent>
       </Dialog>
