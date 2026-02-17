@@ -58,6 +58,7 @@ import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
 import Tasks from './pages/Tasks';
+import Leads from './pages/Leads';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
     "Tasks": Tasks,
+    "Leads": Leads,
 }
 
 export const pagesConfig = {
