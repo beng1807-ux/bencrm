@@ -1,0 +1,155 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+
+    // בדיקת הגדרות
+    const settingsList = await base44.asServiceRole.entities.AppSettings.list();
+    if (!settingsList[0]?.automations_enabled) {
+      return Response.json({ message: 'Automations disabled' });
+    }
+    const settings = settingsList[0];
+
+    const now = new Date();
+    const events = await base44.asServiceRole.entities.Event.list();
+    const customers = await base44.asServiceRole.entities.Customer.list();
+    const djs = await base44.asServiceRole.entities.DJ.list();
+    let remindersCount = 0;
+    let thanksCount = 0;
+
+    for (const event of events) {
+      const eventDate = new Date(event.event_date);
+      const daysUntilEvent = Math.floor((eventDate - now) / (1000 * 60 * 60 * 24));
+      const daysSinceEvent = Math.floor((now - eventDate) / (1000 * 60 * 60 * 24));
+
+      // תזכורת אירוע
+      if (daysUntilEvent === settings.event_reminder_days_before) {
+        await sendEventReminder(base44, event, customers, djs, settings);
+        remindersCount++;
+
+        // סנכרון סטטוס אירוע
+        if (event.event_status === 'PENDING') {
+          await base44.asServiceRole.entities.Event.update(event.id, {
+            event_status: 'CONFIRMED',
+          });
+        }
+      }
+
+      // הודעת תודה אחרי אירוע
+      if (
+        daysSinceEvent === settings.thank_you_days_after &&
+        event.event_status !== 'COMPLETED'
+      ) {
+        await sendThankYou(base44, event, customers, settings);
+        thanksCount++;
+
+        // עדכון סטטוס לסיום
+        await base44.asServiceRole.entities.Event.update(event.id, {
+          event_status: 'COMPLETED',
+        });
+      }
+    }
+
+    return Response.json({ success: true, remindersCount, thanksCount });
+  } catch (error) {
+    console.error('Error in eventCycle:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
+
+async function sendEventReminder(base44, event, customers, djs, settings) {
+  const customer = customers.find((c) => c.id === event.customer_id);
+  const dj = djs.find((d) => d.id === event.dj_id);
+  if (!customer) return;
+
+  const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
+    template_key: 'EVENT_REMINDER',
+    active: true,
+  });
+  if (templateList.length === 0) return;
+
+  const template = templateList[0];
+  const messageText = template.template_text
+    .replace('[שם]', customer.name)
+    .replace('[תאריך]', new Date(event.event_date).toLocaleDateString('he-IL'))
+    .replace('[שעה]', '18:00')
+    .replace('[מיקום]', event.location || 'לא צוין')
+    .replace('[שם DJ]', dj?.name || 'לא שובץ');
+
+  try {
+    if (settings.whatsapp_send_mode === 'לוג בלבד') {
+      await base44.asServiceRole.entities.ConversationMessage.create({
+        customer_id: customer.id,
+        event_id: event.id,
+        channel: 'SYSTEM',
+        sender: 'SYSTEM',
+        message_text: messageText,
+        timestamp: new Date().toISOString(),
+      });
+
+      await base44.asServiceRole.entities.AuditLog.create({
+        entity_name: 'Event',
+        entity_id: event.id,
+        action: 'SEND_MESSAGE',
+        diff_summary: 'תזכורת אירוע נרשמה',
+        metadata: { template_key: 'EVENT_REMINDER', simulated: true },
+      });
+    } else {
+      throw new Error('WhatsApp API לא מחובר');
+    }
+  } catch (error) {
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_name: 'Event',
+      entity_id: event.id,
+      action: 'SEND_FAILED',
+      diff_summary: `כשל בתזכורת: ${error.message}`,
+      metadata: { template_key: 'EVENT_REMINDER', error_message: error.message },
+    });
+  }
+}
+
+async function sendThankYou(base44, event, customers, settings) {
+  const customer = customers.find((c) => c.id === event.customer_id);
+  if (!customer) return;
+
+  const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
+    template_key: 'THANK_YOU',
+    active: true,
+  });
+  if (templateList.length === 0) return;
+
+  const template = templateList[0];
+  const messageText = template.template_text.replace('[שם]', customer.name);
+
+  try {
+    if (settings.whatsapp_send_mode === 'לוג בלבד') {
+      await base44.asServiceRole.entities.ConversationMessage.create({
+        customer_id: customer.id,
+        event_id: event.id,
+        channel: 'SYSTEM',
+        sender: 'SYSTEM',
+        message_text: messageText,
+        timestamp: new Date().toISOString(),
+      });
+
+      await base44.asServiceRole.entities.AuditLog.create({
+        entity_name: 'Event',
+        entity_id: event.id,
+        action: 'SEND_MESSAGE',
+        diff_summary: 'הודעת תודה נרשמה',
+        metadata: { template_key: 'THANK_YOU', simulated: true },
+      });
+    } else {
+      throw new Error('WhatsApp API לא מחובר');
+    }
+  } catch (error) {
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_name: 'Event',
+      entity_id: event.id,
+      action: 'SEND_FAILED',
+      diff_summary: `כשל בהודעת תודה: ${error.message}`,
+      metadata: { template_key: 'THANK_YOU', error_message: error.message },
+    });
+  }
+}
