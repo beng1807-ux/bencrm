@@ -112,10 +112,10 @@ function TableView({ leads, onRowClick, phaseFilter }) {
     : leads;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 text-gray-500 text-xs font-bold bg-gray-50">
+          <tr className="border-b border-[#e5dedc] text-[#886c63] text-xs font-bold bg-[#f8f6f6]">
             <th className="text-right px-4 py-3">שם</th>
             <th className="text-right px-4 py-3">סוג אירוע</th>
             <th className="text-right px-4 py-3">תאריך</th>
@@ -125,26 +125,27 @@ function TableView({ leads, onRowClick, phaseFilter }) {
         </thead>
         <tbody>
           {filtered.length === 0 && (
-            <tr><td colSpan={5} className="text-center text-gray-400 py-10">לא נמצאו רשומות</td></tr>
+            <tr><td colSpan={5} className="text-center text-[#886c63] py-10">לא נמצאו רשומות</td></tr>
           )}
           {filtered.map(lead => {
             const col = ALL_COLS.find(c => c.key === lead.status);
+            const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌' };
             return (
               <tr
                 key={lead.id}
                 onClick={() => onRowClick(lead)}
-                className="border-b border-gray-50 hover:bg-orange-50 cursor-pointer transition-colors"
+                className="border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors"
               >
-                <td className="px-4 py-3 font-semibold text-gray-800">
+                <td className="px-4 py-3 font-bold text-[#181311]">
                   {lead.contact_name}
-                  {lead.celebrant_name ? <span className="text-gray-400 font-normal"> — {lead.celebrant_name}</span> : ''}
+                  {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
                 </td>
-                <td className="px-4 py-3 text-gray-600">{EVENT_TYPE_ICONS[lead.event_type]} {lead.event_type}</td>
-                <td className="px-4 py-3 text-gray-600">{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</td>
-                <td className="px-4 py-3 text-gray-600">{lead.phone}</td>
+                <td className="px-4 py-3 text-[#886c63]">{typeInfo.emoji} {lead.event_type}</td>
+                <td className="px-4 py-3 text-[#886c63]">{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</td>
+                <td className="px-4 py-3 text-[#886c63]">{lead.phone}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold
-                    ${CUSTOMER_COLS.some(c => c.key === lead.status) ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-700'}`}>
+                    ${CUSTOMER_COLS.some(c => c.key === lead.status) ? 'bg-orange-100 text-primary' : 'bg-blue-50 text-blue-700'}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${col?.dot || 'bg-gray-400'}`} />
                     {STATUS_LABELS[lead.status] || lead.status}
                   </span>
