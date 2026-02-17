@@ -70,26 +70,34 @@ function KanbanColumn({ col, leads, onCardClick, phase }) {
 // ── KanbanCard ───────────────────────────────────────────────────
 function KanbanCard({ lead, colKey, onClick }) {
   const isCustomer = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL','EVENT_DONE'].includes(colKey);
-  const isGreen = ['DEPOSIT_PAID','PAID_FULL'].includes(colKey);
-  const icon = EVENT_TYPE_ICONS[lead.event_type] || '📌';
+  const isDone = colKey === 'EVENT_DONE';
+  const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌', label: lead.event_type };
+
   return (
     <div
       onClick={onClick}
-      className={`bg-white p-3 rounded-xl shadow-sm cursor-pointer transition-all hover:shadow-md group
-        ${isGreen ? 'border-r-4 border-emerald-500' : isCustomer ? 'border-r-4 border-orange-400' : 'border border-gray-100 hover:border-orange-300'}`}
+      className={`bg-white p-4 rounded-xl shadow-sm cursor-pointer transition-all group
+        border border-transparent hover:border-primary/20 hover:shadow-md
+        ${isDone ? 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0' : ''}`}
     >
-      <div className="flex justify-between items-start mb-1">
-        <span className="font-bold text-gray-800 text-xs group-hover:text-orange-500 transition-colors leading-snug">
-          {lead.contact_name}{lead.celebrant_name ? ` — ${lead.celebrant_name}` : ''}
-        </span>
+      <div className="flex justify-between items-start mb-2">
+        <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug">
+          {lead.contact_name}
+          {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
+        </h4>
         {lead.guests_count > 150 && (
-          <span className="text-[9px] bg-orange-50 text-orange-500 px-1.5 py-0.5 rounded-full font-bold border border-orange-200 flex-shrink-0">VIP</span>
+          <span className="text-[10px] bg-orange-100 text-primary font-bold px-2 py-0.5 rounded-full flex-shrink-0 mr-2">VIP</span>
         )}
       </div>
-      <p className="text-[11px] text-gray-400 mb-2">{icon} {lead.event_type}</p>
-      <div className="flex items-center justify-between pt-1.5 border-t border-gray-50 text-[10px] text-gray-400">
-        <span><Calendar className="w-2.5 h-2.5 inline ml-0.5" />{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</span>
-        <span><Phone className="w-2.5 h-2.5 inline ml-0.5" />{lead.phone}</span>
+      <div className="flex flex-col gap-1.5 text-sm text-[#886c63]">
+        <div className="flex items-center gap-1.5">
+          <span className="text-base">{typeInfo.emoji}</span>
+          <span>{typeInfo.label}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span>{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</span>
+        </div>
       </div>
     </div>
   );
