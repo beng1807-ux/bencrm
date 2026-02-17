@@ -2,37 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { Menu, X, Home, Users, Calendar, ListChecks, Settings, Briefcase, Music } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Sparkles, Calendar, Music,
+  ListChecks, Settings, LogOut, User, Briefcase, BarChart3
+} from 'lucide-react';
 
 export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [djProfile, setDjProfile] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
-          // User not authenticated - this is OK for public pages
-          return;
-        }
+        if (!isAuth) return;
 
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
         const settingsList = await base44.entities.AppSettings.list();
-        if (settingsList.length > 0) {
-          setSettings(settingsList[0]);
-        }
+        if (settingsList.length > 0) setSettings(settingsList[0]);
 
-        // בדיקה אם המשתמש הוא DJ
         if (currentUser.role !== 'admin') {
           const djList = await base44.entities.DJ.filter({ user_id: currentUser.id });
-          if (djList.length > 0) {
-            setDjProfile(djList[0]);
-          }
+          if (djList.length > 0) setDjProfile(djList[0]);
         }
       } catch (err) {
         console.error(err);
@@ -46,18 +41,16 @@ export default function Layout({ children, currentPageName }) {
 
   const primaryColor = settings?.brand_primary_color || '#e94f1c';
   const bgColor = settings?.brand_bg_color || '#F3F4F6';
-  const headingColor = settings?.brand_heading_color || '#1E293B';
-  const fontFamily = settings?.app_font || 'Rubik';
+  const fontFamily = settings?.app_font || 'Assistant';
 
   const adminMenuItems = [
-    { name: 'דשבורד', page: 'Dashboard', icon: Home },
+    { name: 'לוח בקרה', page: 'Dashboard', icon: LayoutDashboard },
     { name: 'לידים', page: 'Leads', icon: Users },
     { name: 'לקוחות', page: 'Customers', icon: Briefcase },
-    { name: 'אירועים', page: 'Events', icon: Calendar },
-    { name: 'יומן אירועים', page: 'EventCalendar', icon: Calendar },
-    { name: 'DJ-ים', page: 'DJs', icon: Music },
+    { name: 'אירועים', page: 'Events', icon: Sparkles },
+    { name: 'יומן', page: 'EventCalendar', icon: Calendar },
+    { name: 'תקליטנים', page: 'DJs', icon: Music },
     { name: 'משימות', page: 'Tasks', icon: ListChecks },
-    { name: 'ניהול', page: 'Management', icon: Settings },
   ];
 
   const djMenuItems = [
@@ -67,93 +60,141 @@ export default function Layout({ children, currentPageName }) {
 
   const menuItems = isAdmin ? adminMenuItems : djMenuItems;
 
-  // No layout for non-authenticated users (public pages handle their own layout)
-  if (!user) {
-    return children;
-  }
+  if (!user) return children;
+
+  const displayName = user.full_name || user.email;
 
   return (
-    <div dir="rtl" style={{ fontFamily, backgroundColor: bgColor }} className="min-h-screen">
+    <div dir="rtl" style={{ fontFamily: `${fontFamily}, sans-serif`, backgroundColor: bgColor }} className="min-h-screen flex">
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
         :root {
           --primary: ${primaryColor};
           --bg: ${bgColor};
-          --heading: ${headingColor};
         }
+        .sidebar-scrollbar::-webkit-scrollbar { width: 4px; }
+        .sidebar-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
       `}</style>
 
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-              >
-                {menuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                     style={{ backgroundColor: primaryColor }}>
-                  {settings?.app_name?.charAt(0) || 'ס'}
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: headingColor }}>
-                    {settings?.app_name || 'סקיצה'}
-                  </h1>
-                  <p className="text-xs text-gray-500">{settings?.owner_name || 'בן גבאי'}</p>
-                </div>
-              </div>
-            </div>
+      {/* Mobile overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30 md:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user.email}</span>
-              <button
-                onClick={() => base44.auth.logout()}
-                className="text-sm px-4 py-2 rounded-lg hover:bg-gray-100"
-              >
-                יציאה
-              </button>
-            </div>
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:sticky top-0 right-0 h-screen w-64 bg-white border-l border-gray-200
+          flex flex-col z-40 transition-transform duration-300
+          ${menuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Logo */}
+        <header className="p-6 flex flex-col items-center border-b border-gray-50">
+          <div className="w-32">
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0_uKfsvVKZ4Mpi9MLyf9vBach0cn4cN--SNFGgFjz6tGPezBfgF7zw9Ahm8SSnGw1IZ8XunIiJAugS5SuKBYHnJgZfLwYdUPhz8VIa-2HTwq6T1UUoZXCstl9rGz6LC-F_3YcdRbxd7jhlvCi0sB9tqDRro18Naj5ErM82bTc1WUNSBXLD2oznh9-nzVjx04FzGceugXXCxD7TAiWuR2ZjCHrzPlxUnaitRTYa0O3QWErwEktq68zHcI8uc5mDrhWGlMmlIqYu7nL"
+              alt="Skitza Logo"
+              className="w-full h-auto object-contain"
+            />
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${menuOpen ? 'block' : 'hidden'} md:block fixed md:sticky top-16 right-0 h-[calc(100vh-4rem)] w-64 bg-white border-l border-gray-200 overflow-y-auto z-40`}>
-          <nav className="p-4 space-y-1">
+        {/* Nav */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto sidebar-scrollbar">
+          <ul className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
               return (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page)}
-                  onClick={() => setMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                  style={isActive ? { backgroundColor: primaryColor } : {}}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
+                <li key={item.page} className="relative">
+                  <Link
+                    to={createPageUrl(item.page)}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors duration-200 ${
+                      isActive
+                        ? 'text-white'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                    style={isActive ? { backgroundColor: primaryColor } : {}}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = primaryColor; }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = ''; }}
+                  >
+                    <Icon size={20} />
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
               );
             })}
-          </nav>
-        </aside>
+          </ul>
+        </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
+        {/* Footer */}
+        <footer className="p-4 border-t border-gray-100">
+          <ul className="space-y-1">
+            {isAdmin && (
+              <li>
+                <Link
+                  to={createPageUrl('Management')}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 ${
+                    currentPageName === 'Management'
+                      ? 'text-white'
+                      : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                  }`}
+                  style={currentPageName === 'Management' ? { backgroundColor: primaryColor } : {}}
+                >
+                  <Settings size={20} />
+                  <span>הגדרות</span>
+                </Link>
+              </li>
+            )}
+            <li>
+              <button
+                onClick={() => base44.auth.logout()}
+                className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors duration-200"
+              >
+                <LogOut size={20} />
+                <span>התנתקות</span>
+              </button>
+            </li>
+          </ul>
+
+          {/* User info */}
+          <div className="mt-3 flex items-center gap-3 px-4 py-3 border-t border-gray-50 pt-4">
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <User size={18} className="text-gray-400" />
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-sm font-semibold text-gray-800 truncate">{displayName}</span>
+              <span className="text-xs text-gray-400 truncate">{user.email}</span>
+            </div>
           </div>
-        </main>
+        </footer>
+      </aside>
+
+      {/* Mobile hamburger */}
+      <div className="md:hidden fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="p-2 bg-white rounded-lg shadow-md border border-gray-200"
+        >
+          <div className="w-5 h-0.5 bg-gray-600 mb-1"></div>
+          <div className="w-5 h-0.5 bg-gray-600 mb-1"></div>
+          <div className="w-5 h-0.5 bg-gray-600"></div>
+        </button>
       </div>
+
+      {/* Main content */}
+      <main className="flex-1 min-w-0 p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
