@@ -153,7 +153,7 @@ export default function Layout({ children, currentPageName }) {
                   style={currentPageName === 'Management' ? { backgroundColor: primaryColor } : {}}
                 >
                   <Settings size={20} />
-                  <span>הגדרות</span>
+                  <span>{navSettings.nav_settings || 'הגדרות'}</span>
                 </Link>
               </li>
             )}
@@ -163,7 +163,7 @@ export default function Layout({ children, currentPageName }) {
                 className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors duration-200"
               >
                 <LogOut size={20} />
-                <span>התנתקות</span>
+                <span>{navSettings.nav_logout || 'התנתקות'}</span>
               </button>
             </li>
           </ul>
