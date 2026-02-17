@@ -37,12 +37,14 @@ export default function Dashboard() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      const [leads, events, customers, auditLogs] = await Promise.all([
+      const [leads, events, customers, auditLogs, settingsList] = await Promise.all([
         base44.entities.Lead.list(),
         base44.entities.Event.list(),
         base44.entities.Customer.list(),
         base44.entities.AuditLog.list('-created_date', 5),
+        base44.entities.AppSettings.list(),
       ]);
+      if (settingsList.length > 0) setSettings(settingsList[0]);
 
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
