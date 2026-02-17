@@ -23,8 +23,12 @@ export default function Layout({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
-        const settingsList = await base44.entities.AppSettings.list();
+        const [settingsList, navList] = await Promise.all([
+          base44.entities.AppSettings.list(),
+          base44.entities.NavSettings.list(),
+        ]);
         if (settingsList.length > 0) setSettings(settingsList[0]);
+        if (navList.length > 0) setNavSettings(navList[0]);
 
         if (currentUser.role !== 'admin') {
           const djList = await base44.entities.DJ.filter({ user_id: currentUser.id });
