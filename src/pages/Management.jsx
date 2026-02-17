@@ -99,11 +99,12 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
           <TabsTrigger value="branding">מיתוג</TabsTrigger>
+          <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings">
@@ -370,6 +371,85 @@ export default function Management() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="dashboard_texts">
+          <Card>
+            <CardHeader>
+              <CardTitle>טקסטים דשבורד</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>כותרת ראשית (השתמש ב-{'{name}'} לשם המשתמש)</Label>
+                <Input
+                  value={settings.dashboard_greeting ?? 'היי {name}, מה קורה היום?'}
+                  onChange={e => setSettings({...settings, dashboard_greeting: e.target.value})}
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <Label>תת כותרת</Label>
+                <Input
+                  value={settings.dashboard_subtitle ?? 'הנה סקירה של מה שקורה בסטודיו שלך כרגע.'}
+                  onChange={e => setSettings({...settings, dashboard_subtitle: e.target.value})}
+                  dir="rtl"
+                />
+              </div>
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold text-gray-500 mb-3">כרטיסי סטטיסטיקה</p>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <Label>כרטיס 1 — לידים חדשים</Label>
+                    <Input
+                      value={settings.dashboard_stat_new_leads ?? 'לידים חדשים'}
+                      onChange={e => setSettings({...settings, dashboard_stat_new_leads: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>כרטיס 2 — אירועים קרובים</Label>
+                    <Input
+                      value={settings.dashboard_stat_upcoming_events ?? 'אירועים קרובים'}
+                      onChange={e => setSettings({...settings, dashboard_stat_upcoming_events: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>כרטיס 3 — הכנסה חודשית</Label>
+                    <Input
+                      value={settings.dashboard_stat_monthly_revenue ?? 'הכנסה חודשית'}
+                      onChange={e => setSettings({...settings, dashboard_stat_monthly_revenue: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold text-gray-500 mb-3">כותרות גרפים</p>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <Label>כותרת גרף לידים שבועי</Label>
+                    <Input
+                      value={settings.dashboard_chart_title ?? 'פילוח לידים שבועי'}
+                      onChange={e => setSettings({...settings, dashboard_chart_title: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                  <div>
+                    <Label>כותרת פעילות אחרונה</Label>
+                    <Input
+                      value={settings.dashboard_activity_title ?? 'פעילות אחרונה'}
+                      onChange={e => setSettings({...settings, dashboard_activity_title: e.target.value})}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+              </div>
+              <Button onClick={saveSettings} className="w-full bg-orange-500 hover:bg-orange-600">
+                שמור טקסטים
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );
