@@ -9,8 +9,8 @@ import {
 
 export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
-  const [settings, setSettings] = useState(null);
-  const [navSettings, setNavSettings] = useState({});
+    const [settings, setSettings] = useState(null);
+    const [navSettings, setNavSettings] = useState(null);
   const [djProfile, setDjProfile] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
