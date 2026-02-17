@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, MessageSquare, Package as PackageIcon, Palette } from 'lucide-react';
+import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Management() {
