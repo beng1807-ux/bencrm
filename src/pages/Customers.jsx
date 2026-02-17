@@ -46,7 +46,7 @@ const EVENT_TYPE_ICONS = {
 const EVENT_TYPES = ['חתונה','בר מצווה','בת מצווה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'];
 
 // ── KanbanColumn ────────────────────────────────────────────────
-function KanbanColumn({ col, leads, onCardClick, phase }) {
+function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect }) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center gap-2 px-1 mb-1">
@@ -62,7 +62,14 @@ function KanbanColumn({ col, leads, onCardClick, phase }) {
             <span className="text-xs text-gray-400">ריק</span>
           </div>
         )}
-        {leads.map(lead => <KanbanCard key={lead.id} lead={lead} colKey={col.key} onClick={() => onCardClick(lead)} />)}
+        {leads.map(lead => (
+          <KanbanCard key={lead.id} lead={lead} colKey={col.key}
+            onClick={() => onCardClick(lead)}
+            onEdit={onEdit} onDelete={onDelete}
+            isSelected={selected.has(lead.id)}
+            onSelect={onSelect}
+          />
+        ))}
       </div>
     </div>
   );
