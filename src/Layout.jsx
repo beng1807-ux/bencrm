@@ -102,7 +102,7 @@ export default function Layout({ children, currentPageName }) {
         <header className="p-6 flex flex-col items-center border-b border-gray-50">
           <div className="w-32">
             <img
-              src={navSettings.logo_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuC0_uKfsvVKZ4Mpi9MLyf9vBach0cn4cN--SNFGgFjz6tGPezBfgF7zw9Ahm8SSnGw1IZ8XunIiJAugS5SuKBYHnJgZfLwYdUPhz8VIa-2HTwq6T1UUoZXCstl9rGz6LC-F_3YcdRbxd7jhlvCi0sB9tqDRro18Naj5ErM82bTc1WUNSBXLD2oznh9-nzVjx04FzGceugXXCxD7TAiWuR2ZjCHrzPlxUnaitRTYa0O3QWErwEktq68zHcI8uc5mDrhWGlMmlIqYu7nL"}
+              src={navSettings?.logo_url || ""}
               alt="Logo"
               className="w-full h-auto object-contain"
             />
