@@ -119,7 +119,7 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
 }
 
 // ── TableView ────────────────────────────────────────────────────
-function TableView({ leads, onRowClick, phaseFilter }) {
+function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected, onSelect, onSelectAll }) {
   const filtered = phaseFilter === 'lead'
     ? leads.filter(l => LEAD_COLS.some(c => c.key === l.status))
     : phaseFilter === 'customer'
@@ -131,26 +131,27 @@ function TableView({ leads, onRowClick, phaseFilter }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e5dedc] text-[#886c63] text-xs font-bold bg-[#f8f6f6]">
+            <th className="px-4 py-3"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={() => onSelectAll(filtered)} /></th>
             <th className="text-right px-4 py-3">שם</th>
             <th className="text-right px-4 py-3">סוג אירוע</th>
             <th className="text-right px-4 py-3">תאריך</th>
             <th className="text-right px-4 py-3">טלפון</th>
             <th className="text-right px-4 py-3">סטטוס</th>
+            <th className="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
           {filtered.length === 0 && (
-            <tr><td colSpan={5} className="text-center text-[#886c63] py-10">לא נמצאו רשומות</td></tr>
+            <tr><td colSpan={7} className="text-center text-[#886c63] py-10">לא נמצאו רשומות</td></tr>
           )}
           {filtered.map(lead => {
             const col = ALL_COLS.find(c => c.key === lead.status);
             const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌' };
+            const isSelected = selected.has(lead.id);
             return (
-              <tr
-                key={lead.id}
-                onClick={() => onRowClick(lead)}
-                className="border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors"
-              >
+              <tr key={lead.id} onClick={() => onRowClick(lead)}
+                className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
+                <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => onSelect(lead.id)} /></td>
                 <td className="px-4 py-3 font-bold text-[#181311]">
                   {lead.contact_name}
                   {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
@@ -164,6 +165,12 @@ function TableView({ leads, onRowClick, phaseFilter }) {
                     <span className={`w-1.5 h-1.5 rounded-full ${col?.dot || 'bg-gray-400'}`} />
                     {STATUS_LABELS[lead.status] || lead.status}
                   </span>
+                </td>
+                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-1">
+                    <button onClick={e => { e.stopPropagation(); onEdit(lead); }} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={e => { e.stopPropagation(); onDelete(lead.id); }} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </td>
               </tr>
             );
