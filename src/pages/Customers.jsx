@@ -432,7 +432,8 @@ export default function Customers() {
                 {CUSTOMER_COLS.map(col => (
                   <KanbanColumn key={col.key} col={col} phase="customer"
                     leads={filteredLeads.filter(l => l.status === col.key)}
-                    onCardClick={openDetails} />
+                    onCardClick={openDetails} onEdit={openEdit} onDelete={deleteLead}
+                    selected={multiSelected} onSelect={toggleSelect} />
                 ))}
               </div>
             </div>
