@@ -13,6 +13,12 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     const loadData = async () => {
       try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) {
+          // User not authenticated - this is OK for public pages
+          return;
+        }
+
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
@@ -61,15 +67,9 @@ export default function Layout({ children, currentPageName }) {
 
   const menuItems = isAdmin ? adminMenuItems : djMenuItems;
 
+  // No layout for non-authenticated users (public pages handle their own layout)
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: bgColor }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }}></div>
-          <p style={{ color: headingColor, fontFamily }}>טוען...</p>
-        </div>
-      </div>
-    );
+    return children;
   }
 
   return (
