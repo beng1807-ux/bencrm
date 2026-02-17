@@ -69,6 +69,35 @@ export default function Management() {
     }
   };
 
+  const saveNavSettings = async () => {
+    try {
+      if (navSettings.id) {
+        await base44.entities.NavSettings.update(navSettings.id, navSettings);
+      } else {
+        const created = await base44.entities.NavSettings.create(navSettings);
+        setNavSettings(created);
+      }
+      toast.success('הגדרות הניווט נשמרו');
+    } catch (error) {
+      toast.error('שגיאה בשמירה');
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setNavSettings(prev => ({ ...prev, logo_url: file_url }));
+      toast.success('הלוגו הועלה בהצלחה');
+    } catch {
+      toast.error('שגיאה בהעלאת הלוגו');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
   const savePackage = async (pkg) => {
     try {
       if (pkg.id) {
