@@ -405,6 +405,70 @@ export default function Management() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="nav">
+          <Card>
+            <CardHeader>
+              <CardTitle>סרגל ניווט</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo upload */}
+              <div>
+                <Label className="mb-2 block">לוגו</Label>
+                <div className="flex items-center gap-4">
+                  {navSettings?.logo_url && (
+                    <img src={navSettings.logo_url} alt="לוגו נוכחי" className="h-12 object-contain rounded border p-1" />
+                  )}
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
+                    <Upload size={16} />
+                    {logoUploading ? 'מעלה...' : 'העלה לוגו'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
+                  </label>
+                  {navSettings?.logo_url && (
+                    <button
+                      onClick={() => setNavSettings(prev => ({ ...prev, logo_url: '' }))}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      הסר לוגו
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Nav texts */}
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold text-gray-500 mb-3">טקסטי פריטי ניווט</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { key: 'nav_dashboard', label: 'לוח בקרה' },
+                    { key: 'nav_leads', label: 'לידים' },
+                    { key: 'nav_customers', label: 'לקוחות' },
+                    { key: 'nav_events', label: 'אירועים' },
+                    { key: 'nav_calendar', label: 'יומן' },
+                    { key: 'nav_djs', label: 'תקליטנים' },
+                    { key: 'nav_tasks', label: 'משימות' },
+                    { key: 'nav_settings', label: 'הגדרות' },
+                    { key: 'nav_logout', label: 'התנתקות' },
+                  ].map(({ key, label }) => (
+                    <div key={key}>
+                      <Label>{label}</Label>
+                      <Input
+                        value={navSettings?.[key] ?? label}
+                        onChange={e => setNavSettings(prev => ({ ...prev, [key]: e.target.value }))}
+                        dir="rtl"
+                        placeholder={label}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button onClick={saveNavSettings} className="w-full bg-orange-500 hover:bg-orange-600">
+                שמור סרגל ניווט
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="dashboard_texts">
           <Card>
             <CardHeader>
