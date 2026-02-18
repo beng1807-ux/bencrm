@@ -229,45 +229,52 @@ export default function Events() {
           </div>
         </div>
 
-      {/* Cards View */}
-      {viewMode === 'cards' && (
-        <div className="grid grid-cols-1 gap-4">
-          {events.map(event => {
-            const customer = customers.find(c => c.id === event.customer_id);
-            const dj = djs.find(d => d.id === event.dj_id);
-            const isSelected = selected.has(event.id);
-            return (
-              <div key={event.id}
-                className={`bg-white p-4 rounded-xl shadow-sm border transition-all hover:shadow-md
-                  ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-[#e5dedc] hover:border-primary/20'}`}
-                onClick={() => openEdit(event)}>
-                <div className="flex items-start gap-3">
-                  <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => toggleSelect(event.id, e)} className="mt-1 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <h3 className="font-bold text-[#181311]">{event.event_type}</h3>
-                      <Badge className={getStatusColor(event.event_status)}>{STATUS_LABELS[event.event_status] || event.event_status}</Badge>
-                      <Badge className={getPaymentColor(event.payment_status)}>{PAYMENT_LABELS[event.payment_status] || event.payment_status}</Badge>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-[#886c63]">
-                      <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" />{customer?.name || '—'}</div>
-                      <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{new Date(event.event_date).toLocaleDateString('he-IL')}</div>
-                      {event.location && <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{event.location}</div>}
-                      {dj && <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" />DJ: {dj.name}</div>}
-                    </div>
+        {/* Cards View */}
+        {viewMode === 'cards' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+            {filteredEvents.map(event => {
+              const customer = customers.find(c => c.id === event.customer_id);
+              const dj = djs.find(d => d.id === event.dj_id);
+              const isCancelled = event.event_status === 'CANCELLED';
+              return (
+                <div key={event.id}
+                  onClick={() => openEdit(event)}
+                  className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''}`}>
+                  <div className="absolute top-6 left-6">
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${getStatusColor(event.event_status)}`}>
+                      {STATUS_LABELS[event.event_status]}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <p className="text-xl font-black" style={{ color: PRIMARY }}>₪{event.price_total?.toLocaleString()}</p>
-                    <button onClick={e => openEdit(event, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={e => deleteEvent(event.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  <div className="mb-6 pr-8">
+                    <h4 className={`text-xl font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</h4>
+                    <p className="text-sm font-bold text-slate-400">{customer?.name || 'לא משויך ללקוח'} {event.location ? `• ${event.location}` : ''}</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Calendar className="w-5 h-5" />
+                      <span className="text-sm font-bold">{new Date(event.event_date).toLocaleDateString('he-IL')}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-900 font-black">
+                      <TrendingUp className="w-5 h-5" />
+                      <span>₪{event.price_total?.toLocaleString()}</span>
+                    </div>
+                    {dj && (
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <Music className="w-5 h-5" />
+                        <span className="text-sm font-bold">{dj.name}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+              );
+            })}
+            {filteredEvents.length === 0 && (
+              <div className="col-span-full bg-white rounded-xl p-12 text-center text-slate-500 border border-slate-200">
+                אין אירועים התואמים את הסינון
               </div>
-            );
-          })}
-          {events.length === 0 && <div className="bg-white rounded-xl p-12 text-center text-[#886c63] border border-[#e5dedc]">אין אירועים במערכת</div>}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
       {/* Table View */}
       {viewMode === 'table' && (
