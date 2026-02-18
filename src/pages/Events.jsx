@@ -8,17 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, DollarSign, FileText, User, MapPin, Plus, Pencil, Trash2 } from 'lucide-react';
-import ViewToggle from '@/components/shared/ViewToggle';
+import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 
-const PRIMARY = '#e94f1c';
+const PRIMARY = '#ec5b13';
 
 const STATUS_LABELS = { PENDING: 'ממתין', CONFIRMED: 'מאושר', IN_PROGRESS: 'בתהליך', COMPLETED: 'הושלם', CANCELLED: 'בוטל' };
 const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', DEPOSIT_PAID: 'שולמה מקדמה', PAID_FULL: 'שולם במלואו' };
 
-const getStatusColor = (s) => ({ PENDING:'bg-gray-100 text-gray-700', CONFIRMED:'bg-blue-100 text-blue-700', IN_PROGRESS:'bg-yellow-100 text-yellow-700', COMPLETED:'bg-green-100 text-green-700', CANCELLED:'bg-red-100 text-red-700' }[s] || 'bg-gray-100 text-gray-700');
-const getPaymentColor = (s) => ({ PENDING:'bg-red-100 text-red-700', DEPOSIT_PAID:'bg-yellow-100 text-yellow-700', PAID_FULL:'bg-green-100 text-green-700' }[s] || 'bg-gray-100 text-gray-700');
+const getStatusColor = (s) => ({ PENDING:'bg-orange-50 text-orange-500', CONFIRMED:'bg-emerald-50 text-emerald-500', IN_PROGRESS:'bg-amber-50 text-amber-500', COMPLETED:'bg-green-50 text-green-500', CANCELLED:'bg-red-50 text-red-500' }[s] || 'bg-slate-50 text-slate-500');
+const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID:'bg-amber-50 text-amber-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
 
 export default function Events() {
   const [events, setEvents] = useState([]);
