@@ -55,6 +55,7 @@ export default function Management() {
         setSettings(created);
       }
       toast.success('ההגדרות נשמרו בהצלחה');
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('שגיאה בשמירת ההגדרות');
