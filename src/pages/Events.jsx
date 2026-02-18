@@ -98,28 +98,136 @@ export default function Events() {
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }} /></div>;
 
+  const thisMonth = events.filter(e => {
+    const d = new Date(e.event_date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const totalRevenue = thisMonth.reduce((sum, e) => sum + (e.price_total || 0), 0);
+  const confirmedCount = events.filter(e => e.event_status === 'CONFIRMED').length;
+  const pendingContracts = events.filter(e => e.contract_status === 'SENT' || e.contract_status === 'DRAFT').length;
+
+  const filteredEvents = events.filter(e => {
+    const matchType = filterType === 'ALL' || e.event_type === filterType;
+    const matchSearch = !searchTerm || 
+      e.event_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customers.find(c => c.id === e.customer_id)?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchType && matchSearch;
+  });
+
   return (
-    <div className="space-y-5" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-[#181311] tracking-tight">אירועים</h1>
-          <p className="mt-1 font-medium text-[#886c63] text-sm">ניהול אירועים ותשלומים</p>
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black text-slate-900 mb-2">חגיגה של הצלחה! 🎉</h2>
+          <p className="text-slate-500 font-medium max-w-md">החודש הזה אנחנו שוברים שיאים. האירועים שלכם הופכים לרגעים בלתי נשכחים.</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
-          <Plus className="w-4 h-4 ml-2" />אירוע חדש
-        </Button>
+        <div className="flex items-center gap-8 relative z-10">
+          <div className="relative flex items-center justify-center w-28 h-28">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle className="text-slate-200" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeWidth="8" />
+              <circle className="text-primary" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeDasharray="301.59" strokeDashoffset={301.59 * (1 - confirmedCount / (confirmedCount + 8))} strokeLinecap="round" strokeWidth="10" />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+              <span className="text-2xl font-black text-slate-900">{confirmedCount}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">מתוך {confirmedCount + 8}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold text-slate-400">אירועים שנסגרו החודש</p>
+            <p className="text-xl font-black text-primary">{Math.round((confirmedCount / (confirmedCount + 8)) * 100)}% ביצוע יעדים</p>
+          </div>
+        </div>
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+          <Music className="absolute bottom-4 left-40 w-10 h-10 -rotate-12" />
+          <Music className="absolute top-10 left-1/2 w-12 h-12" />
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-        {selected.size > 0 && (
-          <Button variant="destructive" size="sm" onClick={deleteSelected}>
-            <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
-          </Button>
-        )}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-full">+12%</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">אירועים החודש</p>
+          <h3 className="text-3xl font-extrabold mt-1">{thisMonth.length}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+              <FileText className="w-6 h-6" />
+            </div>
+            <span className="text-amber-500 text-xs font-bold bg-amber-500/10 px-2 py-1 rounded-full">בהמתנה</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">חוזים פתוחים</p>
+          <h3 className="text-3xl font-extrabold mt-1">{pendingContracts}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded-full">+18%</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">הכנסות החודש</p>
+          <h3 className="text-3xl font-extrabold mt-1">₪{totalRevenue.toLocaleString()}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-500">
+              <User className="w-6 h-6" />
+            </div>
+            <span className="text-slate-500 text-xs font-bold bg-slate-500/10 px-2 py-1 rounded-full">חדש</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">לידים חדשים</p>
+          <h3 className="text-3xl font-extrabold mt-1">28</h3>
+        </div>
       </div>
+
+      {/* Main Container */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* Toolbar */}
+        <div className="p-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button onClick={() => setViewMode('table')}
+                className={`px-6 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <List className="w-4 h-4" />תצוגת רשימה
+              </button>
+              <button onClick={() => setViewMode('cards')}
+                className={`px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <LayoutGrid className="w-4 h-4" />תצוגת כרטיסים
+              </button>
+            </div>
+            <div className="h-6 w-px bg-slate-200" />
+            <div className="flex items-center gap-4">
+              <button onClick={() => setFilterType('ALL')} className={`text-sm font-black pb-1 ${filterType === 'ALL' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>כל האירועים</button>
+              <button onClick={() => setFilterType('חתונה')} className={`text-sm font-bold pb-1 ${filterType === 'חתונה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>חתונות</button>
+              <button onClick={() => setFilterType('אירוע חברה')} className={`text-sm font-bold pb-1 ${filterType === 'אירוע חברה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>אירועי חברה</button>
+              <button onClick={() => setFilterType('יום הולדת')} className={`text-sm font-bold pb-1 ${filterType === 'יום הולדת' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>מסיבות</button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input className="pr-10 w-64 bg-slate-50 border-slate-200" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            </div>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />סינון מתקדם
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />ייצוא
+            </Button>
+            <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+              <Plus className="w-4 h-4 ml-2" />אירוע חדש
+            </Button>
+          </div>
+        </div>
 
       {/* Cards View */}
       {viewMode === 'cards' && (
