@@ -184,6 +184,7 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
 // ── Main Page ────────────────────────────────────────────────────
 export default function Customers() {
   const [leads, setLeads] = useState([]);
+  const [customerSettings, setCustomerSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEventType, setFilterEventType] = useState('ALL');
