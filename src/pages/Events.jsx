@@ -276,50 +276,96 @@ export default function Events() {
           </div>
         )}
 
-      {/* Table View */}
-      {viewMode === 'table' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#e5dedc] bg-[#f8f6f6] text-[#886c63] text-xs font-bold">
-                <th className="px-4 py-3"><Checkbox checked={selected.size === events.length && events.length > 0} onCheckedChange={toggleAll} /></th>
-                <th className="text-right px-4 py-3">לקוח</th>
-                <th className="text-right px-4 py-3">סוג אירוע</th>
-                <th className="text-right px-4 py-3">תאריך</th>
-                <th className="text-right px-4 py-3">מחיר</th>
-                <th className="text-right px-4 py-3">סטטוס</th>
-                <th className="text-right px-4 py-3">תשלום</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.length === 0 && <tr><td colSpan={8} className="text-center text-[#886c63] py-10">אין אירועים</td></tr>}
-              {events.map(event => {
-                const customer = customers.find(c => c.id === event.customer_id);
-                const isSelected = selected.has(event.id);
-                return (
-                  <tr key={event.id} className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
-                    onClick={() => openEdit(event)}>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(event.id, { stopPropagation: () => {} })} /></td>
-                    <td className="px-4 py-3 font-bold text-[#181311]">{customer?.name || '—'}</td>
-                    <td className="px-4 py-3 text-[#886c63]">{event.event_type}</td>
-                    <td className="px-4 py-3 text-[#886c63]">{new Date(event.event_date).toLocaleDateString('he-IL')}</td>
-                    <td className="px-4 py-3 font-bold" style={{ color: PRIMARY }}>₪{event.price_total?.toLocaleString()}</td>
-                    <td className="px-4 py-3"><Badge className={getStatusColor(event.event_status)}>{STATUS_LABELS[event.event_status]}</Badge></td>
-                    <td className="px-4 py-3"><Badge className={getPaymentColor(event.payment_status)}>{PAYMENT_LABELS[event.payment_status]}</Badge></td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button onClick={e => openEdit(event, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={e => deleteEvent(event.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* Table View */}
+        {viewMode === 'table' && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 text-slate-500 text-sm font-bold uppercase tracking-wider">
+                  <th className="px-8 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">פרטי האירוע</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">תאריך</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">לקוח</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">ספק מוביל</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">מחיר</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">סטטוס</th>
+                  <th className="px-8 py-5 border-b border-slate-100"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredEvents.length === 0 && (
+                  <tr><td colSpan={7} className="text-center text-slate-500 py-10">אין אירועים התואמים את הסינון</td></tr>
+                )}
+                {filteredEvents.map(event => {
+                  const customer = customers.find(c => c.id === event.customer_id);
+                  const dj = djs.find(d => d.id === event.dj_id);
+                  const isCancelled = event.event_status === 'CANCELLED';
+                  const eventDate = new Date(event.event_date);
+                  const dayName = eventDate.toLocaleDateString('he-IL', { weekday: 'long' });
+                  
+                  return (
+                    <tr key={event.id} 
+                      onClick={() => openEdit(event)}
+                      className={`hover:bg-slate-50/50 transition-all group cursor-pointer ${isCancelled ? 'opacity-50' : ''}`}>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCancelled ? 'bg-red-50' : 'bg-orange-50'}`}>
+                            {isCancelled ? (
+                              <span className="text-red-500 text-xl">✕</span>
+                            ) : (
+                              <Calendar className="text-primary w-5 h-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className={`font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</p>
+                            <p className="text-[10px] font-bold text-slate-400">{customer?.name || 'לא משויך'} {event.location ? `• ${event.location}` : ''}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6">
+                        <p className="text-sm font-bold text-slate-700">{eventDate.toLocaleDateString('he-IL')}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">{dayName}</p>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className="text-sm font-black text-slate-700">{customer?.name || '—'}</span>
+                      </td>
+                      <td className="px-6 py-6 text-sm font-bold text-slate-600">{dj?.name || <span className="italic text-slate-400">טרם נקבע</span>}</td>
+                      <td className="px-6 py-6">
+                        <span className="text-base font-black text-slate-900">₪{event.price_total?.toLocaleString()}</span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className={`text-[10px] font-black px-3 py-1 rounded-full ${getStatusColor(event.event_status)}`}>
+                          {STATUS_LABELS[event.event_status]}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-left" onClick={e => e.stopPropagation()}>
+                        <button onClick={e => { e.stopPropagation(); openEdit(event); }} className="p-2 text-slate-300 hover:text-primary transition-colors">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="p-6 border-t border-slate-200 flex items-center justify-between">
+          <p className="text-sm text-slate-500">מציג 1-{Math.min(filteredEvents.length, 10)} מתוך {filteredEvents.length} אירועים</p>
+          <div className="flex items-center gap-2">
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+              ❮
+            </button>
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">1</button>
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm">2</button>
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm">3</button>
+            <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50">
+              ❯
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
