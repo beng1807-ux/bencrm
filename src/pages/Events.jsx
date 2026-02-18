@@ -328,7 +328,9 @@ export default function Events() {
                       <td className="px-6 py-6">
                         <span className="text-sm font-black text-slate-700">{customer?.name || '—'}</span>
                       </td>
-                      <td className="px-6 py-6 text-sm font-bold text-slate-600">{dj?.name || <span className="italic text-slate-400">טרם נקבע</span>}</td>
+                      <td className="px-6 py-6 text-sm font-bold text-slate-600">
+                        {dj?.name || <span className="italic text-slate-400">טרם נקבע</span>}
+                      </td>
                       <td className="px-6 py-6">
                         <span className="text-base font-black text-slate-900">₪{event.price_total?.toLocaleString()}</span>
                       </td>
