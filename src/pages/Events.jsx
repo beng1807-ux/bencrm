@@ -31,6 +31,8 @@ export default function Events() {
   const [editData, setEditData] = useState({});
   const [createOpen, setCreateOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({});
+  const [filterType, setFilterType] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => { loadData(); }, []);
 
