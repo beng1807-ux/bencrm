@@ -82,6 +82,7 @@ export default function Management() {
         setNavSettings(created);
       }
       toast.success('הגדרות הניווט נשמרו');
+      setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       toast.error('שגיאה בשמירה');
     }
