@@ -200,17 +200,26 @@ export default function Customers() {
   const [editOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState({});
 
-  useEffect(() => { loadLeads(); }, []);
+  useEffect(() => { loadData(); }, []);
 
-  const loadLeads = async () => {
+  const loadData = async () => {
     try {
-      const data = await base44.entities.Lead.list('-created_date');
-      setLeads(data);
+      const [leadsData, csList] = await Promise.all([
+        base44.entities.Lead.list('-created_date'),
+        base44.entities.CustomerSettings.list(),
+      ]);
+      setLeads(leadsData);
+      setCustomerSettings(csList[0] || {});
     } catch {
       toast.error('שגיאה בטעינת נתונים');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadLeads = async () => {
+    const data = await base44.entities.Lead.list('-created_date');
+    setLeads(data);
   };
 
   const openDetails = async (lead) => {
