@@ -450,12 +450,21 @@ export default function Events() {
               <Label>לקוח *</Label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
-                    <SelectTrigger><SelectValue placeholder={customers.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
-                    <SelectContent>
-                      {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {(() => {
+                    const closedLeads = leads.filter(l => ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(l.status));
+                    const allOptions = [
+                      ...customers.map(c => ({ id: c.id, name: c.name, type: 'customer' })),
+                      ...closedLeads.map(l => ({ id: l.id, name: l.contact_name, type: 'lead' })),
+                    ];
+                    return (
+                      <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
+                        <SelectTrigger><SelectValue placeholder={allOptions.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
+                        <SelectContent>
+                          {allOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    );
+                  })()}
                 </div>
                 <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0">
                   <Plus className="w-4 h-4 ml-1" />לקוח חדש
