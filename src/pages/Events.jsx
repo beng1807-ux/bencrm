@@ -33,6 +33,8 @@ export default function Events() {
   const [newEvent, setNewEvent] = useState({});
   const [filterType, setFilterType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
 
   useEffect(() => { loadData(); }, []);
 
@@ -94,6 +96,19 @@ export default function Events() {
     await loadData();
     toast.success('אירוע חדש נוצר');
     setCreateOpen(false); setNewEvent({});
+  };
+
+  const createCustomer = async () => {
+    if (!newCustomer.name || !newCustomer.phone || !newCustomer.email) {
+      toast.error('יש למלא את כל השדות');
+      return;
+    }
+    const created = await base44.entities.Customer.create(newCustomer);
+    await loadData();
+    setNewEvent({ ...newEvent, customer_id: created.id });
+    setNewCustomerOpen(false);
+    setNewCustomer({ name: '', phone: '', email: '' });
+    toast.success('לקוח חדש נוצר');
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }} /></div>;
@@ -421,12 +436,20 @@ export default function Events() {
         <DialogContent className="max-w-2xl" dir="rtl">
           <DialogHeader><DialogTitle>אירוע חדש</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
+            <div className="col-span-2">
               <Label>לקוח *</Label>
-              <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר לקוח" /></SelectTrigger>
-                <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="בחר לקוח" /></SelectTrigger>
+                  <SelectContent>
+                    {customers.length === 0 && <SelectItem value="none" disabled>אין לקוחות</SelectItem>}
+                    {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0">
+                  <Plus className="w-4 h-4 ml-1" />לקוח חדש
+                </Button>
+              </div>
             </div>
             <div><Label>תאריך *</Label><Input type="date" value={newEvent.event_date || ''} onChange={e => setNewEvent({...newEvent, event_date: e.target.value})} /></div>
             <div>
@@ -447,6 +470,30 @@ export default function Events() {
             </div>
             <div className="col-span-2"><Label>מיקום</Label><Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} /></div>
             <div className="col-span-2"><Button onClick={createEvent} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>צור אירוע</Button></div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Customer Dialog */}
+      <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader><DialogTitle>לקוח חדש</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <Label>שם *</Label>
+              <Input value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} placeholder="שם מלא" />
+            </div>
+            <div>
+              <Label>טלפון *</Label>
+              <Input value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="050-1234567" />
+            </div>
+            <div>
+              <Label>אימייל *</Label>
+              <Input type="email" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} placeholder="example@email.com" />
+            </div>
+            <Button onClick={createCustomer} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+              צור לקוח
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
