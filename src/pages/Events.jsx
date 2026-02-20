@@ -45,16 +45,17 @@ export default function Events() {
   }, [createOpen]);
 
   const loadData = async () => {
-    try {
-      const [e, c, p, d] = await Promise.all([
-        base44.entities.Event.list('-event_date'),
-        base44.entities.Customer.list(),
-        base44.entities.Package.filter({ active: true }),
-        base44.entities.DJ.filter({ status: 'ACTIVE' }),
-      ]);
-      setEvents(e); setCustomers(c); setPackages(p); setDJs(d);
-    } catch { toast.error('שגיאה בטעינת נתונים'); }
-    finally { setLoading(false); }
+    const results = await Promise.allSettled([
+      base44.entities.Event.list('-event_date'),
+      base44.entities.Customer.list(),
+      base44.entities.Package.filter({ active: true }),
+      base44.entities.DJ.filter({ status: 'ACTIVE' }),
+    ]);
+    setEvents(results[0].status === 'fulfilled' ? results[0].value : []);
+    setCustomers(results[1].status === 'fulfilled' ? results[1].value : []);
+    setPackages(results[2].status === 'fulfilled' ? results[2].value : []);
+    setDJs(results[3].status === 'fulfilled' ? results[3].value : []);
+    setLoading(false);
   };
 
   const toggleSelect = (id, e) => { e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
