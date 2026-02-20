@@ -95,14 +95,32 @@ export default function Events() {
     const depositAmount = editData.deposit_amount || (priceTotal * 0.3);
     const balanceAmount = priceTotal - (editData.payment_status === 'DEPOSIT_PAID' ? depositAmount : editData.payment_status === 'PAID_FULL' ? priceTotal : 0);
     await base44.entities.Event.update(editData.id, { ...editData, price_total: priceTotal, deposit_amount: depositAmount, balance_amount: balanceAmount });
+    if (editData.customer_id && editData.event_date) {
+      await syncDateToSource(editData.customer_id, editData.event_date);
+    }
     await loadData();
     setEditOpen(false);
     toast.success('האירוע עודכן');
   };
 
+  const syncDateToSource = async (sourceId, newDate) => {
+    const lead = leads.find(l => l.id === sourceId);
+    if (lead) {
+      await base44.entities.Lead.update(sourceId, { event_date: newDate });
+      return;
+    }
+    const customer = customers.find(c => c.id === sourceId);
+    if (customer) {
+      await base44.entities.Customer.update(sourceId, { event_date: newDate });
+    }
+  };
+
   const createEvent = async () => {
     const priceTotal = calculatePrice(newEvent.package_id, newEvent.addon_ids);
     await base44.entities.Event.create({ ...newEvent, price_total: priceTotal, deposit_amount: priceTotal * 0.3, balance_amount: priceTotal, payment_status: 'PENDING', contract_status: 'DRAFT', event_status: 'PENDING' });
+    if (newEvent.customer_id && newEvent.event_date) {
+      await syncDateToSource(newEvent.customer_id, newEvent.event_date);
+    }
     await loadData();
     toast.success('אירוע חדש נוצר');
     setCreateOpen(false); setNewEvent({});
@@ -457,7 +475,14 @@ export default function Events() {
                       ...closedLeads.map(l => ({ id: l.id, name: l.contact_name, type: 'lead' })),
                     ];
                     return (
-                      <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
+                      <Select value={newEvent.customer_id || ''} onValueChange={v => {
+                        const lead = leads.find(l => l.id === v);
+                        const updatedEvent = { ...newEvent, customer_id: v };
+                        if (lead?.event_date) {
+                          updatedEvent.event_date = lead.event_date;
+                        }
+                        setNewEvent(updatedEvent);
+                      }}>
                         <SelectTrigger><SelectValue placeholder={allOptions.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
                         <SelectContent>
                           {allOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
