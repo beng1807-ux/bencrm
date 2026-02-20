@@ -49,13 +49,15 @@ export default function Events() {
     const results = await Promise.allSettled([
       base44.entities.Event.list('-event_date'),
       base44.entities.Customer.list(),
+      base44.entities.Lead.list(),
       base44.entities.Package.filter({ active: true }),
       base44.entities.DJ.filter({ status: 'ACTIVE' }),
     ]);
     setEvents(results[0].status === 'fulfilled' ? results[0].value : []);
     setCustomers(results[1].status === 'fulfilled' ? results[1].value : []);
-    setPackages(results[2].status === 'fulfilled' ? results[2].value : []);
-    setDJs(results[3].status === 'fulfilled' ? results[3].value : []);
+    setLeads(results[2].status === 'fulfilled' ? results[2].value : []);
+    setPackages(results[3].status === 'fulfilled' ? results[3].value : []);
+    setDJs(results[4].status === 'fulfilled' ? results[4].value : []);
     setLoading(false);
   };
 
