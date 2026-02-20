@@ -38,6 +38,12 @@ export default function Events() {
 
   useEffect(() => { loadData(); }, []);
 
+  useEffect(() => {
+    if (createOpen) {
+      loadData();
+    }
+  }, [createOpen]);
+
   const loadData = async () => {
     try {
       const [e, c, p, d] = await Promise.all([
