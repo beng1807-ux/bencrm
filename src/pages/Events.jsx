@@ -439,13 +439,14 @@ export default function Events() {
             <div className="col-span-2">
               <Label>לקוח *</Label>
               <div className="flex gap-2">
-                <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
-                  <SelectTrigger><SelectValue placeholder="בחר לקוח" /></SelectTrigger>
-                  <SelectContent>
-                    {customers.length === 0 && <SelectItem value="none" disabled>אין לקוחות</SelectItem>}
-                    {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="flex-1">
+                  <Select value={newEvent.customer_id || ''} onValueChange={v => setNewEvent({...newEvent, customer_id: v})}>
+                    <SelectTrigger><SelectValue placeholder={customers.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0">
                   <Plus className="w-4 h-4 ml-1" />לקוח חדש
                 </Button>
