@@ -22,6 +22,7 @@ const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [packages, setPackages] = useState([]);
   const [djs, setDJs] = useState([]);
   const [loading, setLoading] = useState(true);
