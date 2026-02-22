@@ -19,6 +19,16 @@ const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', DEPOSIT_PAID: 'שו
 const getStatusColor = (s) => ({ PENDING:'bg-orange-50 text-orange-500', CONFIRMED:'bg-emerald-50 text-emerald-500', IN_PROGRESS:'bg-amber-50 text-amber-500', COMPLETED:'bg-green-50 text-green-500', CANCELLED:'bg-red-50 text-red-500' }[s] || 'bg-slate-50 text-slate-500');
 const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID:'bg-amber-50 text-amber-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
 
+const CUSTOMER_STATUSES = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL','EVENT_DONE'];
+
+const getCustomerName = (customerId, customers, leads) => {
+  const customer = customers.find(c => c.id === customerId);
+  if (customer) return customer.name;
+  const lead = leads.find(l => l.id === customerId);
+  if (lead) return lead.contact_name;
+  return 'לא משויך ללקוח';
+};
+
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -36,6 +46,7 @@ export default function Events() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
