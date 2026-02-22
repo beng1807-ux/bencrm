@@ -287,21 +287,24 @@ export default function Events() {
         {viewMode === 'cards' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
             {filteredEvents.map(event => {
-              const customer = customers.find(c => c.id === event.customer_id);
+              const customerName = getCustomerName(event.customer_id, customers, leads);
               const dj = djs.find(d => d.id === event.dj_id);
               const isCancelled = event.event_status === 'CANCELLED';
               return (
                 <div key={event.id}
                   onClick={() => openEdit(event)}
-                  className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''}`}>
-                  <div className="absolute top-6 left-6">
+                  className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''} ${selected.has(event.id) ? 'border-primary/40 bg-primary/5' : ''}`}>
+                  <div className="absolute top-6 left-6 flex items-center gap-2">
                     <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${getStatusColor(event.event_status)}`}>
                       {STATUS_LABELS[event.event_status]}
                     </span>
                   </div>
+                  <div className="absolute top-6 right-6" onClick={e => e.stopPropagation()}>
+                    <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id, { stopPropagation: () => {} })} />
+                  </div>
                   <div className="mb-6 pr-8">
                     <h4 className={`text-xl font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</h4>
-                    <p className="text-sm font-bold text-slate-400">{customer?.name || 'לא משויך ללקוח'} {event.location ? `• ${event.location}` : ''}</p>
+                    <p className="text-sm font-bold text-slate-400">{customerName} {event.location ? `• ${event.location}` : ''}</p>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-500">
@@ -350,7 +353,7 @@ export default function Events() {
                   <tr><td colSpan={7} className="text-center text-slate-500 py-10">אין אירועים התואמים את הסינון</td></tr>
                 )}
                 {filteredEvents.map(event => {
-                  const customer = customers.find(c => c.id === event.customer_id);
+                  const customerName = getCustomerName(event.customer_id, customers, leads);
                   const dj = djs.find(d => d.id === event.dj_id);
                   const isCancelled = event.event_status === 'CANCELLED';
                   const eventDate = new Date(event.event_date);
@@ -371,7 +374,7 @@ export default function Events() {
                           </div>
                           <div>
                             <p className={`font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</p>
-                            <p className="text-[10px] font-bold text-slate-400">{customer?.name || 'לא משויך'} {event.location ? `• ${event.location}` : ''}</p>
+                            <p className="text-[10px] font-bold text-slate-400">{customerName} {event.location ? `• ${event.location}` : ''}</p>
                           </div>
                         </div>
                       </td>
@@ -380,7 +383,7 @@ export default function Events() {
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{dayName}</p>
                       </td>
                       <td className="px-6 py-6">
-                        <span className="text-sm font-black text-slate-700">{customer?.name || '—'}</span>
+                        <span className="text-sm font-black text-slate-700">{customerName}</span>
                       </td>
                       <td className="px-6 py-6 text-sm font-bold text-slate-600">
                         {dj?.name || <span className="italic text-slate-400">טרם נקבע</span>}
