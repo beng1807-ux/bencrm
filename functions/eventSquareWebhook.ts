@@ -52,17 +52,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // אבטחה - token ב-URL
-    const url = new URL(req.url);
-    const requiredToken = Deno.env.get('EVENT_SQUARE_TOKEN');
-    if (requiredToken) {
-      const got = url.searchParams.get('token') || '';
-      if (got !== requiredToken) {
-        console.warn('[eventSquareWebhook] ✖ Token mismatch - Unauthorized');
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-    }
-    console.log('[eventSquareWebhook] ✓ Token validated');
+    // אבטחה בוטלה - ללא בדיקת token
+    console.log('[eventSquareWebhook] ✓ No token validation (disabled)');
 
     const base44 = createClientFromRequest(req);
 
