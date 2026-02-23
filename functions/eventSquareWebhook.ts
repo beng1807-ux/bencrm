@@ -62,13 +62,38 @@ Deno.serve(async (req) => {
     }
     console.log('[eventSquareWebhook] ✓ Parsed incoming data:', JSON.stringify(incoming).substring(0, 500));
 
+    // מיפוי שדות אירוע בריבוע (Event Square)
+    // שמות השדות: Contact1Name, Contact1Phone, Contact1EMail, EventTypeName,
+    // ResourceStartTime/isoResourceStartTime, DocID/DocNumber, OpenQty, ResourceName, etc.
+    const contactName = pick(incoming, ['Contact1Name', 'contact_name', 'name', 'customer_name', 'client_name']);
+    const phone = pick(incoming, ['Contact1Phone', 'Contact2Phone', 'BizPhone', 'phone', 'customer_phone', 'client_phone', 'mobile', 'cellphone']);
+    const email = pick(incoming, ['Contact1EMail', 'Contact2EMail', 'email', 'customer_email', 'client_email']);
+    const eventType = pick(incoming, ['EventTypeName', 'event_type', 'eventKind', 'type']);
+    const externalId = pick(incoming, ['DocID', 'DocNumber', 'Event_ExternalID', 'external_event_id', 'deal_id', 'event_id', 'id']);
+    
+    // תאריך - ננסה לחלץ מ-isoResourceStartTime או ResourceStartTime
+    let eventDate = pick(incoming, ['isoResourceStartTime', 'ResourceStartTime', 'event_date', 'eventDate', 'date']);
+    // המרה לפורמט YYYY-MM-DD אם צריך
+    if (eventDate) {
+      try {
+        const d = new Date(eventDate);
+        if (!isNaN(d.getTime())) {
+          eventDate = d.toISOString().split('T')[0];
+        }
+      } catch {}
+    }
+
+    const guestsCount = pick(incoming, ['OpenQty', 'guests_count']);
+    const location = pick(incoming, ['ResourceName', 'location']);
+
     const payload = {
-      contact_name: pick(incoming, ['contact_name', 'name', 'customer_name', 'client_name']),
-      phone: pick(incoming, ['phone', 'customer_phone', 'client_phone', 'mobile', 'cellphone']),
-      email: pick(incoming, ['email', 'customer_email', 'client_email']),
-      event_type: pick(incoming, ['event_type', 'eventKind', 'type']),
-      event_date: pick(incoming, ['event_date', 'eventDate', 'date']),
-      external_event_id: pick(incoming, ['external_event_id', 'deal_id', 'event_id', 'id']),
+      contact_name: contactName,
+      phone: phone,
+      email: email,
+      event_type: eventType,
+      event_date: eventDate,
+      external_event_id: externalId,
+      guests_count: guestsCount ? Number(guestsCount) : undefined,
       source: 'EVENT_SQUARE_IMPORT',
       status: 'NEW',
     };
