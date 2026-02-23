@@ -18,18 +18,13 @@ async function parseIncoming(req) {
     return obj;
   }
 
-  // safe fallback
+  // fallback - try json then text
+  const text = await req.text();
   try {
-    const body = await req.json();
+    const body = JSON.parse(text);
     return body?.data ?? body;
   } catch {
-    const text = await req.text();
-    try {
-      const body = JSON.parse(text);
-      return body?.data ?? body;
-    } catch {
-      throw new Error(`Unsupported content-type: ${contentType}`);
-    }
+    throw new Error(`Unsupported content-type: ${contentType}`);
   }
 }
 
