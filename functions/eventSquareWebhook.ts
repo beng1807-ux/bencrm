@@ -29,10 +29,12 @@ async function parseIncoming(req) {
 }
 
 function pick(obj, keys) {
-  if (!obj) return '';
+  if (!obj || typeof obj !== 'object') return '';
+  const objKeys = Object.keys(obj);
   for (const k of keys) {
-    if (obj.hasOwnProperty(k)) {
-      const v = obj[k];
+    const foundKey = objKeys.find(ok => ok === k);
+    if (foundKey) {
+      const v = obj[foundKey];
       if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
     }
   }
