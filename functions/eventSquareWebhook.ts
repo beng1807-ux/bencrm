@@ -29,79 +29,87 @@ async function parseIncoming(req) {
 }
 
 function pick(obj, keys) {
+  if (!obj) return '';
   for (const k of keys) {
-    const v = obj?.[k];
-    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+    if (obj.hasOwnProperty(k)) {
+      const v = obj[k];
+      if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+    }
   }
   return '';
 }
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
-  console.log(`[eventSquareWebhook] ▶ Request received: ${req.method} ${req.url}`);
+  console.log(`[esWebhook] ▶ ${req.method} ${req.url}`);
 
-  // הגנה: רק POST
   if (req.method !== 'POST') {
-    console.warn(`[eventSquareWebhook] ⚠ Method not allowed: ${req.method}`);
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
   try {
-    // אבטחה בוטלה - ללא בדיקת token
-    console.log('[eventSquareWebhook] ✓ No token validation (disabled)');
-
     const base44 = createClientFromRequest(req);
 
-    // פרסור הנתונים
     let incoming;
     try {
       incoming = await parseIncoming(req);
     } catch (parseErr) {
-      console.error(`[eventSquareWebhook] ✖ Parse error: ${parseErr.message}`);
+      console.error(`[esWebhook] Parse error: ${parseErr.message}`);
       return Response.json({ error: `Parse error: ${parseErr.message}` }, { status: 400 });
     }
-    console.log('[eventSquareWebhook] ✓ Parsed incoming data:', JSON.stringify(incoming).substring(0, 500));
 
-    // מיפוי שדות אירוע בריבוע (Event Square)
-    // שמות השדות: Contact1Name, Contact1Phone, Contact1EMail, EventTypeName,
-    // ResourceStartTime/isoResourceStartTime, DocID/DocNumber, OpenQty, ResourceName, etc.
-    const contactName = pick(incoming, ['Contact1Name', 'contact_name', 'name', 'customer_name', 'client_name']);
-    const phone = pick(incoming, ['Contact1Phone', 'Contact2Phone', 'BizPhone', 'phone', 'customer_phone', 'client_phone', 'mobile', 'cellphone']);
-    const email = pick(incoming, ['Contact1EMail', 'Contact2EMail', 'email', 'customer_email', 'client_email']);
+    const keys = Object.keys(incoming || {});
+    console.log(`[esWebhook] Incoming keys: ${keys.join(', ')}`);
+    console.log(`[esWebhook] Incoming data: ${JSON.stringify(incoming).substring(0, 800)}`);
+
+    // מיפוי שדות אירוע בריבוע
+    const contactName = pick(incoming, ['Contact1Name', 'Contact2Name', 'contact_name', 'name', 'customer_name']);
+    const phone = pick(incoming, ['Contact1Phone', 'Contact2Phone', 'BizPhone', 'phone', 'mobile', 'cellphone']);
+    const email = pick(incoming, ['Contact1EMail', 'Contact2EMail', 'email', 'customer_email']);
     const eventType = pick(incoming, ['EventTypeName', 'event_type', 'eventKind', 'type']);
-    const externalId = pick(incoming, ['DocID', 'DocNumber', 'Event_ExternalID', 'external_event_id', 'deal_id', 'event_id', 'id']);
-    
-    // תאריך - ננסה לחלץ מ-isoResourceStartTime או ResourceStartTime
+    const externalId = pick(incoming, ['DocID', 'DocNumber', 'Event_ExternalID', 'external_event_id', 'deal_id']);
+    const guestsCount = pick(incoming, ['OpenQty', 'guests_count']);
+    const location = pick(incoming, ['ResourceName', 'location']);
+
+    // תאריך אירוע
     let eventDate = pick(incoming, ['isoResourceStartTime', 'ResourceStartTime', 'event_date', 'eventDate', 'date']);
-    // המרה לפורמט YYYY-MM-DD אם צריך
     if (eventDate) {
       try {
-        const d = new Date(eventDate);
-        if (!isNaN(d.getTime())) {
-          eventDate = d.toISOString().split('T')[0];
+        // נסה ISO format ישירות
+        if (eventDate.includes('T')) {
+          eventDate = eventDate.split('T')[0];
+        } else if (eventDate.includes('/')) {
+          // פורמט DD/MM/YYYY HH:MM:SS
+          const parts = eventDate.split(' ')[0].split('/');
+          if (parts.length === 3) {
+            eventDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          }
+        } else {
+          const d = new Date(eventDate);
+          if (!isNaN(d.getTime())) {
+            eventDate = d.toISOString().split('T')[0];
+          }
         }
       } catch {}
     }
 
-    const guestsCount = pick(incoming, ['OpenQty', 'guests_count']);
-    const location = pick(incoming, ['ResourceName', 'location']);
+    console.log(`[esWebhook] Mapped: name=${contactName}, phone=${phone}, type=${eventType}, date=${eventDate}, extId=${externalId}, guests=${guestsCount}`);
 
     const payload = {
       contact_name: contactName,
       phone: phone,
-      email: email,
-      event_type: eventType,
-      event_date: eventDate,
-      external_event_id: externalId,
+      email: email || undefined,
+      event_type: eventType || undefined,
+      event_date: eventDate || undefined,
+      external_event_id: externalId || undefined,
       guests_count: guestsCount ? Number(guestsCount) : undefined,
       source: 'EVENT_SQUARE_IMPORT',
       status: 'NEW',
     };
-    console.log('[eventSquareWebhook] ✓ Mapped payload:', JSON.stringify(payload));
 
     // חובה: לפחות external_event_id או phone
-    if (!payload.external_event_id && !payload.phone) {
-      console.warn('[eventSquareWebhook] ✖ Missing required: no external_event_id and no phone');
+    if (!externalId && !phone) {
+      console.warn(`[esWebhook] Missing required: no external_event_id and no phone`);
       return Response.json(
         { error: 'Missing required field: external_event_id or phone' },
         { status: 400 }
@@ -110,47 +118,34 @@ Deno.serve(async (req) => {
 
     // דדופליקציה
     let existing = [];
-    if (payload.external_event_id) {
-      console.log(`[eventSquareWebhook] 🔍 Checking duplicates by external_event_id: ${payload.external_event_id}`);
+    if (externalId) {
       try {
         existing = await base44.asServiceRole.entities.Lead.filter({
-          external_event_id: payload.external_event_id,
+          external_event_id: externalId,
         });
-      } catch (filterErr) {
-        console.error(`[eventSquareWebhook] ⚠ Filter by external_event_id failed: ${filterErr.message}`);
-      }
+      } catch {}
     }
-    if (existing.length === 0 && payload.phone && payload.event_date) {
-      console.log(`[eventSquareWebhook] 🔍 Checking duplicates by phone+date: ${payload.phone} / ${payload.event_date}`);
+    if (existing.length === 0 && phone && eventDate) {
       try {
         existing = await base44.asServiceRole.entities.Lead.filter({
-          phone: payload.phone,
-          event_date: payload.event_date,
+          phone: phone,
+          event_date: eventDate,
         });
-      } catch (filterErr) {
-        console.error(`[eventSquareWebhook] ⚠ Filter by phone+date failed: ${filterErr.message}`);
-      }
+      } catch {}
     }
 
     if (existing.length > 0) {
-      console.log(`[eventSquareWebhook] ℹ Duplicate found - lead_id: ${existing[0].id}`);
-      return Response.json({
-        success: true,
-        message: 'Lead already exists',
-        lead_id: existing[0].id,
-      });
+      console.log(`[esWebhook] Duplicate found: ${existing[0].id}`);
+      return Response.json({ success: true, message: 'Lead already exists', lead_id: existing[0].id });
     }
 
     // יצירת ליד
-    console.log('[eventSquareWebhook] 📝 Creating new lead...');
     const createdLead = await base44.asServiceRole.entities.Lead.create(payload);
-    const elapsed = Date.now() - startTime;
-    console.log(`[eventSquareWebhook] ✅ Lead created: ${createdLead.id} (${elapsed}ms)`);
+    console.log(`[esWebhook] Lead created: ${createdLead.id} (${Date.now() - startTime}ms)`);
 
     return Response.json({ success: true, lead_id: createdLead.id });
   } catch (error) {
-    const elapsed = Date.now() - startTime;
-    console.error(`[eventSquareWebhook] ❌ Unhandled error (${elapsed}ms):`, error.message, error.stack);
+    console.error(`[esWebhook] Error: ${error.message}`);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
