@@ -42,19 +42,39 @@ function pick(obj, keys) {
 }
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  console.log(`[eventSquareWebhook] ▶ Request received: ${req.method} ${req.url}`);
+
+  // הגנה: רק POST
+  if (req.method !== 'POST') {
+    console.warn(`[eventSquareWebhook] ⚠ Method not allowed: ${req.method}`);
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  }
+
   try {
-    // אבטחה אופציונלית - token ב-URL
+    // אבטחה - token ב-URL
     const url = new URL(req.url);
     const requiredToken = Deno.env.get('EVENT_SQUARE_TOKEN');
     if (requiredToken) {
       const got = url.searchParams.get('token') || '';
       if (got !== requiredToken) {
+        console.warn('[eventSquareWebhook] ✖ Token mismatch - Unauthorized');
         return Response.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
+    console.log('[eventSquareWebhook] ✓ Token validated');
 
     const base44 = createClientFromRequest(req);
-    const incoming = await parseIncoming(req);
+
+    // פרסור הנתונים
+    let incoming;
+    try {
+      incoming = await parseIncoming(req);
+    } catch (parseErr) {
+      console.error(`[eventSquareWebhook] ✖ Parse error: ${parseErr.message}`);
+      return Response.json({ error: `Parse error: ${parseErr.message}` }, { status: 400 });
+    }
+    console.log('[eventSquareWebhook] ✓ Parsed incoming data:', JSON.stringify(incoming).substring(0, 500));
 
     const payload = {
       contact_name: pick(incoming, ['contact_name', 'name', 'customer_name', 'client_name']),
@@ -66,30 +86,43 @@ Deno.serve(async (req) => {
       source: 'EVENT_SQUARE_IMPORT',
       status: 'NEW',
     };
+    console.log('[eventSquareWebhook] ✓ Mapped payload:', JSON.stringify(payload));
 
     // חובה: לפחות external_event_id או phone
     if (!payload.external_event_id && !payload.phone) {
+      console.warn('[eventSquareWebhook] ✖ Missing required: no external_event_id and no phone');
       return Response.json(
         { error: 'Missing required field: external_event_id or phone' },
         { status: 400 }
       );
     }
 
-    // דדופליקציה: external_event_id ואז phone + event_date
+    // דדופליקציה
     let existing = [];
     if (payload.external_event_id) {
-      existing = await base44.asServiceRole.entities.Lead.filter({
-        external_event_id: payload.external_event_id,
-      });
+      console.log(`[eventSquareWebhook] 🔍 Checking duplicates by external_event_id: ${payload.external_event_id}`);
+      try {
+        existing = await base44.asServiceRole.entities.Lead.filter({
+          external_event_id: payload.external_event_id,
+        });
+      } catch (filterErr) {
+        console.error(`[eventSquareWebhook] ⚠ Filter by external_event_id failed: ${filterErr.message}`);
+      }
     }
     if (existing.length === 0 && payload.phone && payload.event_date) {
-      existing = await base44.asServiceRole.entities.Lead.filter({
-        phone: payload.phone,
-        event_date: payload.event_date,
-      });
+      console.log(`[eventSquareWebhook] 🔍 Checking duplicates by phone+date: ${payload.phone} / ${payload.event_date}`);
+      try {
+        existing = await base44.asServiceRole.entities.Lead.filter({
+          phone: payload.phone,
+          event_date: payload.event_date,
+        });
+      } catch (filterErr) {
+        console.error(`[eventSquareWebhook] ⚠ Filter by phone+date failed: ${filterErr.message}`);
+      }
     }
 
     if (existing.length > 0) {
+      console.log(`[eventSquareWebhook] ℹ Duplicate found - lead_id: ${existing[0].id}`);
       return Response.json({
         success: true,
         message: 'Lead already exists',
@@ -97,12 +130,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // יצירת ליד - onNewLead automation ירוץ אוטומטית
+    // יצירת ליד
+    console.log('[eventSquareWebhook] 📝 Creating new lead...');
     const createdLead = await base44.asServiceRole.entities.Lead.create(payload);
+    const elapsed = Date.now() - startTime;
+    console.log(`[eventSquareWebhook] ✅ Lead created: ${createdLead.id} (${elapsed}ms)`);
 
     return Response.json({ success: true, lead_id: createdLead.id });
   } catch (error) {
-    console.error('eventSquareWebhook error:', error);
+    const elapsed = Date.now() - startTime;
+    console.error(`[eventSquareWebhook] ❌ Unhandled error (${elapsed}ms):`, error.message, error.stack);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
