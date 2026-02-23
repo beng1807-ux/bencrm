@@ -62,10 +62,19 @@ Deno.serve(async (req) => {
 
       if (templateList.length > 0) {
         const template = templateList[0];
+        const eventDateFormatted = lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '';
         const messageText = template.template_text
+          // פורמט ישן עם סוגריים מרובעים
           .replace('[שם]', lead.contact_name || '')
-          .replace('[תאריך]', lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '')
-          .replace('[טלפון בן גבאי]', settings.owner_phone || '');
+          .replace('[תאריך]', eventDateFormatted)
+          .replace('[טלפון בן גבאי]', settings.owner_phone || '')
+          // פורמט חדש עם סוגריים מסולסלים
+          .replace('{contact_name}', lead.contact_name || '')
+          .replace('{event_date}', eventDateFormatted)
+          .replace('{event_type}', lead.event_type || '')
+          .replace('{owner_name}', settings.owner_name || '')
+          .replace('{owner_phone}', settings.owner_phone || '')
+          .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
 
         console.log(`[onNewLead] 📝 Message prepared (${messageText.length} chars)`);
 
