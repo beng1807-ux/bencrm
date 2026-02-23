@@ -306,7 +306,7 @@ export default function Events() {
                     </span>
                   </div>
                   <div className="absolute top-6 right-6" onClick={e => e.stopPropagation()}>
-                    <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id, { stopPropagation: () => {} })} />
+                    <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id)} />
                   </div>
                   <div className="mb-6 pr-8">
                     <h4 className={`text-xl font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</h4>
@@ -371,7 +371,7 @@ export default function Events() {
                       onClick={() => openEdit(event)}
                       className={`hover:bg-slate-50/50 transition-all group cursor-pointer ${isCancelled ? 'opacity-50' : ''} ${selected.has(event.id) ? 'bg-primary/5' : ''}`}>
                       <td className="px-4 py-6" onClick={e => e.stopPropagation()}>
-                        <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id, { stopPropagation: () => {} })} />
+                        <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id)} />
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
