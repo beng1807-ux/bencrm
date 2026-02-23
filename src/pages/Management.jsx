@@ -285,39 +285,67 @@ export default function Management() {
 
         <TabsContent value="templates">
           <div className="space-y-4">
-            {templates.map(template => (
-              <Card key={template.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{template.template_name}</span>
-                    <Switch
-                      checked={template.active}
-                      onCheckedChange={v => saveTemplate({...template, active: v})}
+            {templates.map(template => {
+              const placeholderMap = {
+                NEW_LEAD: ['{contact_name}', '{event_date}', '{event_type}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                QUOTE_SENT: ['{customer_name}', '{event_date}', '{price_total}', '{deposit_amount}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                PAY_REMINDER_1: ['{customer_name}', '{event_date}', '{balance}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                PAY_REMINDER_2: ['{customer_name}', '{event_date}', '{balance}', '{owner_name}'],
+                PAY_CONFIRMED: ['{customer_name}', '{event_date}', '{location}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                DJ_ASSIGNED: ['{customer_name}', '{dj_name}', '{dj_phone}', '{event_date}', '{location}', '{event_type}', '{owner_name}', '{owner_phone}'],
+                EVENT_REMINDER: ['{customer_name}', '{event_date}', '{location}', '{dj_name}', '{dj_phone}', '{owner_name}', '{owner_phone}'],
+                THANK_YOU: ['{customer_name}', '{owner_name}', '{owner_phone}'],
+              };
+              const placeholders = placeholderMap[template.template_key] || [];
+              return (
+                <Card key={template.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{template.template_name}</span>
+                      <Switch
+                        checked={template.active}
+                        onCheckedChange={v => saveTemplate({...template, active: v})}
+                      />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      value={template.template_text}
+                      onChange={e => {
+                        const updated = templates.map(t => 
+                          t.id === template.id ? {...t, template_text: e.target.value} : t
+                        );
+                        setTemplates(updated);
+                      }}
+                      className="min-h-[120px]"
+                      dir="rtl"
                     />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={template.template_text}
-                    onChange={e => {
-                      const updated = templates.map(t => 
-                        t.id === template.id ? {...t, template_text: e.target.value} : t
-                      );
-                      setTemplates(updated);
-                    }}
-                    className="min-h-[120px]"
-                    dir="rtl"
-                  />
-                  <Button 
-                    onClick={() => saveTemplate(template)} 
-                    className="mt-3 bg-orange-500 hover:bg-orange-600"
-                    size="sm"
-                  >
-                    שמור תבנית
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                    {placeholders.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <span className="text-xs text-gray-400">משתנים זמינים:</span>
+                        {placeholders.map(p => (
+                          <span key={p} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-mono cursor-pointer hover:bg-orange-100"
+                            onClick={() => {
+                              const updated = templates.map(t => 
+                                t.id === template.id ? {...t, template_text: t.template_text + p} : t
+                              );
+                              setTemplates(updated);
+                            }}
+                          >{p}</span>
+                        ))}
+                      </div>
+                    )}
+                    <Button 
+                      onClick={() => saveTemplate(template)} 
+                      className="mt-3 bg-orange-500 hover:bg-orange-600"
+                      size="sm"
+                    >
+                      שמור תבנית
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </TabsContent>
 
