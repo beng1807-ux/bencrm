@@ -70,11 +70,15 @@ Deno.serve(async (req) => {
 
     if (templateList.length > 0) {
       const template = templateList[0];
+      const eventDateFormatted = new Date(event.event_date).toLocaleDateString('he-IL');
       const messageText = template.template_text
-        .replace('[שם]', customer.name)
-        .replace('[מספר הצעה]', event.id.substring(0, 8))
-        .replace('[תאריך]', new Date(event.event_date).toLocaleDateString('he-IL'))
-        .replace('[טלפון בן גבאי]', settings.owner_phone || '');
+        .replace('{customer_name}', customer.name || '')
+        .replace('{event_date}', eventDateFormatted)
+        .replace('{price_total}', event.price_total?.toLocaleString() || '0')
+        .replace('{deposit_amount}', event.deposit_amount?.toLocaleString() || '0')
+        .replace('{owner_name}', settings.owner_name || '')
+        .replace('{owner_phone}', settings.owner_phone || '')
+        .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
 
       try {
         if (settings.whatsapp_send_mode === 'לוג בלבד') {

@@ -71,11 +71,13 @@ async function sendEventReminder(base44, event, customers, djs, settings) {
 
   const template = templateList[0];
   const messageText = template.template_text
-    .replace('[שם]', customer.name)
-    .replace('[תאריך]', new Date(event.event_date).toLocaleDateString('he-IL'))
-    .replace('[שעה]', '18:00')
-    .replace('[מיקום]', event.location || 'לא צוין')
-    .replace('[שם DJ]', dj?.name || 'לא שובץ');
+    .replace('{customer_name}', customer.name || '')
+    .replace('{event_date}', new Date(event.event_date).toLocaleDateString('he-IL'))
+    .replace('{location}', event.location || 'לא צוין')
+    .replace('{dj_name}', dj?.name || 'לא שובץ')
+    .replace('{dj_phone}', dj?.phone || '')
+    .replace('{owner_name}', settings.owner_name || '')
+    .replace('{owner_phone}', settings.owner_phone || '');
 
   try {
     if (settings.whatsapp_send_mode === 'לוג בלבד') {
@@ -120,7 +122,10 @@ async function sendThankYou(base44, event, customers, settings) {
   if (templateList.length === 0) return;
 
   const template = templateList[0];
-  const messageText = template.template_text.replace('[שם]', customer.name);
+  const messageText = template.template_text
+    .replace('{customer_name}', customer.name || '')
+    .replace('{owner_name}', settings.owner_name || '')
+    .replace('{owner_phone}', settings.owner_phone || '');
 
   try {
     if (settings.whatsapp_send_mode === 'לוג בלבד') {

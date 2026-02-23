@@ -61,11 +61,14 @@ async function sendPaymentReminder(base44, event, customers, settings, reminderN
   if (templateList.length === 0) return;
 
   const template = templateList[0];
+  const eventDateFormatted = new Date(event.event_date).toLocaleDateString('he-IL');
   const messageText = template.template_text
-    .replace('[שם]', customer.name)
-    .replace('[תאריך]', new Date(event.event_date).toLocaleDateString('he-IL'))
-    .replace('[סכום]', event.balance_amount?.toLocaleString() || '0')
-    .replace('[טלפון בן גבאי]', settings.owner_phone || '');
+    .replace('{customer_name}', customer.name || '')
+    .replace('{event_date}', eventDateFormatted)
+    .replace('{balance}', event.balance_amount?.toLocaleString() || '0')
+    .replace('{owner_name}', settings.owner_name || '')
+    .replace('{owner_phone}', settings.owner_phone || '')
+    .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
 
   try {
     if (settings.whatsapp_send_mode === 'לוג בלבד') {

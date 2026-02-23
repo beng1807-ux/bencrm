@@ -47,10 +47,14 @@ Deno.serve(async (req) => {
 
         if (templateList.length > 0) {
           const template = templateList[0];
+          const eventDateFormatted = new Date(eventData.event_date).toLocaleDateString('he-IL');
           const messageText = template.template_text
-            .replace('[שם]', customer.name)
-            .replace('[תאריך]', new Date(eventData.event_date).toLocaleDateString('he-IL'))
-            .replace('[מיקום]', eventData.location || 'לא צוין');
+            .replace('{customer_name}', customer.name || '')
+            .replace('{event_date}', eventDateFormatted)
+            .replace('{location}', eventData.location || 'לא צוין')
+            .replace('{owner_name}', settings.owner_name || '')
+            .replace('{owner_phone}', settings.owner_phone || '')
+            .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
 
           try {
             if (settings.whatsapp_send_mode === 'לוג בלבד') {
