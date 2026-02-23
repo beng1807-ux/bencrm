@@ -72,7 +72,7 @@ export default function Events() {
     setLoading(false);
   };
 
-  const toggleSelect = (id, e) => { e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const toggleSelect = (id) => { setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
   const toggleAll = () => setSelected(prev => prev.size === events.length ? new Set() : new Set(events.map(e => e.id)));
 
   const openEdit = (event, e) => { if (e) e.stopPropagation(); setEditData({...event}); setEditOpen(true); };
