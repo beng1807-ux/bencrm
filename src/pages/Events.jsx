@@ -277,6 +277,11 @@ export default function Events() {
             <Button variant="outline" size="sm" className="flex items-center gap-2">
               <Download className="w-4 h-4" />ייצוא
             </Button>
+            {selected.size > 0 && (
+              <Button variant="destructive" size="sm" onClick={deleteSelected} className="flex items-center gap-2 font-bold">
+                <Trash2 className="w-4 h-4" />מחק {selected.size} נבחרים
+              </Button>
+            )}
             <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold text-white" style={{ backgroundColor: PRIMARY }}>
               <Plus className="w-4 h-4 ml-2" />אירוע חדש
             </Button>
@@ -339,6 +344,7 @@ export default function Events() {
             <table className="w-full text-right border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 text-slate-500 text-sm font-bold uppercase tracking-wider">
+                  <th className="px-4 py-5 border-b border-slate-100"><Checkbox checked={selected.size === filteredEvents.length && filteredEvents.length > 0} onCheckedChange={toggleAll} /></th>
                   <th className="px-8 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">פרטי האירוע</th>
                   <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">תאריך</th>
                   <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">לקוח</th>
@@ -350,7 +356,7 @@ export default function Events() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredEvents.length === 0 && (
-                  <tr><td colSpan={7} className="text-center text-slate-500 py-10">אין אירועים התואמים את הסינון</td></tr>
+                  <tr><td colSpan={8} className="text-center text-slate-500 py-10">אין אירועים התואמים את הסינון</td></tr>
                 )}
                 {filteredEvents.map(event => {
                   const customerName = getCustomerName(event.customer_id, customers, leads);
@@ -362,7 +368,10 @@ export default function Events() {
                   return (
                     <tr key={event.id} 
                       onClick={() => openEdit(event)}
-                      className={`hover:bg-slate-50/50 transition-all group cursor-pointer ${isCancelled ? 'opacity-50' : ''}`}>
+                      className={`hover:bg-slate-50/50 transition-all group cursor-pointer ${isCancelled ? 'opacity-50' : ''} ${selected.has(event.id) ? 'bg-primary/5' : ''}`}>
+                      <td className="px-4 py-6" onClick={e => e.stopPropagation()}>
+                        <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id, { stopPropagation: () => {} })} />
+                      </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCancelled ? 'bg-red-50' : 'bg-orange-50'}`}>
@@ -431,6 +440,26 @@ export default function Events() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader><DialogTitle>עריכת אירוע</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="col-span-2">
+              <Label>לקוח</Label>
+              <Input value={getCustomerName(editData.customer_id, customers, leads)} disabled className="bg-slate-50" />
+            </div>
+            <div>
+              <Label>סוג אירוע</Label>
+              <Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>חבילה</Label>
+              <Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}>
+                <SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger>
+                <SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>תאריך</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>
             <div><Label>מיקום</Label><Input value={editData.location || ''} onChange={e => setEditData({...editData, location: e.target.value})} /></div>
             <div>
@@ -468,7 +497,12 @@ export default function Events() {
               </Select>
             </div>
             <div className="col-span-2"><Label>הערות</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>
-            <div className="col-span-2"><Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button></div>
+            <div className="col-span-2 flex gap-2">
+              <Button onClick={saveEdit} className="flex-1 font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+              <Button variant="destructive" onClick={() => { setEditOpen(false); deleteEvent(editData.id); }} className="font-bold">
+                <Trash2 className="w-4 h-4 ml-1" />מחק
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
