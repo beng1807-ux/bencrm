@@ -163,9 +163,10 @@ export default function Events() {
 
   const filteredEvents = events.filter(e => {
     const matchType = filterType === 'ALL' || e.event_type === filterType;
+    const customerName = getCustomerName(e.customer_id, customers, leads);
     const matchSearch = !searchTerm || 
       e.event_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customers.find(c => c.id === e.customer_id)?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      customerName?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchType && matchSearch;
   });
 

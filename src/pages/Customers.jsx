@@ -246,6 +246,30 @@ export default function Customers() {
         extra = { lost_reason: reason };
       }
       await base44.entities.Lead.update(leadId, { status: newStatus, ...extra });
+
+      // Auto-create event when lead becomes a customer
+      const customerStatuses = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL'];
+      if (customerStatuses.includes(newStatus)) {
+        const existingEvents = await base44.entities.Event.filter({ customer_id: leadId });
+        if (existingEvents.length === 0) {
+          const lead = leads.find(l => l.id === leadId);
+          if (lead) {
+            await base44.entities.Event.create({
+              customer_id: leadId,
+              event_date: lead.event_date,
+              event_type: lead.event_type,
+              event_status: 'PENDING',
+              payment_status: 'PENDING',
+              contract_status: 'DRAFT',
+              price_total: 0,
+              deposit_amount: 0,
+              balance_amount: 0,
+            });
+            toast.success('אירוע חדש נוצר אוטומטית');
+          }
+        }
+      }
+
       await loadLeads();
       setSelectedLead(prev => ({ ...prev, status: newStatus }));
       toast.success('הסטטוס עודכן');
