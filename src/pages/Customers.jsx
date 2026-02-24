@@ -285,7 +285,15 @@ export default function Customers() {
 
   const closeDeal = async (leadId) => {
     if (!confirm('לסגור עסקה? הליד ישנה סטטוס ל-"נסגרה עסקה"')) return;
-    await updateStatus(leadId, 'DEAL_CLOSED');
+    await base44.entities.Lead.update(leadId, { status: 'DEAL_CLOSED' });
+    toast.info('יוצר לקוח ואירוע...');
+    const response = await base44.functions.invoke('dealClosedHandler', { lead_id: leadId });
+    if (response.data?.success) {
+      toast.success('עסקה נסגרה — לקוח ואירוע נוצרו');
+    } else {
+      toast.success('סטטוס עודכן');
+    }
+    await loadLeads();
   };
 
   const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
