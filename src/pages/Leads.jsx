@@ -327,6 +327,21 @@ export default function Leads() {
                   </Select>
                 </div>
 
+                {selectedLead.status !== 'DEAL_CLOSED' && selectedLead.status !== 'WAITING_PAYMENT' && selectedLead.status !== 'DEPOSIT_PAID' && selectedLead.status !== 'PAID_FULL' && selectedLead.status !== 'EVENT_DONE' && (
+                  <Button
+                    onClick={() => closeDeal(selectedLead)}
+                    disabled={closingDeal}
+                    className="w-full bg-green-600 hover:bg-green-700 font-bold text-white"
+                  >
+                    {closingDeal ? (
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 ml-2" />
+                    )}
+                    {closingDeal ? 'סוגר עסקה...' : 'סגור עסקה (צור לקוח + אירוע)'}
+                  </Button>
+                )}
+
                 <Button variant="destructive" onClick={() => deleteLead(selectedLead.id)} className="w-full">
                   <Trash2 className="w-4 h-4 ml-2" />
                   מחק ליד
