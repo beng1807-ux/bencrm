@@ -4,13 +4,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error('[onQuoteSent] Failed to parse body:', e.message);
-      return Response.json({ error: 'Failed to parse request body' }, { status: 400 });
-    }
+    const rawBody = await req.text();
+    console.log(`[onQuoteSent] RAW BODY: ${rawBody.substring(0, 500)}`);
+    
+    const body = JSON.parse(rawBody);
+    console.log(`[onQuoteSent] BODY KEYS: ${Object.keys(body).join(', ')}`);
 
     const lead = body.data;
     const old_data = body.old_data;
