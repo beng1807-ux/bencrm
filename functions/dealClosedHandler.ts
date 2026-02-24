@@ -3,44 +3,49 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const body = await req.json();
-    console.log(`[dealClosedHandler] BODY KEYS: ${Object.keys(body).join(', ')}`);
+    const leadId = body.lead_id;
 
-    // Support both automation payload format and manual invocation
-    const lead = body.data;
-    const old_data = body.old_data;
+    if (!leadId) {
+      return Response.json({ error: 'lead_id is required' }, { status: 400 });
+    }
 
-    console.log(`[dealClosedHandler] Status check: current=${lead?.status}, old=${old_data?.status}, lead_id=${lead?.id}`);
+    console.log(`[dealClosedHandler] Processing lead: ${leadId}`);
 
+    // Fetch the lead
+    const leads = await base44.asServiceRole.entities.Lead.filter({ id: leadId });
+    const lead = leads[0];
     if (!lead) {
-      return Response.json({ message: 'No lead data' });
+      return Response.json({ error: 'Lead not found' }, { status: 404 });
     }
 
-    if (lead.status !== 'DEAL_CLOSED' || lead.status === old_data?.status) {
-      console.log(`[dealClosedHandler] Skipping: Change from ${old_data?.status} to ${lead.status}`);
-      return Response.json({ message: 'Not a triggering status change' });
+    if (lead.status !== 'DEAL_CLOSED') {
+      return Response.json({ message: 'Lead status is not DEAL_CLOSED' });
     }
 
-    console.log(`[dealClosedHandler] Lead ${lead.id} moved to DEAL_CLOSED. Processing...`);
-
+    // Check settings
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const settings = settingsList[0];
     if (!settings) {
-      console.error('[dealClosedHandler] AppSettings not found');
       return Response.json({ error: 'Settings not configured' }, { status: 500 });
     }
     if (!settings.automations_enabled) {
-      console.log('[dealClosedHandler] Automations are disabled in settings');
       return Response.json({ message: 'Automations disabled' });
     }
 
+    // Check if event already exists
     const existingEvents = await base44.asServiceRole.entities.Event.filter({ lead_id: lead.id });
     if (existingEvents.length > 0) {
       console.log(`[dealClosedHandler] Event already exists for lead ${lead.id}`);
       return Response.json({ message: 'Event already exists', event_id: existingEvents[0].id });
     }
 
+    // Find or create customer
     let customer;
     if (lead.phone) {
       const existingCustomers = await base44.asServiceRole.entities.Customer.filter({ phone: lead.phone });
@@ -61,16 +66,15 @@ Deno.serve(async (req) => {
       console.log(`[dealClosedHandler] Created new customer: ${customer.id}`);
     }
 
+    // Get default package
     const packages = await base44.asServiceRole.entities.Package.filter({ item_type: 'PACKAGE', active: true });
     const defaultPackage = packages[0];
-    if (!defaultPackage) {
-      console.warn('[dealClosedHandler] No active package found, using empty values');
-    }
 
     const depositPercent = settings.default_deposit_percent || 30;
     const priceTotal = defaultPackage?.price || 0;
     const depositAmount = priceTotal * (depositPercent / 100);
 
+    // Create event
     const newEvent = await base44.asServiceRole.entities.Event.create({
       customer_id: customer.id,
       lead_id: lead.id,
@@ -85,8 +89,9 @@ Deno.serve(async (req) => {
       contract_status: 'DRAFT',
       event_status: 'PENDING',
     });
-    console.log(`[dealClosedHandler] Event created successfully: ${newEvent.id}`);
+    console.log(`[dealClosedHandler] Event created: ${newEvent.id}`);
 
+    // Log message from template
     const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
       template_key: 'DEAL_CLOSED',
       active: true,
@@ -115,14 +120,12 @@ Deno.serve(async (req) => {
         message_text: messageText,
         timestamp: new Date().toISOString(),
       });
-      console.log('[dealClosedHandler] Message logged to conversation');
-    } else {
-      console.log('[dealClosedHandler] No DEAL_CLOSED template found, skipping message');
+      console.log('[dealClosedHandler] Message logged');
     }
 
     return Response.json({ success: true, customer_id: customer.id, event_id: newEvent.id });
   } catch (error) {
-    console.error('[dealClosedHandler] CRITICAL ERROR:', error.stack || error.message);
+    console.error('[dealClosedHandler] ERROR:', error.stack || error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
