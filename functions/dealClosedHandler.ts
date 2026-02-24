@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
 
     const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
       template_key: 'DEAL_CLOSED',
-      active: true
+      active: true,
     });
     const template = templateList.length > 0 ? templateList[0] : null;
 
