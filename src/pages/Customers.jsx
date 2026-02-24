@@ -256,9 +256,21 @@ export default function Customers() {
         extra = { lost_reason: reason };
       }
       await base44.entities.Lead.update(leadId, { status: newStatus, ...extra });
+      
+      if (newStatus === 'DEAL_CLOSED') {
+        toast.info('יוצר לקוח ואירוע...');
+        const response = await base44.functions.invoke('dealClosedHandler', { lead_id: leadId });
+        if (response.data?.success) {
+          toast.success('עסקה נסגרה — לקוח ואירוע נוצרו');
+        } else {
+          toast.success('הסטטוס עודכן');
+        }
+      } else {
+        toast.success('הסטטוס עודכן');
+      }
+      
       await loadLeads();
       setSelectedLead(prev => ({ ...prev, status: newStatus }));
-      toast.success('הסטטוס עודכן');
     } catch {
       toast.error('שגיאה בעדכון הסטטוס');
     }
