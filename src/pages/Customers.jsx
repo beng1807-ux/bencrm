@@ -46,7 +46,7 @@ const EVENT_TYPE_ICONS = {
 const EVENT_TYPES = ['חתונה','בר מצווה','בת מצווה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'];
 
 // ── KanbanColumn ────────────────────────────────────────────────
-function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect }) {
+function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect, onCloseDeal }) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center gap-2 px-1 mb-1">
@@ -68,6 +68,7 @@ function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, select
             onEdit={onEdit} onDelete={onDelete}
             isSelected={selected.has(lead.id)}
             onSelect={onSelect}
+            onCloseDeal={onCloseDeal}
           />
         ))}
       </div>
@@ -282,6 +283,11 @@ export default function Customers() {
   const toggleSelect = (id) => setMultiSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const selectAll = (list) => setMultiSelected(prev => prev.size === list.length ? new Set() : new Set(list.map(l => l.id)));
 
+  const closeDeal = async (leadId) => {
+    if (!confirm('לסגור עסקה? הליד ישנה סטטוס ל-"נסגרה עסקה"')) return;
+    await updateStatus(leadId, 'DEAL_CLOSED');
+  };
+
   const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
   const saveEdit = async () => {
     await base44.entities.Lead.update(editData.id, editData);
@@ -396,6 +402,28 @@ export default function Customers() {
             </button>
           ))}
         </div>
+
+        {/* Close deal for selected */}
+        {multiSelected.size > 0 && [...multiSelected].some(id => {
+          const l = leads.find(x => x.id === id);
+          return l && LEAD_COLS.some(c => c.key === l.status);
+        }) && (
+          <Button variant="outline" size="sm" className="border-gray-300 text-gray-600 font-bold hover:border-orange-400 hover:text-orange-600"
+            onClick={async () => {
+              if (!confirm(`לסגור עסקה ל-${multiSelected.size} נבחרים?`)) return;
+              for (const id of multiSelected) {
+                const l = leads.find(x => x.id === id);
+                if (l && LEAD_COLS.some(c => c.key === l.status)) {
+                  await base44.entities.Lead.update(id, { status: 'DEAL_CLOSED' });
+                }
+              }
+              setMultiSelected(new Set());
+              await loadLeads();
+              toast.success('עסקאות נסגרו');
+            }}>
+            <Handshake className="w-4 h-4 ml-1" />סגור עסקה ({multiSelected.size})
+          </Button>
+        )}
 
         {/* View mode toggle */}
         <div className="flex bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
