@@ -54,7 +54,6 @@ import Dashboard from './pages/Dashboard';
 import EventCalendar from './pages/EventCalendar';
 import Events from './pages/Events';
 import Home from './pages/Home';
-import Leads from './pages/Leads';
 import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
@@ -70,7 +69,6 @@ export const PAGES = {
     "EventCalendar": EventCalendar,
     "Events": Events,
     "Home": Home,
-    "Leads": Leads,
     "Management": Management,
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
