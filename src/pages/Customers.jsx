@@ -462,7 +462,7 @@ export default function Customers() {
                   <KanbanColumn key={col.key} col={col} phase="lead"
                     leads={filteredLeads.filter(l => l.status === col.key)}
                     onCardClick={openDetails} onEdit={openEdit} onDelete={deleteLead}
-                    selected={multiSelected} onSelect={toggleSelect} />
+                    selected={multiSelected} onSelect={toggleSelect} onCloseDeal={closeDeal} />
                 ))}
               </div>
             </div>
@@ -480,7 +480,7 @@ export default function Customers() {
                   <KanbanColumn key={col.key} col={col} phase="customer"
                     leads={filteredLeads.filter(l => l.status === col.key)}
                     onCardClick={openDetails} onEdit={openEdit} onDelete={deleteLead}
-                    selected={multiSelected} onSelect={toggleSelect} />
+                    selected={multiSelected} onSelect={toggleSelect} onCloseDeal={closeDeal} />
                 ))}
               </div>
             </div>
