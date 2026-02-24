@@ -4,58 +4,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MyAvailability() {
   const [djProfile, setDjProfile] = useState(null);
-  const [allDJs, setAllDJs] = useState([]);
-  const [selectedDJId, setSelectedDJId] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [unavailableDates, setUnavailableDates] = useState([]);
   const [newDate, setNewDate] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadInitial();
+    loadAvailability();
   }, []);
 
-  const loadInitial = async () => {
+  const loadAvailability = async () => {
     try {
       const user = await base44.auth.me();
-      const admin = user.role === 'admin';
-      setIsAdmin(admin);
-
-      if (admin) {
-        const djs = await base44.entities.DJ.list();
-        setAllDJs(djs);
-        if (djs.length > 0) {
-          setSelectedDJId(djs[0].id);
-          setDjProfile(djs[0]);
-          setUnavailableDates(djs[0].unavailable_dates || []);
-        }
-      } else {
-        const djList = await base44.entities.DJ.filter({ user_id: user.id });
-        if (djList.length > 0) {
-          setDjProfile(djList[0]);
-          setUnavailableDates(djList[0].unavailable_dates || []);
-        }
+      const djList = await base44.entities.DJ.filter({ user_id: user.id });
+      if (djList.length > 0) {
+        setDjProfile(djList[0]);
+        setUnavailableDates(djList[0].unavailable_dates || []);
       }
     } catch (error) {
       console.error('Error loading availability:', error);
       toast.error('שגיאה בטעינת זמינות');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const selectDJ = (djId) => {
-    const dj = allDJs.find(d => d.id === djId);
-    if (dj) {
-      setSelectedDJId(djId);
-      setDjProfile(dj);
-      setUnavailableDates(dj.unavailable_dates || []);
     }
   };
 
@@ -100,26 +74,12 @@ export default function MyAvailability() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Calendar className="w-8 h-8" />
-            {isAdmin ? 'זמינות תקליטנים' : 'הזמינות שלי'}
-          </h1>
-          <p className="text-gray-600">ניהול תאריכים לא זמינים{djProfile ? ` — ${djProfile.name}` : ''}</p>
-        </div>
-        {isAdmin && allDJs.length > 0 && (
-          <Select value={selectedDJId} onValueChange={selectDJ}>
-            <SelectTrigger className="w-52 bg-white">
-              <SelectValue placeholder="בחר תקליטן" />
-            </SelectTrigger>
-            <SelectContent>
-              {allDJs.map(dj => (
-                <SelectItem key={dj.id} value={dj.id}>{dj.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <Calendar className="w-8 h-8" />
+          הזמינות שלי
+        </h1>
+        <p className="text-gray-600">ניהול תאריכים לא זמינים</p>
       </div>
 
       <Card>
