@@ -2,41 +2,65 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, MapPin, Users, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MyShows() {
   const [myEvents, setMyEvents] = useState([]);
   const [djProfile, setDjProfile] = useState(null);
+  const [allDJs, setAllDJs] = useState([]);
+  const [selectedDJId, setSelectedDJId] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadMyShows();
+    loadInitial();
   }, []);
 
-  const loadMyShows = async () => {
+  const loadInitial = async () => {
     try {
       const user = await base44.auth.me();
-      const djList = await base44.entities.DJ.filter({ user_id: user.id });
-      
-      if (djList.length > 0) {
-        const dj = djList[0];
-        setDjProfile(dj);
-        
-        const [events, customersData] = await Promise.all([
-          base44.entities.Event.filter({ dj_id: dj.id }, '-event_date'),
-          base44.entities.Customer.list(),
-        ]);
-        
-        setMyEvents(events);
-        setCustomers(customersData);
+      const admin = user.role === 'admin';
+      setIsAdmin(admin);
+
+      const customersData = await base44.entities.Customer.list();
+      setCustomers(customersData);
+
+      if (admin) {
+        const djs = await base44.entities.DJ.list();
+        setAllDJs(djs);
+        if (djs.length > 0) {
+          setSelectedDJId(djs[0].id);
+          setDjProfile(djs[0]);
+          const events = await base44.entities.Event.filter({ dj_id: djs[0].id }, '-event_date');
+          setMyEvents(events);
+        }
+      } else {
+        const djList = await base44.entities.DJ.filter({ user_id: user.id });
+        if (djList.length > 0) {
+          const dj = djList[0];
+          setDjProfile(dj);
+          const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
+          setMyEvents(events);
+        }
       }
     } catch (error) {
       console.error('Error loading shows:', error);
       toast.error('שגיאה בטעינת הופעות');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const selectDJ = async (djId) => {
+    const dj = allDJs.find(d => d.id === djId);
+    if (dj) {
+      setSelectedDJId(djId);
+      setDjProfile(dj);
+      const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
+      setMyEvents(events);
     }
   };
 
@@ -64,9 +88,23 @@ export default function MyShows() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">לוח ההופעות שלי</h1>
-        <p className="text-gray-600">{djProfile?.name} - {upcomingEvents.length} אירועים קרובים</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{isAdmin ? 'הופעות תקליטנים' : 'לוח ההופעות שלי'}</h1>
+          <p className="text-gray-600">{djProfile?.name} - {upcomingEvents.length} אירועים קרובים</p>
+        </div>
+        {isAdmin && allDJs.length > 0 && (
+          <Select value={selectedDJId} onValueChange={selectDJ}>
+            <SelectTrigger className="w-52 bg-white">
+              <SelectValue placeholder="בחר תקליטן" />
+            </SelectTrigger>
+            <SelectContent>
+              {allDJs.map(dj => (
+                <SelectItem key={dj.id} value={dj.id}>{dj.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div>
