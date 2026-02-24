@@ -13,6 +13,7 @@ const COLUMNS = [
   { key: 'NEW',             label: 'חדש',            dot: 'bg-blue-500' },
   { key: 'FIRST_CONTACT',   label: 'נוצר קשר',       dot: 'bg-amber-500' },
   { key: 'QUOTE_SENT',      label: 'נשלחה הצעה',     dot: 'bg-purple-500' },
+  { key: 'DEAL_CLOSED',     label: 'נסגרה עסקה',     dot: 'bg-green-500', countClass: 'bg-green-100 text-green-700' },
   { key: 'WAITING_PAYMENT', label: 'ממתין לתשלום',   dot: 'bg-orange-400' },
   { key: 'DEPOSIT_PAID',    label: 'שולמה מקדמה',    dot: 'bg-emerald-600', countClass: 'bg-emerald-100 text-emerald-700' },
   { key: 'PAID_FULL',       label: 'שולם במלואו',    dot: 'bg-green-600' },
