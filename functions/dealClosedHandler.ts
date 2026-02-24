@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const newEvent = await base44.asServiceRole.entities.Event.create({
       customer_id: customer.id,
       lead_id: lead.id,
-      event_date: lead.event_date || null,
+      event_date: lead.event_date || '',
       event_type: lead.event_type || 'אחר',
       package_id: defaultPackage?.id || null,
       addon_ids: [],
