@@ -57,6 +57,8 @@ export default function Layout({ children, currentPageName }) {
     { name: n.nav_djs || 'תקליטנים', page: 'DJs', icon: Music },
     { name: n.nav_tasks || 'משימות', page: 'Tasks', icon: ListChecks },
     { name: 'טופס הזמנה', page: 'BookingForm', icon: Briefcase },
+    { name: 'ההופעות שלי', page: 'MyShows', icon: Music },
+    { name: 'הזמינות שלי', page: 'MyAvailability', icon: ListChecks },
   ];
 
   const djMenuItems = [
