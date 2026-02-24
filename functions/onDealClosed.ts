@@ -19,7 +19,6 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'No lead data' });
     }
 
-    // אירוע נפתח רק כשנסגרה עסקה והסטטוס באמת השתנה
     if (lead.status !== 'DEAL_CLOSED' || lead.status === old_data?.status) {
       console.log(`[onDealClosed] Skipping: Change from ${old_data?.status} to ${lead.status}`);
       return Response.json({ message: 'Not a triggering status change' });
@@ -27,7 +26,6 @@ Deno.serve(async (req) => {
 
     console.log(`[onDealClosed] Lead ${lead.id} moved to DEAL_CLOSED. Processing...`);
 
-    // 1. בדיקת הגדרות
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const settings = settingsList[0];
     if (!settings) {
@@ -39,14 +37,12 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Automations disabled' });
     }
 
-    // 2. בדיקה אם כבר קיים אירוע עבור הליד (מניעת כפילויות)
     const existingEvents = await base44.asServiceRole.entities.Event.filter({ lead_id: lead.id });
     if (existingEvents.length > 0) {
       console.log(`[onDealClosed] Event already exists for lead ${lead.id}`);
       return Response.json({ message: 'Event already exists', event_id: existingEvents[0].id });
     }
 
-    // 3. טיפול בלקוח
     let customer;
     if (lead.phone) {
       const existingCustomers = await base44.asServiceRole.entities.Customer.filter({ phone: lead.phone });
@@ -67,7 +63,6 @@ Deno.serve(async (req) => {
       console.log(`[onDealClosed] Created new customer: ${customer.id}`);
     }
 
-    // 4. שליפת חבילת ברירת מחדל
     const packages = await base44.asServiceRole.entities.Package.filter({ item_type: 'PACKAGE', active: true });
     const defaultPackage = packages[0];
     if (!defaultPackage) {
@@ -78,7 +73,6 @@ Deno.serve(async (req) => {
     const priceTotal = defaultPackage?.price || 0;
     const depositAmount = priceTotal * (depositPercent / 100);
 
-    // 5. יצירת אירוע
     const newEvent = await base44.asServiceRole.entities.Event.create({
       customer_id: customer.id,
       lead_id: lead.id,
@@ -95,7 +89,6 @@ Deno.serve(async (req) => {
     });
     console.log(`[onDealClosed] Event created successfully: ${newEvent.id}`);
 
-    // 6. שליחת הודעה - תבנית DEAL_CLOSED
     const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
       template_key: 'DEAL_CLOSED',
       active: true
