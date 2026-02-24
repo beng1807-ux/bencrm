@@ -127,6 +127,27 @@ export default function Leads() {
     }
   };
 
+  const closeDeal = async (lead) => {
+    if (!confirm('האם לסגור עסקה עבור ליד זה? ייווצרו לקוח ואירוע חדשים.')) return;
+    setClosingDeal(true);
+    try {
+      // First update the lead status
+      await base44.entities.Lead.update(lead.id, { status: 'DEAL_CLOSED' });
+      // Then call the function directly as a fallback
+      await base44.functions.invoke('dealClosedHandler', {
+        data: { ...lead, status: 'DEAL_CLOSED' },
+        old_data: { status: lead.status },
+      });
+      await loadLeads();
+      toast.success('העסקה נסגרה! לקוח ואירוע נוצרו בהצלחה');
+      setDetailsOpen(false);
+    } catch (err) {
+      toast.error('שגיאה בסגירת העסקה: ' + (err?.response?.data?.error || err.message));
+    } finally {
+      setClosingDeal(false);
+    }
+  };
+
   const deleteLead = async (leadId) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק את הליד?')) return;
     try {
