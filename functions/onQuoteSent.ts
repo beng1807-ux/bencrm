@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     const priceTotal = defaultPackage?.price || 0;
     const depositAmount = priceTotal * (depositPercent / 100);
 
-    // 5. יצירת אירוע (null במקום מחרוזת ריקה לשדות תאריך)
+    // 5. יצירת אירוע
     const newEvent = await base44.asServiceRole.entities.Event.create({
       customer_id: customer.id,
       lead_id: lead.id,
