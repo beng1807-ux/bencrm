@@ -423,11 +423,12 @@ export default function Customers() {
                 const l = leads.find(x => x.id === id);
                 if (l && LEAD_COLS.some(c => c.key === l.status)) {
                   await base44.entities.Lead.update(id, { status: 'DEAL_CLOSED' });
+                  await base44.functions.invoke('dealClosedHandler', { lead_id: id });
                 }
               }
               setMultiSelected(new Set());
               await loadLeads();
-              toast.success('עסקאות נסגרו');
+              toast.success('עסקאות נסגרו — לקוחות ואירועים נוצרו');
             }}>
             <Handshake className="w-4 h-4 ml-1" />סגור עסקה ({multiSelected.size})
           </Button>
