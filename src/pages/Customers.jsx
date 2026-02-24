@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil } from 'lucide-react';
+import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
@@ -76,7 +76,7 @@ function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, select
 }
 
 // ── KanbanCard ───────────────────────────────────────────────────
-function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSelect }) {
+function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSelect, onCloseDeal }) {
   const isDone = colKey === 'EVENT_DONE';
   const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌', label: lead.event_type };
 
@@ -114,6 +114,15 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
           <span>{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</span>
         </div>
       </div>
+      {LEAD_COLS.some(c => c.key === lead.status) && (
+        <button
+          onClick={e => { e.stopPropagation(); onCloseDeal(lead.id); }}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:border-orange-400 hover:text-orange-600 transition-colors"
+        >
+          <Handshake className="w-3.5 h-3.5" />
+          סגור עסקה
+        </button>
+      )}
     </div>
   );
 }
