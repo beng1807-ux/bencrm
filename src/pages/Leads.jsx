@@ -95,6 +95,7 @@ export default function Leads() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [newLead, setNewLead] = useState({});
+  const [closingDeal, setClosingDeal] = useState(false);
 
   useEffect(() => { loadLeads(); }, []);
 
