@@ -53,7 +53,6 @@ import DJs from './pages/DJs';
 import Dashboard from './pages/Dashboard';
 import EventCalendar from './pages/EventCalendar';
 import Events from './pages/Events';
-import Home from './pages/Home';
 import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
@@ -68,7 +67,6 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "EventCalendar": EventCalendar,
     "Events": Events,
-    "Home": Home,
     "Management": Management,
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
