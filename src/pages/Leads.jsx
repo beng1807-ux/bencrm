@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Calendar, Phone, Mail, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, Calendar, Phone, Mail, Trash2, Filter, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const COLUMNS = [
