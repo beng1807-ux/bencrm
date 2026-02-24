@@ -4,12 +4,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const rawBody = await req.text();
-    console.log(`[dealClosedHandler] RAW BODY: ${rawBody.substring(0, 500)}`);
-
-    const body = JSON.parse(rawBody);
+    const body = await req.json();
     console.log(`[dealClosedHandler] BODY KEYS: ${Object.keys(body).join(', ')}`);
 
+    // Support both automation payload format and manual invocation
     const lead = body.data;
     const old_data = body.old_data;
 
