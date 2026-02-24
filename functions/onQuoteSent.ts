@@ -5,11 +5,8 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { event: triggerEvent, data: lead, old_data } = await req.json();
 
-    // סטטוסים שמפעילים יצירת לקוח + אירוע
-    const TRIGGER_STATUSES = ['QUOTE_SENT', 'DEAL_CLOSED'];
-    
-    // בדיקה שהסטטוס השתנה לאחד מהסטטוסים שמפעילים
-    if (!TRIGGER_STATUSES.includes(lead.status) || lead.status === old_data?.status) {
+    // אירוע נפתח רק כשנסגרה עסקה
+    if (lead.status !== 'DEAL_CLOSED' || lead.status === old_data?.status) {
       return Response.json({ message: 'Not a triggering status change' });
     }
 
