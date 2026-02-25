@@ -25,12 +25,13 @@ export default function MyShows() {
       const admin = user.role === 'admin';
       setIsAdmin(admin);
 
-      const customersData = await base44.entities.Customer.list();
-      setCustomers(customersData);
-
       if (admin) {
-        const djs = await base44.entities.DJ.list();
+        const [djs, customersData] = await Promise.all([
+          base44.entities.DJ.list(),
+          base44.entities.Customer.list(),
+        ]);
         setAllDJs(djs);
+        setCustomers(customersData);
         if (djs.length > 0) {
           setSelectedDJId(djs[0].id);
           setDjProfile(djs[0]);
@@ -38,12 +39,22 @@ export default function MyShows() {
           setMyEvents(events);
         }
       } else {
-        const djList = await base44.entities.DJ.filter({ user_id: user.id });
+        // Auto-link by email if needed
+        let djList = await base44.entities.DJ.filter({ user_id: user.id });
+        if (djList.length === 0 && user.email) {
+          const byEmail = await base44.entities.DJ.filter({ email: user.email });
+          if (byEmail.length > 0 && !byEmail[0].user_id) {
+            await base44.entities.DJ.update(byEmail[0].id, { user_id: user.id });
+            djList = [{ ...byEmail[0], user_id: user.id }];
+          }
+        }
         if (djList.length > 0) {
           const dj = djList[0];
           setDjProfile(dj);
-          const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
-          setMyEvents(events);
+          try {
+            const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
+            setMyEvents(events);
+          } catch { /* DJ might not have event read access yet */ }
         }
       }
     } catch (error) {
