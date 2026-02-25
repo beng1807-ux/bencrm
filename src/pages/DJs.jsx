@@ -215,8 +215,12 @@ export default function DJs() {
               </Select>
             </div>
             <div>
-              <Label>שיוך משתמש</Label>
-              <Select value={editData.user_id || '_none_'} onValueChange={v => setEditData({...editData, user_id: v === '_none_' ? '' : v})}>
+              <Label>שיוך משתמש (בחר מהרשימה או הקלד אימייל)</Label>
+              <Select value={editData.user_id || '_none_'} onValueChange={v => {
+                if (v === '_none_') setEditData({...editData, user_id: ''});
+                else if (v === '_manual_') {} // handled by input below
+                else setEditData({...editData, user_id: v});
+              }}>
                 <SelectTrigger><SelectValue placeholder="ללא שיוך" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none_">ללא שיוך</SelectItem>
@@ -225,6 +229,19 @@ export default function DJs() {
                   ))}
                 </SelectContent>
               </Select>
+              <div className="mt-2">
+                <Input
+                  placeholder="או הקלד אימייל לשיוך ידני..."
+                  value={editData.user_id && !users.find(u => u.id === editData.user_id) ? editData.user_id : ''}
+                  onChange={e => setEditData({...editData, user_id: e.target.value})}
+                />
+                {editData.user_id && users.find(u => u.id === editData.user_id) && (
+                  <p className="text-xs text-green-600 mt-1">משויך ל: {users.find(u => u.id === editData.user_id)?.full_name || users.find(u => u.id === editData.user_id)?.email}</p>
+                )}
+                {editData.user_id && !users.find(u => u.id === editData.user_id) && editData.user_id !== '' && (
+                  <p className="text-xs text-amber-600 mt-1">שיוך ידני לפי אימייל: {editData.user_id}</p>
+                )}
+              </div>
             </div>
             <div><Label>הערות</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>
             <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
