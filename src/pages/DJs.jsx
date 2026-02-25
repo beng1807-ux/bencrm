@@ -68,7 +68,6 @@ export default function DJs() {
   };
 
   const createDJ = async () => {
-    if (!newDJ.user_id) { toast.error('חובה לבחור משתמש מהמערכת'); return; }
     if (!newDJ.name || !newDJ.phone || !newDJ.email) { toast.error('חובה למלא שם, טלפון ואימייל'); return; }
     // Check for duplicate email or phone
     const dupEmail = djs.find(d => d.email === newDJ.email);
@@ -88,26 +87,28 @@ export default function DJs() {
   return (
     <div className="space-y-5" dir="rtl">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black text-slate-900 mb-2">תקליטנים</h2>
+          <h1 className="text-3xl font-extrabold mb-2" style={{ color: '#0f172a', fontFamily: 'Assistant, sans-serif' }}>תקליטנים</h1>
           <p className="text-slate-500 font-medium max-w-md">ניהול צוות ה-DJ-ים שלך</p>
         </div>
         <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3" />
         <Sparkles className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 text-primary/10" />
-        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white relative z-10" style={{ backgroundColor: PRIMARY }}>
-          <Plus className="w-4 h-4 ml-2" />DJ חדש
-        </Button>
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-        {selected.size > 0 && (
-          <Button variant="destructive" size="sm" onClick={deleteSelected}>
-            <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
-          </Button>
-        )}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          {selected.size > 0 && (
+            <Button variant="destructive" size="sm" onClick={deleteSelected}>
+              <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
+            </Button>
+          )}
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
+          <Plus className="w-4 h-4 ml-2" />DJ חדש
+        </Button>
       </div>
 
       {/* Cards View */}
@@ -224,26 +225,6 @@ export default function DJs() {
         <DialogContent dir="rtl">
           <DialogHeader><DialogTitle>DJ חדש</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
-            <div>
-              <Label>שיוך למשתמש במערכת *</Label>
-              {(() => {
-                const assignedUserIds = new Set(djs.map(d => d.user_id));
-                const availableUsers = users.filter(u => !assignedUserIds.has(u.id));
-                return (
-                  <Select value={newDJ.user_id || ''} onValueChange={v => {
-                    const usr = users.find(u => u.id === v);
-                    setNewDJ({ ...newDJ, user_id: v, name: usr?.full_name || newDJ.name || '', email: usr?.email || newDJ.email || '' });
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="בחר משתמש" /></SelectTrigger>
-                    <SelectContent>
-                      {availableUsers.length === 0 && <SelectItem value="_none" disabled>אין משתמשים זמינים</SelectItem>}
-                      {availableUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                );
-              })()}
-              <p className="text-xs text-slate-400 mt-1">DJ חייב להיות משויך למשתמש קיים במערכת</p>
-            </div>
             <div><Label>שם *</Label><Input value={newDJ.name || ''} onChange={e => setNewDJ({...newDJ, name: e.target.value})} /></div>
             <div><Label>טלפון *</Label><Input value={newDJ.phone || ''} onChange={e => setNewDJ({...newDJ, phone: e.target.value})} /></div>
             <div><Label>אימייל *</Label><Input type="email" value={newDJ.email || ''} onChange={e => setNewDJ({...newDJ, email: e.target.value})} /></div>
