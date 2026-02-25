@@ -1,185 +1,415 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
+  Layers, LayoutGrid, MapPin, Music, FileText, CreditCard, User, Ban
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+
+import MonthView from '../components/calendar/MonthView';
+import WeekView from '../components/calendar/WeekView';
+import CalendarLegend from '../components/calendar/CalendarLegend';
+import CalendarFilters from '../components/calendar/CalendarFilters';
+import EventTooltip from '../components/calendar/EventTooltip';
+import DJBlockTooltip from '../components/calendar/DJBlockTooltip';
+
+const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+
+const CONTRACT_LABELS = { SIGNED: 'חתום', DRAFT: 'טיוטה', SENT: 'נשלח', DECLINED: 'סורב' };
+const PAYMENT_LABELS = { PENDING: 'ממתין', DEPOSIT_PAID: 'מקדמה שולמה', PAID_FULL: 'שולם במלואו' };
 
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [djs, setDJs] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('month');
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ contractStatus: 'ALL', djId: 'ALL', eventType: 'ALL' });
+
+  // Tooltip state
+  const [hoveredEvent, setHoveredEvent] = useState(null);
+  const [hoveredCustomer, setHoveredCustomer] = useState(null);
+  const [hoveredDJ, setHoveredDJ] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [hoveredBlockedDJs, setHoveredBlockedDJs] = useState(null);
+  const [djTooltipPos, setDJTooltipPos] = useState({ x: 0, y: 0 });
+
+  // Event detail dialog
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [djBlockDialog, setDJBlockDialog] = useState(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    try {
-      const [eventsData, customersData, djsData] = await Promise.all([
-        base44.entities.Event.list(),
-        base44.entities.Customer.list(),
-        base44.entities.DJ.list(),
-      ]);
-      setEvents(eventsData);
-      setCustomers(customersData);
-      setDJs(djsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('שגיאה בטעינת נתונים');
-    } finally {
-      setLoading(false);
-    }
+    const [eventsData, customersData, djsData] = await Promise.all([
+      base44.entities.Event.list(),
+      base44.entities.Customer.list(),
+      base44.entities.DJ.list(),
+    ]);
+    setEvents(eventsData);
+    setCustomers(customersData);
+    setDJs(djsData);
+    setLoading(false);
   };
 
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const days = [];
+  // Filter events
+  const filteredEvents = events.filter(e => {
+    if (filters.contractStatus !== 'ALL' && e.contract_status !== filters.contractStatus) return false;
+    if (filters.djId !== 'ALL' && e.dj_id !== filters.djId) return false;
+    if (filters.eventType !== 'ALL' && e.event_type !== filters.eventType) return false;
+    return true;
+  });
 
-    const startDayOfWeek = firstDay.getDay();
-    for (let i = 0; i < startDayOfWeek; i++) {
-      days.push(null);
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      days.push(new Date(year, month, day));
-    }
-
-    return days;
-  };
-
-  const getEventsForDate = (date) => {
+  const getEventsForDate = useCallback((date) => {
     if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    return events.filter(e => e.event_date === dateStr);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return filteredEvents.filter(e => e.event_date === dateStr);
+  }, [filteredEvents]);
+
+  const getBlockedDJsForDate = useCallback((date) => {
+    if (!date) return [];
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return djs.filter(dj => 
+      dj.status === 'ACTIVE' && 
+      dj.unavailable_dates?.includes(dateStr)
+    );
+  }, [djs]);
+
+  // Navigation
+  const navigateForward = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    } else {
+      const next = new Date(currentDate);
+      next.setDate(next.getDate() + 7);
+      setCurrentDate(next);
+    }
   };
 
-  const getEventColor = (event) => {
-    if (event.event_status === 'COMPLETED') return 'bg-gray-200 text-gray-700';
-    if (event.event_status === 'CANCELLED') return 'bg-red-100 text-red-700';
-    if (event.payment_status === 'PAID_FULL') return 'bg-green-100 text-green-700';
-    if (event.payment_status === 'DEPOSIT_PAID') return 'bg-yellow-100 text-yellow-700';
-    return 'bg-blue-100 text-blue-700';
+  const navigateBack = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    } else {
+      const prev = new Date(currentDate);
+      prev.setDate(prev.getDate() - 7);
+      setCurrentDate(prev);
+    }
   };
 
-  const changeMonth = (offset) => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
+  const goToToday = () => setCurrentDate(new Date());
+
+  // Week days
+  const getWeekDays = () => {
+    const startOfWeek = new Date(currentDate);
+    const dayOfWeek = startOfWeek.getDay();
+    startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
   };
 
-  const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-  const dayNames = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+  // Hover handlers
+  const handleEventHover = (event, customer, dj, e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+    setHoveredEvent(event);
+    setHoveredCustomer(customer);
+    setHoveredDJ(dj);
+  };
+
+  const handleEventLeave = () => {
+    setHoveredEvent(null);
+    setHoveredCustomer(null);
+    setHoveredDJ(null);
+  };
+
+  const handleDJBlockHover = (djList, e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDJTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+    setHoveredBlockedDJs(djList);
+  };
+
+  const handleDJBlockLeave = () => {
+    setHoveredBlockedDJs(null);
+  };
+
+  // Title
+  const getTitle = () => {
+    if (viewMode === 'month') {
+      return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    }
+    const weekDays = getWeekDays();
+    const start = weekDays[0];
+    const end = weekDays[6];
+    if (start.getMonth() === end.getMonth()) {
+      return `${start.getDate()}-${end.getDate()} ${monthNames[start.getMonth()]} ${start.getFullYear()}`;
+    }
+    return `${start.getDate()} ${monthNames[start.getMonth()]} - ${end.getDate()} ${monthNames[end.getMonth()]}`;
+  };
+
+  // Stats
+  const currentMonthEvents = events.filter(e => {
+    const d = new Date(e.event_date);
+    return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+  });
+  const signedCount = currentMonthEvents.filter(e => e.contract_status === 'SIGNED').length;
+  const pendingCount = currentMonthEvents.filter(e => e.contract_status === 'DRAFT' || e.contract_status === 'SENT').length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-teal-500 animate-spin" />
+          <CalendarIcon className="w-6 h-6 text-teal-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        </div>
       </div>
     );
   }
 
-  const days = getDaysInMonth(currentDate);
+  const selectedCustomer = selectedEvent ? customers.find(c => c.id === selectedEvent.customer_id) : null;
+  const selectedDJ = selectedEvent ? djs.find(d => d.id === selectedEvent.dj_id) : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <CalendarIcon className="w-8 h-8" />
-          יומן אירועים
-        </h1>
+    <div className="space-y-6" dir="rtl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5 text-teal-600" />
+            </div>
+            יומן אירועים
+          </h1>
+          <p className="text-sm text-slate-400 font-medium mt-1">
+            {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {signedCount} חתומים • {pendingCount} ממתינים
+          </p>
+        </div>
+
+        {/* Quick stats pills */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-bold">{signedCount} חתומים</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-bold">{pendingCount} ממתינים</span>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-6">
-            <Button variant="outline" onClick={() => changeMonth(-1)}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-            <h2 className="text-2xl font-bold">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
-            <Button variant="outline" onClick={() => changeMonth(1)}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
+      {/* Controls bar */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Navigation */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-slate-50 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode('month')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === 'month' ? 'bg-white shadow-sm text-teal-600' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />חודשי
+              </button>
+              <button
+                onClick={() => setViewMode('week')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === 'week' ? 'bg-white shadow-sm text-teal-600' : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />שבועי
+              </button>
+            </div>
+
+            <div className="h-6 w-px bg-slate-200" />
+
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={navigateBack} className="h-8 w-8 rounded-lg">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <button
+                onClick={goToToday}
+                className="px-3 py-1.5 text-xs font-bold text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
+              >
+                היום
+              </button>
+              <Button variant="ghost" size="icon" onClick={navigateForward} className="h-8 w-8 rounded-lg">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <h2 className="text-lg font-black text-slate-800">{getTitle()}</h2>
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
-            {dayNames.map(day => (
-              <div key={day} className="text-center font-semibold text-gray-600 py-2">
-                {day}
-              </div>
-            ))}
-            
-            {days.map((date, index) => {
-              const dayEvents = date ? getEventsForDate(date) : [];
-              const isToday = date && date.toDateString() === new Date().toDateString();
-              
-              return (
-                <div
-                  key={index}
-                  className={`min-h-[100px] border rounded-lg p-2 ${
-                    date ? 'bg-white' : 'bg-gray-50'
-                  } ${isToday ? 'border-orange-500 border-2' : 'border-gray-200'}`}
-                >
-                  {date && (
-                    <>
-                      <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-orange-600' : 'text-gray-700'}`}>
-                        {date.getDate()}
-                      </div>
-                      <div className="space-y-1">
-                        {dayEvents.map(event => {
-                          const customer = customers.find(c => c.id === event.customer_id);
-                          const dj = djs.find(d => d.id === event.dj_id);
-                          
-                          return (
-                            <div
-                              key={event.id}
-                              className={`text-xs p-1 rounded ${getEventColor(event)} cursor-pointer hover:opacity-80`}
-                              title={`${customer?.name || 'לקוח'} - ${event.event_type}${dj ? ` - DJ: ${dj.name}` : ''}`}
-                            >
-                              <div className="font-semibold truncate">{customer?.name}</div>
-                              <div className="truncate">{event.event_type}</div>
-                              {dj && <div className="truncate text-[10px]">DJ: {dj.name}</div>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
+          {/* Filters */}
+          <CalendarFilters djs={djs} filters={filters} onFilterChange={setFilters} />
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+        {viewMode === 'month' ? (
+          <MonthView
+            currentDate={currentDate}
+            events={filteredEvents}
+            djs={djs}
+            customers={customers}
+            getEventsForDate={getEventsForDate}
+            getBlockedDJsForDate={getBlockedDJsForDate}
+            onEventHover={handleEventHover}
+            onEventLeave={handleEventLeave}
+            onDJBlockHover={handleDJBlockHover}
+            onDJBlockLeave={handleDJBlockLeave}
+            onEventClick={(event) => setSelectedEvent(event)}
+            onDJBlockClick={(djList) => setDJBlockDialog(djList)}
+          />
+        ) : (
+          <WeekView
+            weekDays={getWeekDays()}
+            events={filteredEvents}
+            djs={djs}
+            customers={customers}
+            getEventsForDate={getEventsForDate}
+            getBlockedDJsForDate={getBlockedDJsForDate}
+            onEventHover={handleEventHover}
+            onEventLeave={handleEventLeave}
+            onDJBlockHover={handleDJBlockHover}
+            onDJBlockLeave={handleDJBlockLeave}
+            onEventClick={(event) => setSelectedEvent(event)}
+            onDJBlockClick={(djList) => setDJBlockDialog(djList)}
+          />
+        )}
+
+        {/* Legend */}
+        <div className="mt-5 pt-4 border-t border-slate-100">
+          <CalendarLegend />
+        </div>
+      </div>
+
+      {/* Tooltips */}
+      {hoveredEvent && (
+        <EventTooltip event={hoveredEvent} customer={hoveredCustomer} dj={hoveredDJ} position={tooltipPos} />
+      )}
+      {hoveredBlockedDJs && (
+        <DJBlockTooltip djList={hoveredBlockedDJs} position={djTooltipPos} />
+      )}
+
+      {/* Event Detail Dialog */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black">{selectedEvent?.event_type}</DialogTitle>
+          </DialogHeader>
+          {selectedEvent && (
+            <div className="space-y-4 mt-2">
+              <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="w-4 h-4 text-teal-500" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    {new Date(selectedEvent.event_date).toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+                {selectedCustomer && (
+                  <div className="flex items-center gap-3">
+                    <User className="w-4 h-4 text-teal-500" />
+                    <span className="text-sm font-semibold text-slate-700">{selectedCustomer.name}</span>
+                    {selectedCustomer.phone && (
+                      <span className="text-xs text-slate-400">{selectedCustomer.phone}</span>
+                    )}
+                  </div>
+                )}
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-4 h-4 text-teal-500" />
+                    <span className="text-sm font-semibold text-slate-600">{selectedEvent.location}</span>
+                  </div>
+                )}
+                {selectedDJ && (
+                  <div className="flex items-center gap-3">
+                    <Music className="w-4 h-4 text-teal-500" />
+                    <span className="text-sm font-semibold text-slate-600">DJ {selectedDJ.name}</span>
+                  </div>
+                )}
+              </div>
 
-          <div className="flex flex-wrap gap-4 mt-6 pt-6 border-t">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-100 rounded"></div>
-              <span className="text-sm">ממתין לתשלום</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">סטטוס חוזה</p>
+                  <p className="text-sm font-black text-slate-700">{CONTRACT_LABELS[selectedEvent.contract_status] || selectedEvent.contract_status}</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">תשלום</p>
+                  <p className="text-sm font-black text-slate-700">{PAYMENT_LABELS[selectedEvent.payment_status] || selectedEvent.payment_status}</p>
+                </div>
+              </div>
+
+              {selectedEvent.price_total && (
+                <div className="bg-teal-50 rounded-xl p-4 text-center">
+                  <p className="text-xs font-bold text-teal-600 mb-1">סכום עסקה</p>
+                  <p className="text-2xl font-black text-teal-700">₪{selectedEvent.price_total.toLocaleString()}</p>
+                </div>
+              )}
+
+              {selectedEvent.notes && (
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">הערות</p>
+                  <p className="text-sm text-slate-600">{selectedEvent.notes}</p>
+                </div>
+              )}
+
+              <Link
+                to={createPageUrl('Events')}
+                className="block w-full text-center bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                פתח בדף אירועים
+              </Link>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-100 rounded"></div>
-              <span className="text-sm">שולמה מקדמה</span>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* DJ Block Detail Dialog */}
+      <Dialog open={!!djBlockDialog} onOpenChange={() => setDJBlockDialog(null)}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <Ban className="w-5 h-5 text-violet-500" />
+              תקליטנים חסומים
+            </DialogTitle>
+          </DialogHeader>
+          {djBlockDialog && (
+            <div className="space-y-3 mt-2">
+              {djBlockDialog.map(dj => (
+                <div key={dj.id} className="flex items-center gap-3 bg-violet-50 rounded-xl p-4">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                    <span className="text-violet-600 font-black text-sm">{dj.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-800 text-sm">{dj.name}</p>
+                    <p className="text-xs text-slate-400">{dj.phone} • {dj.email}</p>
+                  </div>
+                </div>
+              ))}
+              <Link
+                to={createPageUrl('DJAvailability')}
+                className="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                נהל זמינות תקליטנים
+              </Link>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-100 rounded"></div>
-              <span className="text-sm">שולם במלואו</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-200 rounded"></div>
-              <span className="text-sm">הושלם</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-100 rounded"></div>
-              <span className="text-sm">בוטל</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

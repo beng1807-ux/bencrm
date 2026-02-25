@@ -49,6 +49,7 @@
  */
 import BookingForm from './pages/BookingForm';
 import Customers from './pages/Customers';
+import DJAvailability from './pages/DJAvailability';
 import DJs from './pages/DJs';
 import Dashboard from './pages/Dashboard';
 import EventCalendar from './pages/EventCalendar';
@@ -57,13 +58,13 @@ import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
 import Tasks from './pages/Tasks';
-import DJAvailability from './pages/DJAvailability';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "BookingForm": BookingForm,
     "Customers": Customers,
+    "DJAvailability": DJAvailability,
     "DJs": DJs,
     "Dashboard": Dashboard,
     "EventCalendar": EventCalendar,
@@ -72,7 +73,6 @@ export const PAGES = {
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
     "Tasks": Tasks,
-    "DJAvailability": DJAvailability,
 }
 
 export const pagesConfig = {
