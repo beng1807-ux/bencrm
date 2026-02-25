@@ -87,12 +87,14 @@ export default function DJs() {
 
   return (
     <div className="space-y-5" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-[#181311] tracking-tight">תקליטנים</h1>
-          <p className="mt-1 font-medium text-[#886c63] text-sm">ניהול צוות ה-DJ-ים</p>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black text-slate-900 mb-2">תקליטנים</h2>
+          <p className="text-slate-500 font-medium max-w-md">ניהול צוות ה-DJ-ים שלך</p>
         </div>
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <Sparkles className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 text-primary/10" />
         <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
           <Plus className="w-4 h-4 ml-2" />DJ חדש
         </Button>
