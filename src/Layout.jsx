@@ -78,7 +78,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'הזמינות שלי', page: 'MyAvailability', icon: ListChecks },
   ];
 
-  const menuItems = isAdmin ? adminMenuItems : djMenuItems;
+  const menuItems = isAdmin ? adminMenuItems : isDJ ? djMenuItems : [];
   
   // For non-admin users, default page is MyShows not Dashboard
   const defaultDJPage = 'MyShows';
