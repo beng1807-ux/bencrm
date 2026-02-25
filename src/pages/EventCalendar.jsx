@@ -181,30 +181,11 @@ export default function EventCalendar() {
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-              <CalendarIcon className="w-5 h-5 text-teal-600" />
-            </div>
-            יומן אירועים
-          </h1>
-          <p className="text-sm text-slate-400 font-medium mt-1">
-            {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {signedCount} חתומים • {pendingCount} ממתינים
-          </p>
-        </div>
-
-        {/* Quick stats pills */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-bold">{signedCount} חתומים</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-amber-500" />
-            <span className="text-xs font-bold">{pendingCount} ממתינים</span>
-          </div>
-        </div>
+      <div>
+        <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">יומן אירועים</h2>
+        <p className="mt-2 font-medium text-[#886c63]">
+          {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {signedCount} חתומים • {pendingCount} ממתינים
+        </p>
       </div>
 
       {/* Controls bar */}
