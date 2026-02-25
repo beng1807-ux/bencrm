@@ -94,6 +94,15 @@ export default function MyShows() {
   const upcomingEvents = myEvents.filter(e => new Date(e.event_date) >= new Date() && e.event_status !== 'CANCELLED');
   const pastEvents = myEvents.filter(e => new Date(e.event_date) < new Date() || e.event_status === 'COMPLETED');
 
+  if (!isAdmin && !djProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <p className="text-xl font-semibold text-gray-700">אין לך פרופיל DJ משויך</p>
+        <p className="text-gray-500 mt-2">פנה למנהל המערכת לשיוך החשבון שלך.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
