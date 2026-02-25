@@ -214,6 +214,18 @@ export default function DJs() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>שיוך משתמש</Label>
+              <Select value={editData.user_id || '_none_'} onValueChange={v => setEditData({...editData, user_id: v === '_none_' ? '' : v})}>
+                <SelectTrigger><SelectValue placeholder="ללא שיוך" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none_">ללא שיוך</SelectItem>
+                  {users.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.full_name || u.email} ({u.email})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>הערות</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>
             <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
           </div>
