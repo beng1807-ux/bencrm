@@ -174,12 +174,12 @@ export default function Events() {
   });
 
   return (
-    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif', color: eventSettings.events_font_color || '#0f172a' }}>
       {/* Hero Banner */}
       <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black text-slate-900 mb-2">חגיגה של הצלחה! 🎉</h2>
-          <p className="text-slate-500 font-medium max-w-md">החודש הזה אנחנו שוברים שיאים. האירועים שלכם הופכים לרגעים בלתי נשכחים.</p>
+          <h2 className="text-3xl font-black mb-2" style={{ color: eventSettings.events_font_color || '#0f172a' }}>{eventSettings.events_title || 'חגיגה של הצלחה! 🎉'}</h2>
+          <p className="text-slate-500 font-medium max-w-md">{eventSettings.events_subtitle || 'החודש הזה אנחנו שוברים שיאים. האירועים שלכם הופכים לרגעים בלתי נשכחים.'}</p>
         </div>
         <div className="flex items-center gap-8 relative z-10">
           <div className="relative flex items-center justify-center w-28 h-28">
