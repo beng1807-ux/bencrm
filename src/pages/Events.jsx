@@ -47,6 +47,7 @@ export default function Events() {
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [creating, setCreating] = useState(false);
+  const [eventSettings, setEventSettings] = useState({});
 
   useEffect(() => { loadData(); }, []);
 
