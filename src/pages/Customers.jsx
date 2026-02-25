@@ -467,7 +467,7 @@ export default function Customers() {
       {/* ── TABLE VIEW ── */}
       {viewMode === 'table' && (
         <TableView leads={filteredLeads} onRowClick={openDetails} onEdit={openEdit} onDelete={deleteLead}
-          phaseFilter={phaseFilter} selected={multiSelected} onSelect={toggleSelect} onSelectAll={selectAll} />
+          phaseFilter={phaseFilter} selected={multiSelected} onSelect={toggleSelect} onSelectAll={selectAll} onCloseDeal={closeDeal} />
       )}
 
       {/* ── KANBAN VIEW ── */}
