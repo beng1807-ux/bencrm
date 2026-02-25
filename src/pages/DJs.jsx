@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Music, Phone, Mail, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Music, Phone, Mail, Plus, Pencil, Trash2, Sparkles } from 'lucide-react';
 import ViewToggle from '@/components/shared/ViewToggle';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ const PRIMARY = '#e94f1c';
 
 export default function DJs() {
   const [djs, setDJs] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('cards');
   const [selected, setSelected] = useState(new Set());
@@ -28,8 +29,12 @@ export default function DJs() {
 
   const loadDJs = async () => {
     try {
-      const data = await base44.entities.DJ.list('-created_date');
+      const [data, usersList] = await Promise.all([
+        base44.entities.DJ.list('-created_date'),
+        base44.entities.User.list(),
+      ]);
       setDJs(data);
+      setUsers(usersList);
     } catch { toast.error('שגיאה בטעינת DJ-ים'); }
     finally { setLoading(false); }
   };
