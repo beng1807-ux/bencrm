@@ -456,60 +456,48 @@ export default function Events() {
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-2xl" dir="rtl">
-          <DialogHeader><DialogTitle>אירוע חדש</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="col-span-2">
-              <Label>לקוח *</Label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  {(() => {
-                    const closedLeads = leads.filter(l => ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(l.status));
-                    const allOptions = [
-                      ...customers.map(c => ({ id: c.id, name: c.name, type: 'customer' })),
-                      ...closedLeads.map(l => ({ id: l.id, name: l.contact_name, type: 'lead' })),
-                    ];
-                    return (
+          <DialogHeader><DialogTitle>{eventSettings.create_dialog_title || 'אירוע חדש'}</DialogTitle></DialogHeader>
+          {(() => {
+            const visFields = eventSettings.create_visible_fields || ['customer_id','event_date','event_type','package_id','location'];
+            const fl = eventSettings.field_labels || {};
+            const closedLeads = leads.filter(l => ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(l.status));
+            const allOptions = [
+              ...customers.map(c => ({ id: c.id, name: c.name })),
+              ...closedLeads.map(l => ({ id: l.id, name: l.contact_name })),
+            ];
+            const createFieldMap = {
+              customer_id: () => (
+                <div className="col-span-2" key="customer_id">
+                  <Label>{fl.customer_id || 'לקוח'} *</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
                       <Select value={newEvent.customer_id || ''} onValueChange={v => {
                         const lead = leads.find(l => l.id === v);
                         const updatedEvent = { ...newEvent, customer_id: v };
-                        if (lead?.event_date) {
-                          updatedEvent.event_date = lead.event_date;
-                        }
+                        if (lead?.event_date) updatedEvent.event_date = lead.event_date;
                         setNewEvent(updatedEvent);
                       }}>
                         <SelectTrigger><SelectValue placeholder={allOptions.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
-                        <SelectContent>
-                          {allOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{allOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
                       </Select>
-                    );
-                  })()}
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0"><Plus className="w-4 h-4 ml-1" />לקוח חדש</Button>
+                  </div>
                 </div>
-                <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0">
-                  <Plus className="w-4 h-4 ml-1" />לקוח חדש
-                </Button>
+              ),
+              event_date: () => <div key="event_date"><Label>{fl.event_date || 'תאריך'} *</Label><Input type="date" value={newEvent.event_date || ''} onChange={e => setNewEvent({...newEvent, event_date: e.target.value})} /></div>,
+              event_type: () => <div key="event_type"><Label>{fl.event_type || 'סוג אירוע'} *</Label><Select value={newEvent.event_type || ''} onValueChange={v => setNewEvent({...newEvent, event_type: v})}><SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger><SelectContent>{['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>,
+              package_id: () => <div key="package_id"><Label>{fl.package_id || 'חבילה'} *</Label><Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>,
+              location: () => <div className="col-span-2" key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} /></div>,
+              notes: () => <div className="col-span-2" key="notes"><Label>{fl.notes || 'הערות'}</Label><Textarea value={newEvent.notes || ''} onChange={e => setNewEvent({...newEvent, notes: e.target.value})} /></div>,
+            };
+            return (
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                {visFields.map(f => createFieldMap[f]?.())}
+                <div className="col-span-2"><Button onClick={createEvent} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>צור אירוע</Button></div>
               </div>
-            </div>
-            <div><Label>תאריך *</Label><Input type="date" value={newEvent.event_date || ''} onChange={e => setNewEvent({...newEvent, event_date: e.target.value})} /></div>
-            <div>
-              <Label>סוג אירוע *</Label>
-              <Select value={newEvent.event_type || ''} onValueChange={v => setNewEvent({...newEvent, event_type: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger>
-                <SelectContent>
-                  {['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>חבילה *</Label>
-              <Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger>
-                <SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2"><Label>מיקום</Label><Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} /></div>
-            <div className="col-span-2"><Button onClick={createEvent} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>צור אירוע</Button></div>
-          </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
