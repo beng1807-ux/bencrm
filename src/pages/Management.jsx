@@ -28,18 +28,20 @@ export default function Management() {
 
   const loadData = async () => {
     try {
-      const [settingsList, templatesData, packagesData, navList, customerSettingsList] = await Promise.all([
+      const [settingsList, templatesData, packagesData, navList, customerSettingsList, eventSettingsList] = await Promise.all([
         base44.entities.AppSettings.list(),
         base44.entities.MessageTemplate.list(),
         base44.entities.Package.list(),
         base44.entities.NavSettings.list(),
         base44.entities.CustomerSettings.list(),
+        base44.entities.EventSettings.list(),
       ]);
       setSettings(settingsList[0] || {});
       setTemplates(templatesData);
       setPackages(packagesData);
       setNavSettings(navList[0] || {});
       setCustomerSettings(customerSettingsList[0] || {});
+      setEventSettings(eventSettingsList[0] || {});
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('שגיאה בטעינת נתונים');
