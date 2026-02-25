@@ -424,72 +424,32 @@ export default function Events() {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader><DialogTitle>עריכת אירוע</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="col-span-2">
-              <Label>לקוח</Label>
-              <Input value={getCustomerName(editData.customer_id, customers, leads)} disabled className="bg-slate-50" />
-            </div>
-            <div>
-              <Label>סוג אירוע</Label>
-              <Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>חבילה</Label>
-              <Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger>
-                <SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>תאריך</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>
-            <div><Label>מיקום</Label><Input value={editData.location || ''} onChange={e => setEditData({...editData, location: e.target.value})} /></div>
-            <div>
-              <Label>סטטוס אירוע</Label>
-              <Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>סטטוס תשלום</Label>
-              <Select value={editData.payment_status || ''} onValueChange={v => setEditData({...editData, payment_status: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>DJ</Label>
-              <Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger>
-                <SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>אמצעי תשלום</Label>
-              <Select value={editData.last_payment_method || ''} onValueChange={v => setEditData({...editData, last_payment_method: v})}>
-                <SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger>
-                <SelectContent>
-                  {['העברה','אשראי','מזומן','ביט'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2"><Label>הערות</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>
-            <div className="col-span-2 flex gap-2">
-              <Button onClick={saveEdit} className="flex-1 font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
-              <Button variant="destructive" onClick={() => { setEditOpen(false); deleteEvent(editData.id); }} className="font-bold">
-                <Trash2 className="w-4 h-4 ml-1" />מחק
-              </Button>
-            </div>
-          </div>
+          <DialogHeader><DialogTitle>{eventSettings.edit_dialog_title || 'עריכת אירוע'}</DialogTitle></DialogHeader>
+          {(() => {
+            const visFields = eventSettings.edit_visible_fields || ['customer_id','event_date','event_type','package_id','location','event_status','payment_status','dj_id','last_payment_method','notes'];
+            const fl = eventSettings.field_labels || {};
+            const fieldMap = {
+              customer_id: () => <div className="col-span-2" key="customer_id"><Label>{fl.customer_id || 'לקוח'}</Label><Input value={getCustomerName(editData.customer_id, customers, leads)} disabled className="bg-slate-50" /></div>,
+              event_type: () => <div key="event_type"><Label>{fl.event_type || 'סוג אירוע'}</Label><Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>,
+              package_id: () => <div key="package_id"><Label>{fl.package_id || 'חבילה'}</Label><Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>,
+              event_date: () => <div key="event_date"><Label>{fl.event_date || 'תאריך'}</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>,
+              location: () => <div key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={editData.location || ''} onChange={e => setEditData({...editData, location: e.target.value})} /></div>,
+              event_status: () => <div key="event_status"><Label>{fl.event_status || 'סטטוס אירוע'}</Label><Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
+              payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => setEditData({...editData, payment_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
+              dj_id: () => <div key="dj_id"><Label>{fl.dj_id || 'DJ'}</Label><Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}><SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger><SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent></Select></div>,
+              last_payment_method: () => <div key="last_payment_method"><Label>{fl.last_payment_method || 'אמצעי תשלום'}</Label><Select value={editData.last_payment_method || ''} onValueChange={v => setEditData({...editData, last_payment_method: v})}><SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger><SelectContent>{['העברה','אשראי','מזומן','ביט'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>,
+              notes: () => <div className="col-span-2" key="notes"><Label>{fl.notes || 'הערות'}</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>,
+            };
+            return (
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                {visFields.map(f => fieldMap[f]?.())}
+                <div className="col-span-2 flex gap-2">
+                  <Button onClick={saveEdit} className="flex-1 font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+                  <Button variant="destructive" onClick={() => { setEditOpen(false); deleteEvent(editData.id); }} className="font-bold"><Trash2 className="w-4 h-4 ml-1" />מחק</Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
