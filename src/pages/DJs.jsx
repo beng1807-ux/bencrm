@@ -149,7 +149,7 @@ export default function DJs() {
               </div>
             );
           })}
-          {djs.length === 0 && <div className="col-span-full bg-white rounded-xl p-12 text-center text-[#886c63] border border-[#e5dedc]">אין DJ-ים במערכת</div>}
+          {djs.length === 0 && <div className="col-span-full bg-white rounded-xl p-12 text-center text-slate-500 border border-slate-200">אין DJ-ים במערכת</div>}
         </div>
       )}
 
