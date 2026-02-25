@@ -20,7 +20,14 @@ export default function MyAvailability() {
   const loadAvailability = async () => {
     try {
       const user = await base44.auth.me();
-      const djList = await base44.entities.DJ.filter({ user_id: user.id });
+      // חיפוש DJ לפי user_id (ID או אימייל)
+      let djList = await base44.entities.DJ.filter({ user_id: user.id });
+      if (djList.length === 0 && user.email) {
+        djList = await base44.entities.DJ.filter({ user_id: user.email });
+      }
+      if (djList.length === 0 && user.email) {
+        djList = await base44.entities.DJ.filter({ email: user.email });
+      }
       if (djList.length > 0) {
         setDjProfile(djList[0]);
         const dates = (djList[0].unavailable_dates || []).sort();
