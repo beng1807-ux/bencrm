@@ -64,12 +64,14 @@ export default function Events() {
       base44.entities.Lead.list(),
       base44.entities.Package.filter({ active: true }),
       base44.entities.DJ.filter({ status: 'ACTIVE' }),
+      base44.entities.EventSettings.list(),
     ]);
     setEvents(results[0].status === 'fulfilled' ? results[0].value : []);
     setCustomers(results[1].status === 'fulfilled' ? results[1].value : []);
     setLeads(results[2].status === 'fulfilled' ? results[2].value : []);
     setPackages(results[3].status === 'fulfilled' ? results[3].value : []);
     setDJs(results[4].status === 'fulfilled' ? results[4].value : []);
+    if (results[5].status === 'fulfilled' && results[5].value.length > 0) setEventSettings(results[5].value[0]);
     setLoading(false);
   };
 
