@@ -155,10 +155,10 @@ export default function DJs() {
 
       {/* Table View */}
       {viewMode === 'table' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#e5dedc] bg-[#f8f6f6] text-[#886c63] text-xs font-bold">
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 text-xs font-bold">
                 <th className="px-4 py-3"><Checkbox checked={selected.size === djs.length && djs.length > 0} onCheckedChange={toggleAll} /></th>
                 <th className="text-right px-4 py-3">שם</th>
                 <th className="text-right px-4 py-3">טלפון</th>
@@ -169,16 +169,16 @@ export default function DJs() {
               </tr>
             </thead>
             <tbody>
-              {djs.length === 0 && <tr><td colSpan={7} className="text-center text-[#886c63] py-10">אין DJ-ים</td></tr>}
+              {djs.length === 0 && <tr><td colSpan={7} className="text-center text-slate-500 py-10">אין DJ-ים</td></tr>}
               {djs.map(dj => {
                 const isSelected = selected.has(dj.id);
                 return (
-                  <tr key={dj.id} className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
+                  <tr key={dj.id} className={`border-b border-slate-100 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
                     onClick={() => openEdit(dj)}>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(dj.id, { stopPropagation: () => {} })} /></td>
-                    <td className="px-4 py-3 font-bold text-[#181311]">{dj.name}</td>
-                    <td className="px-4 py-3 text-[#886c63]">{dj.phone}</td>
-                    <td className="px-4 py-3 text-[#886c63]">{dj.email}</td>
+                    <td className="px-4 py-3 font-bold text-slate-900">{dj.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{dj.phone}</td>
+                    <td className="px-4 py-3 text-slate-500">{dj.email}</td>
                     <td className="px-4 py-3"><Badge className={getStatusColor(dj.status)}>{dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}</Badge></td>
                     <td className="px-4 py-3 text-[#886c63]">{dj.total_events || 0}</td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
