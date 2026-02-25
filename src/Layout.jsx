@@ -31,7 +31,18 @@ export default function Layout({ children, currentPageName }) {
         if (navList.length > 0) setNavSettings(navList[0]);
 
         if (currentUser.role !== 'admin') {
-          const djList = await base44.entities.DJ.filter({ user_id: currentUser.id });
+          // First try by user_id
+          let djList = await base44.entities.DJ.filter({ user_id: currentUser.id });
+          // If not found, try auto-link by email
+          if (djList.length === 0 && currentUser.email) {
+            const byEmail = await base44.entities.DJ.filter({ email: currentUser.email });
+            if (byEmail.length > 0 && !byEmail[0].user_id) {
+              await base44.entities.DJ.update(byEmail[0].id, { user_id: currentUser.id });
+              djList = [{ ...byEmail[0], user_id: currentUser.id }];
+            } else {
+              djList = byEmail.filter(d => d.user_id === currentUser.id);
+            }
+          }
           if (djList.length > 0) setDjProfile(djList[0]);
         }
       } catch (err) {
