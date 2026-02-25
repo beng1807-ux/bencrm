@@ -118,7 +118,7 @@ export default function DJs() {
             return (
               <div key={dj.id}
                 className={`bg-white p-4 rounded-xl shadow-sm border transition-all hover:shadow-md cursor-pointer
-                  ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-[#e5dedc] hover:border-primary/20'}`}
+                  ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-slate-200 hover:border-primary/20'}`}
                 onClick={() => openEdit(dj)}>
                 <div className="flex items-start gap-3">
                   <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => toggleSelect(dj.id, e)} className="mt-1 flex-shrink-0" />
@@ -128,22 +128,22 @@ export default function DJs() {
                         <Music className="w-5 h-5" style={{ color: PRIMARY }} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-[#181311]">{dj.name}</h3>
+                        <h3 className="font-bold text-slate-900">{dj.name}</h3>
                         <Badge className={getStatusColor(dj.status)}>{dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}</Badge>
                       </div>
                     </div>
-                    <div className="space-y-1.5 text-sm text-[#886c63]">
+                    <div className="space-y-1.5 text-sm text-slate-500">
                       <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{dj.phone}</div>
                       <div className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{dj.email}</div>
-                      <div className="flex items-center justify-between pt-2 border-t border-[#e5dedc]">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                         <span>אירועים: {dj.total_events || 0}</span>
                         {dj.unavailable_dates?.length > 0 && <span className="text-xs">{dj.unavailable_dates.length} תאריכים חסומים</span>}
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <button onClick={e => openEdit(dj, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={e => openEdit(dj, e)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
