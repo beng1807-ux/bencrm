@@ -412,6 +412,10 @@ export default function Management() {
           </div>
         </TabsContent>
 
+        <TabsContent value="events_settings">
+          <EventSettingsTab eventSettings={eventSettings} setEventSettings={setEventSettings} />
+        </TabsContent>
+
         <TabsContent value="branding">
           <Card>
             <CardHeader>
