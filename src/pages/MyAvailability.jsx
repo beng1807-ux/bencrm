@@ -20,16 +20,7 @@ export default function MyAvailability() {
   const loadAvailability = async () => {
     try {
       const user = await base44.auth.me();
-      // Try by user_id first
-      let djList = await base44.entities.DJ.filter({ user_id: user.id });
-      // Auto-link by email if not found
-      if (djList.length === 0 && user.email) {
-        const byEmail = await base44.entities.DJ.filter({ email: user.email });
-        if (byEmail.length > 0 && !byEmail[0].user_id) {
-          await base44.entities.DJ.update(byEmail[0].id, { user_id: user.id });
-          djList = [{ ...byEmail[0], user_id: user.id }];
-        }
-      }
+      const djList = await base44.entities.DJ.filter({ user_id: user.id });
       if (djList.length > 0) {
         setDjProfile(djList[0]);
         const dates = (djList[0].unavailable_dates || []).sort();

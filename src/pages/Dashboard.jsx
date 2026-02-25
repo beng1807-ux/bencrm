@@ -38,6 +38,12 @@ export default function Dashboard() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
+      // רק אדמין רואה את הדשבורד
+      if (currentUser.role !== 'admin') {
+        setLoading(false);
+        return;
+      }
+
       const [leads, events, customers, auditLogs, settingsList] = await Promise.all([
         base44.entities.Lead.list(),
         base44.entities.Event.list(),

@@ -39,22 +39,12 @@ export default function MyShows() {
           setMyEvents(events);
         }
       } else {
-        // Auto-link by email if needed
-        let djList = await base44.entities.DJ.filter({ user_id: user.id });
-        if (djList.length === 0 && user.email) {
-          const byEmail = await base44.entities.DJ.filter({ email: user.email });
-          if (byEmail.length > 0 && !byEmail[0].user_id) {
-            await base44.entities.DJ.update(byEmail[0].id, { user_id: user.id });
-            djList = [{ ...byEmail[0], user_id: user.id }];
-          }
-        }
+        const djList = await base44.entities.DJ.filter({ user_id: user.id });
         if (djList.length > 0) {
           const dj = djList[0];
           setDjProfile(dj);
-          try {
-            const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
-            setMyEvents(events);
-          } catch { /* DJ might not have event read access yet */ }
+          const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
+          setMyEvents(events);
         }
       }
     } catch (error) {
