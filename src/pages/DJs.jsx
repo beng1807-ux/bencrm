@@ -68,7 +68,14 @@ export default function DJs() {
   };
 
   const createDJ = async () => {
-    await base44.entities.DJ.create({ ...newDJ, user_id: 'temp_' + Date.now(), status: 'ACTIVE' });
+    if (!newDJ.user_id) { toast.error('חובה לבחור משתמש מהמערכת'); return; }
+    if (!newDJ.name || !newDJ.phone || !newDJ.email) { toast.error('חובה למלא שם, טלפון ואימייל'); return; }
+    // Check for duplicate email or phone
+    const dupEmail = djs.find(d => d.email === newDJ.email);
+    const dupPhone = djs.find(d => d.phone === newDJ.phone);
+    if (dupEmail) { toast.error('כבר קיים DJ עם אימייל זה'); return; }
+    if (dupPhone) { toast.error('כבר קיים DJ עם טלפון זה'); return; }
+    await base44.entities.DJ.create({ ...newDJ, status: 'ACTIVE' });
     await loadDJs();
     toast.success('DJ חדש נוצר');
     setCreateOpen(false); setNewDJ({});
