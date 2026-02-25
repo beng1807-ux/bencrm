@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 
 const PRIMARY = '#e94f1c';
 
@@ -103,7 +104,14 @@ export default function Dashboard() {
     return `לפני ${Math.floor(h / 24)} ימים`;
   };
 
-  if (loading) return (
+  // Redirect non-admin users to MyShows
+  useEffect(() => {
+    if (!loading && user && user.role !== 'admin') {
+      window.location.href = createPageUrl('MyShows');
+    }
+  }, [loading, user]);
+
+  if (loading || (user && user.role !== 'admin')) return (
     <div className="flex items-center justify-center h-64">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }}></div>
     </div>

@@ -23,12 +23,17 @@ export default function Layout({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
-        const [settingsList, navList] = await Promise.all([
-          base44.entities.AppSettings.list(),
-          base44.entities.NavSettings.list(),
-        ]);
-        if (settingsList.length > 0) setSettings(settingsList[0]);
-        if (navList.length > 0) setNavSettings(navList[0]);
+        // Settings are admin-only, so wrap in try/catch for non-admin users
+        try {
+          const [settingsList, navList] = await Promise.all([
+            base44.entities.AppSettings.list(),
+            base44.entities.NavSettings.list(),
+          ]);
+          if (settingsList.length > 0) setSettings(settingsList[0]);
+          if (navList.length > 0) setNavSettings(navList[0]);
+        } catch {
+          // Non-admin users can't read settings — use defaults
+        }
 
         if (currentUser.role !== 'admin') {
           // First try by user_id
@@ -53,7 +58,7 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   const isAdmin = user?.role === 'admin';
-  const isDJ = !isAdmin && djProfile;
+  const isDJ = !isAdmin; // All non-admin users see DJ menu
 
   const primaryColor = settings?.brand_primary_color || '#e94f1c';
   const bgColor = settings?.brand_bg_color || '#F3F4F6';
@@ -78,6 +83,9 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const menuItems = isAdmin ? adminMenuItems : djMenuItems;
+  
+  // For non-admin users, default page is MyShows not Dashboard
+  const defaultDJPage = 'MyShows';
 
   if (!user) return children;
 
