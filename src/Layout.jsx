@@ -14,12 +14,24 @@ export default function Layout({ children, currentPageName }) {
   const [djProfile, setDjProfile] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [authChecked, setAuthChecked] = useState(false);
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) return;
+        // BookingForm is public - no auth required
+        if (currentPageName === 'BookingForm') {
+          setAuthChecked(true);
+          return;
+        }
 
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) {
+          base44.auth.redirectToLogin();
+          return;
+        }
+
+        setAuthChecked(true);
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
