@@ -95,7 +95,7 @@ export default function DJs() {
         </div>
         <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3" />
         <Sparkles className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 text-primary/10" />
-        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
+        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white relative z-10" style={{ backgroundColor: PRIMARY }}>
           <Plus className="w-4 h-4 ml-2" />DJ חדש
         </Button>
       </div>
