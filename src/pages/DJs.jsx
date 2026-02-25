@@ -180,11 +180,11 @@ export default function DJs() {
                     <td className="px-4 py-3 text-slate-500">{dj.phone}</td>
                     <td className="px-4 py-3 text-slate-500">{dj.email}</td>
                     <td className="px-4 py-3"><Badge className={getStatusColor(dj.status)}>{dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}</Badge></td>
-                    <td className="px-4 py-3 text-[#886c63]">{dj.total_events || 0}</td>
+                    <td className="px-4 py-3 text-slate-500">{dj.total_events || 0}</td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
-                        <button onClick={e => openEdit(dj, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={e => openEdit(dj, e)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={e => deleteDJ(dj.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
