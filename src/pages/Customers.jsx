@@ -129,7 +129,7 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
 }
 
 // ── TableView ────────────────────────────────────────────────────
-function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected, onSelect, onSelectAll }) {
+function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected, onSelect, onSelectAll, onCloseDeal }) {
   const filtered = phaseFilter === 'lead'
     ? leads.filter(l => LEAD_COLS.some(c => c.key === l.status))
     : phaseFilter === 'customer'
