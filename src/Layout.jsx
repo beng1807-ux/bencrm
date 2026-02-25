@@ -95,6 +95,16 @@ export default function Layout({ children, currentPageName }) {
   // For non-admin users, default page is MyShows not Dashboard
   const defaultDJPage = 'MyShows';
 
+  // BookingForm is public - render without layout
+  if (currentPageName === 'BookingForm') return children;
+
+  // Wait for auth check before rendering
+  if (!authChecked) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#e94f1c' }}></div>
+    </div>
+  );
+
   if (!user) return children;
 
   const displayName = user.full_name || user.email;
