@@ -54,7 +54,7 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   const isAdmin = user?.role === 'admin';
-  const isDJ = !isAdmin; // All non-admin users see DJ menu
+  const isDJ = !isAdmin && djProfile; // רק מי שמשויך ל-DJ רואה תפריט DJ
 
   const primaryColor = settings?.brand_primary_color || '#e94f1c';
   const bgColor = settings?.brand_bg_color || '#F3F4F6';
