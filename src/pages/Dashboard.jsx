@@ -110,16 +110,44 @@ export default function Dashboard() {
     return `לפני ${Math.floor(h / 24)} ימים`;
   };
 
-  // Redirect non-admin users to MyShows
+  const [isDJ, setIsDJ] = useState(null); // null = loading, true/false = resolved
+
+  // בדיקה אם המשתמש הוא DJ
   useEffect(() => {
+    const checkDJ = async () => {
+      if (!user || user.role === 'admin') return;
+      let djList = await base44.entities.DJ.filter({ user_id: user.id });
+      if (djList.length === 0 && user.email) {
+        djList = await base44.entities.DJ.filter({ user_id: user.email });
+      }
+      if (djList.length === 0 && user.email) {
+        djList = await base44.entities.DJ.filter({ email: user.email });
+      }
+      setIsDJ(djList.length > 0);
+    };
     if (!loading && user && user.role !== 'admin') {
-      window.location.href = createPageUrl('MyShows');
+      checkDJ();
     }
   }, [loading, user]);
 
-  if (loading || (user && user.role !== 'admin')) return (
+  // Redirect DJ users to MyShows
+  useEffect(() => {
+    if (!loading && user && user.role !== 'admin' && isDJ === true) {
+      window.location.href = createPageUrl('MyShows');
+    }
+  }, [loading, user, isDJ]);
+
+  if (loading || (user && user.role !== 'admin' && isDJ !== false)) return (
     <div className="flex items-center justify-center h-64">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }}></div>
+    </div>
+  );
+
+  // משתמש שאינו admin ואינו DJ
+  if (user && user.role !== 'admin' && isDJ === false) return (
+    <div className="flex flex-col items-center justify-center h-64 text-center">
+      <p className="text-xl font-semibold text-gray-700">אין לך הרשאת גישה</p>
+      <p className="text-gray-500 mt-2">החשבון שלך לא משויך למערכת. פנה למנהל.</p>
     </div>
   );
 
