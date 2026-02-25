@@ -178,6 +178,9 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
                 </td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-1">
+                    {LEAD_COLS.some(c => c.key === lead.status) && (
+                      <button onClick={e => { e.stopPropagation(); onCloseDeal(lead.id); }} title="סגור עסקה" className="p-1.5 text-[#886c63] hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"><Handshake className="w-4 h-4" /></button>
+                    )}
                     <button onClick={e => { e.stopPropagation(); onEdit(lead); }} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
                     <button onClick={e => { e.stopPropagation(); onDelete(lead.id); }} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
