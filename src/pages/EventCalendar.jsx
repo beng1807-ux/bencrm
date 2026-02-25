@@ -179,7 +179,7 @@ export default function EventCalendar() {
   const selectedDJ = selectedEvent ? djs.find(d => d.id === selectedEvent.dj_id) : null;
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Header */}
       <div>
         <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">יומן אירועים</h2>
