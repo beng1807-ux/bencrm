@@ -224,6 +224,26 @@ export default function DJs() {
         <DialogContent dir="rtl">
           <DialogHeader><DialogTitle>DJ חדש</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
+            <div>
+              <Label>שיוך למשתמש במערכת *</Label>
+              {(() => {
+                const assignedUserIds = new Set(djs.map(d => d.user_id));
+                const availableUsers = users.filter(u => !assignedUserIds.has(u.id));
+                return (
+                  <Select value={newDJ.user_id || ''} onValueChange={v => {
+                    const usr = users.find(u => u.id === v);
+                    setNewDJ({ ...newDJ, user_id: v, name: usr?.full_name || newDJ.name || '', email: usr?.email || newDJ.email || '' });
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="בחר משתמש" /></SelectTrigger>
+                    <SelectContent>
+                      {availableUsers.length === 0 && <SelectItem value="_none" disabled>אין משתמשים זמינים</SelectItem>}
+                      {availableUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                );
+              })()}
+              <p className="text-xs text-slate-400 mt-1">DJ חייב להיות משויך למשתמש קיים במערכת</p>
+            </div>
             <div><Label>שם *</Label><Input value={newDJ.name || ''} onChange={e => setNewDJ({...newDJ, name: e.target.value})} /></div>
             <div><Label>טלפון *</Label><Input value={newDJ.phone || ''} onChange={e => setNewDJ({...newDJ, phone: e.target.value})} /></div>
             <div><Label>אימייל *</Label><Input type="email" value={newDJ.email || ''} onChange={e => setNewDJ({...newDJ, email: e.target.value})} /></div>
