@@ -39,7 +39,14 @@ export default function MyShows() {
           setMyEvents(events);
         }
       } else {
-        const djList = await base44.entities.DJ.filter({ user_id: user.id });
+        // חיפוש DJ לפי user_id (ID או אימייל)
+        let djList = await base44.entities.DJ.filter({ user_id: user.id });
+        if (djList.length === 0 && user.email) {
+          djList = await base44.entities.DJ.filter({ user_id: user.email });
+        }
+        if (djList.length === 0 && user.email) {
+          djList = await base44.entities.DJ.filter({ email: user.email });
+        }
         if (djList.length > 0) {
           const dj = djList[0];
           setDjProfile(dj);
