@@ -155,10 +155,11 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
+          <TabsTrigger value="events_settings">אירועים</TabsTrigger>
           <TabsTrigger value="branding">מיתוג</TabsTrigger>
           <TabsTrigger value="customers">לקוחות</TabsTrigger>
           <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
