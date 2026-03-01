@@ -246,7 +246,7 @@ export default function BookingForm() {
       {/* Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         {bgType === 'video' ? (
-          <video src={bgUrl} className="w-full h-full object-cover opacity-30 blur-sm scale-110" autoPlay muted loop playsInline />
+          <video src={bgUrl} className="w-full h-full object-cover opacity-50 blur-sm scale-110" autoPlay muted loop playsInline />
         ) : (
           <img src={bgUrl} alt="רקע" className="w-full h-full object-cover opacity-50 blur-sm scale-110" />
         )}
