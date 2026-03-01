@@ -174,6 +174,18 @@ export default function Management() {
               <CardTitle>הגדרות מערכת</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="mb-6">
+                <Label>מייל בעל העסק (לקבלת התראות)</Label>
+                <Input
+                  type="email"
+                  value={settings.owner_email || ''}
+                  onChange={e => setSettings({...settings, owner_email: e.target.value})}
+                  placeholder="beng1807@gmail.com"
+                  dir="ltr"
+                />
+                <p className="text-xs text-gray-400 mt-1">המייל הזה ישמש לקבלת התראות על פניות חדשות מטופס ההזמנה ודברים נוספים</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>שעת שליחה (שעה)</Label>

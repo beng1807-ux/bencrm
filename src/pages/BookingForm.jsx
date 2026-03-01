@@ -43,7 +43,7 @@ const DEFAULT_FIELDS = [
   { key: 'special_requests', label: 'סגנונות דגשים / בקשות מיוחדות', type: 'textarea', required: false, visible: true, placeholder: 'יש לכם בקשות מיוחדות? ספרו לנו...', half_width: false },
 ];
 
-function DynamicField({ field, value, onChange }) {
+function DynamicField({ field, value, onChange, error }) {
   const requiredMark = field.required ? ' *' : '';
 
   switch (field.type) {
@@ -67,6 +67,7 @@ function DynamicField({ field, value, onChange }) {
             }}
             className={field.type === 'date' ? '[color-scheme:dark]' : ''}
           />
+          {error && <p className="text-red-400 text-xs mr-4">{error}</p>}
         </div>
       );
 
@@ -281,7 +282,11 @@ export default function BookingForm() {
                   key={field.key}
                   field={field}
                   value={formData[field.key]}
-                  onChange={val => setFormData(prev => ({ ...prev, [field.key]: val }))}
+                  onChange={val => {
+                    setFormData(prev => ({ ...prev, [field.key]: val }));
+                    if (errors[field.key]) setErrors(prev => ({ ...prev, [field.key]: undefined }));
+                  }}
+                  error={errors[field.key]}
                 />
               ))}
             </div>
