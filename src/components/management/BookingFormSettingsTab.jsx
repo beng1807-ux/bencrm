@@ -120,6 +120,24 @@ export default function BookingFormSettingsTab() {
 
   return (
     <div className="space-y-6">
+      {/* מייל התראות */}
+      <Card>
+        <CardHeader><CardTitle>מייל התראות טופס הזמנה</CardTitle></CardHeader>
+        <CardContent>
+          <div>
+            <Label>מייל לקבלת התראות (אם ריק — ייקח מהגדרות כלליות)</Label>
+            <Input
+              type="email"
+              value={bfSettings.notification_email || ''}
+              onChange={e => setBfSettings(prev => ({ ...prev, notification_email: e.target.value }))}
+              placeholder="beng1807@gmail.com"
+              dir="ltr"
+            />
+            <p className="text-xs text-gray-400 mt-2">השאר ריק כדי להשתמש במייל שהוגדר בהגדרות כלליות</p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* קישור לטופס */}
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Link className="w-5 h-5" />קישור ייעודי לטופס</CardTitle></CardHeader>
