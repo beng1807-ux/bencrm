@@ -455,11 +455,17 @@ export default function Events() {
             const fieldMap = {
               customer_id: () => <div className="col-span-2" key="customer_id"><Label>{fl.customer_id || 'לקוח'}</Label><Input value={getCustomerName(editData.customer_id, customers, leads)} disabled className="bg-slate-50" /></div>,
               event_type: () => <div key="event_type"><Label>{fl.event_type || 'סוג אירוע'}</Label><Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>,
-              package_id: () => <div key="package_id"><Label>{fl.package_id || 'חבילה'}</Label><Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>,
+              package_id: () => (
+                <React.Fragment key="package_id">
+                  <div><Label>{fl.package_id || 'חבילה'}</Label><Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>
+                  <AddonSelector packages={packages} selectedAddonIds={editData.addon_ids || []} onChange={ids => setEditData({...editData, addon_ids: ids})} />
+                  <PriceSummary packages={packages} packageId={editData.package_id} addonIds={editData.addon_ids} depositPercent={depositPercent} data={editData} onChange={updates => setEditData(prev => ({...prev, ...updates}))} />
+                </React.Fragment>
+              ),
               event_date: () => <div key="event_date"><Label>{fl.event_date || 'תאריך'}</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>,
               location: () => <div key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={editData.location || ''} onChange={e => setEditData({...editData, location: e.target.value})} /></div>,
               event_status: () => <div key="event_status"><Label>{fl.event_status || 'סטטוס אירוע'}</Label><Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
-              payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => setEditData({...editData, payment_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
+              payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => handlePaymentStatusChange(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               dj_id: () => {
                 const selectedDj = djs.find(d => d.id === editData.dj_id);
                 const eventDate = editData.event_date;
@@ -537,7 +543,13 @@ export default function Events() {
               ),
               event_date: () => <div key="event_date"><Label>{fl.event_date || 'תאריך'} *</Label><Input type="date" value={newEvent.event_date || ''} onChange={e => setNewEvent({...newEvent, event_date: e.target.value})} /></div>,
               event_type: () => <div key="event_type"><Label>{fl.event_type || 'סוג אירוע'} *</Label><Select value={newEvent.event_type || ''} onValueChange={v => setNewEvent({...newEvent, event_type: v})}><SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger><SelectContent>{['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>,
-              package_id: () => <div key="package_id"><Label>{fl.package_id || 'חבילה'} *</Label><Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>,
+              package_id: () => (
+                <React.Fragment key="package_id">
+                  <div><Label>{fl.package_id || 'חבילה'} *</Label><Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>
+                  <AddonSelector packages={packages} selectedAddonIds={newEvent.addon_ids || []} onChange={ids => setNewEvent({...newEvent, addon_ids: ids})} />
+                  <PriceSummary packages={packages} packageId={newEvent.package_id} addonIds={newEvent.addon_ids} depositPercent={depositPercent} data={newEvent} onChange={updates => setNewEvent(prev => ({...prev, ...updates}))} />
+                </React.Fragment>
+              ),
               location: () => <div className="col-span-2" key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} /></div>,
               notes: () => <div className="col-span-2" key="notes"><Label>{fl.notes || 'הערות'}</Label><Textarea value={newEvent.notes || ''} onChange={e => setNewEvent({...newEvent, notes: e.target.value})} /></div>,
             };
@@ -550,6 +562,14 @@ export default function Events() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        open={paymentModalOpen}
+        onClose={() => { setPaymentModalOpen(false); setPendingPaymentStatus(null); }}
+        onConfirm={confirmPaymentMethod}
+        newStatus={pendingPaymentStatus}
+      />
 
       {/* New Customer Dialog */}
       <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
