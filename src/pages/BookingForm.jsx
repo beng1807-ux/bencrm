@@ -248,9 +248,9 @@ export default function BookingForm() {
         {bgType === 'video' ? (
           <video src={bgUrl} className="w-full h-full object-cover opacity-30 blur-sm scale-110" autoPlay muted loop playsInline />
         ) : (
-          <img src={bgUrl} alt="רקע" className="w-full h-full object-cover opacity-30 blur-sm scale-110" />
+          <img src={bgUrl} alt="רקע" className="w-full h-full object-cover opacity-50 blur-sm scale-110" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-[#0a0a0a]/70" />
       </div>
 
       {/* Centered content */}
