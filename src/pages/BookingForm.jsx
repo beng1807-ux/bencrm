@@ -1,109 +1,191 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
-import BookingHero from '../components/booking/BookingHero';
+import { Send, Copy, Link } from 'lucide-react';
 import BookingSuccess from '../components/booking/BookingSuccess';
 
 const BRAND_ORANGE = '#e94f1c';
 
 const pillClass = "w-full p-3 px-6 rounded-full text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c]";
-const pillStyle = {
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.2)',
-};
-const pillFocusStyle = {
-  background: 'rgba(255,255,255,0.1)',
-  borderColor: BRAND_ORANGE,
-};
+const pillStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' };
+const pillFocusStyle = { background: 'rgba(255,255,255,0.1)', borderColor: BRAND_ORANGE };
 
 function PillInput({ className = '', ...props }) {
   const [focused, setFocused] = useState(false);
-  return (
-    <input
-      className={`${pillClass} ${className}`}
-      style={focused ? { ...pillStyle, ...pillFocusStyle } : pillStyle}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      {...props}
-    />
-  );
+  return <input className={`${pillClass} ${className}`} style={focused ? { ...pillStyle, ...pillFocusStyle } : pillStyle} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} {...props} />;
 }
 
 function PillSelect({ children, className = '', ...props }) {
   const [focused, setFocused] = useState(false);
-  return (
-    <select
-      className={`${pillClass} appearance-none ${className}`}
-      style={focused ? { ...pillStyle, ...pillFocusStyle } : pillStyle}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      {...props}
-    >
-      {children}
-    </select>
-  );
+  return <select className={`${pillClass} appearance-none ${className}`} style={focused ? { ...pillStyle, ...pillFocusStyle } : pillStyle} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} {...props}>{children}</select>;
 }
 
 function PillTextarea({ className = '', ...props }) {
   const [focused, setFocused] = useState(false);
-  return (
-    <textarea
-      className={`w-full rounded-2xl p-4 text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c] ${className}`}
-      style={focused ? { background: 'rgba(255,255,255,0.1)', border: '1px solid #e94f1c' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      {...props}
-    />
-  );
+  return <textarea className={`w-full rounded-2xl p-4 text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c] ${className}`} style={focused ? { background: 'rgba(255,255,255,0.1)', border: '1px solid #e94f1c' } : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} {...props} />;
+}
+
+const DEFAULT_FIELDS = [
+  { key: 'contact_name', label: 'שם מלא / חברה', type: 'text', required: true, visible: true, placeholder: 'הכנס שם מלא', half_width: true },
+  { key: 'phone', label: 'מספר טלפון', type: 'tel', required: true, visible: true, placeholder: '050-0000000', half_width: true },
+  { key: 'email', label: 'אימייל', type: 'email', required: false, visible: true, placeholder: 'example@gmail.com', half_width: true },
+  { key: 'event_type', label: 'סוג אירוע', type: 'select', required: true, visible: true, placeholder: 'בחר סוג אירוע...', options: ['בר מצווה', 'בת מצווה', 'חתונה', 'יום הולדת', 'אירוע פרטי', 'אירוע חברה', 'חינה', 'אחר'], half_width: true },
+  { key: 'event_date', label: 'תאריך האירוע', type: 'date', required: true, visible: true, half_width: true },
+  { key: 'celebrant_name', label: 'שם חוגג/ת', type: 'text', required: false, visible: true, placeholder: 'שמות החוגגים', half_width: true },
+  { key: 'guests_count', label: 'כמות אורחים משוערת', type: 'number', required: false, visible: true, placeholder: 'למשל: 300', half_width: true },
+  { key: 'parents_names', label: 'שמות הורים', type: 'text', required: false, visible: true, placeholder: 'שמות ההורים', half_width: true },
+  { key: 'siblings_names', label: 'שמות אחים', type: 'text', required: false, visible: true, placeholder: 'במידה ורלוונטי', half_width: true },
+  { key: 'age_range', label: 'טווח גילאים', type: 'text', required: false, visible: true, placeholder: 'לדוגמה: 13-16', half_width: true },
+  { key: 'event_contents', label: 'תכני האירוע', type: 'checkbox_group', required: false, visible: true, options: ['DJ', 'תאורה', 'לייזר', 'אפקטים מיוחדים', 'משחקים', 'KAHOOT', 'מסך/מקרן', 'אחר'], section_title: 'סמנו תכנים שיהיו באירוע:', half_width: false },
+  { key: 'event_nature', label: 'אופי האירוע / סוג האורחים / טווח גילאים', type: 'textarea', required: true, visible: true, placeholder: 'ספרו לנו על הקהל שלכם...', half_width: false },
+  { key: 'laser_addition', label: 'תוספת לייזרים ותותחי עשן - שדרוג לאירוע בעלות של 500₪', type: 'checkbox', required: false, visible: true, half_width: false },
+  { key: 'musical_line', label: 'קו מוזיקלי / תיאום ציפיות', type: 'textarea', required: true, visible: true, placeholder: 'איזה סגנונות אתם אוהבים?', half_width: false },
+  { key: 'special_requests', label: 'סגנונות דגשים / בקשות מיוחדות', type: 'textarea', required: false, visible: true, placeholder: 'יש לכם בקשות מיוחדות? ספרו לנו...', half_width: false },
+];
+
+function DynamicField({ field, value, onChange }) {
+  const requiredMark = field.required ? ' *' : '';
+
+  switch (field.type) {
+    case 'text': case 'tel': case 'email': case 'number': case 'date':
+      return (
+        <div className={`space-y-2 ${field.half_width ? '' : 'md:col-span-2'}`}>
+          <label className="block text-sm font-semibold mr-4" style={field.type === 'date' && field.required ? { color: BRAND_ORANGE } : {}}>
+            {field.label}{requiredMark}
+          </label>
+          <PillInput
+            type={field.type}
+            placeholder={field.placeholder}
+            required={field.required}
+            value={value || ''}
+            onChange={e => onChange(field.type === 'number' ? e.target.value : e.target.value)}
+            className={field.type === 'date' ? '[color-scheme:dark]' : ''}
+          />
+        </div>
+      );
+
+    case 'select':
+      return (
+        <div className={`space-y-2 ${field.half_width ? '' : 'md:col-span-2'}`}>
+          <label className="block text-sm font-semibold mr-4">{field.label}{requiredMark}</label>
+          <PillSelect required={field.required} value={value || ''} onChange={e => onChange(e.target.value)}>
+            <option value="" disabled>{field.placeholder || 'בחר...'}</option>
+            {(field.options || []).map(opt => (
+              <option key={opt} value={opt} style={{ background: '#1a1a1a' }}>{opt}</option>
+            ))}
+          </PillSelect>
+        </div>
+      );
+
+    case 'textarea':
+      return (
+        <div className="space-y-2 md:col-span-2">
+          <label className="block text-sm font-semibold mr-4">{field.label}{requiredMark}</label>
+          <PillTextarea
+            placeholder={field.placeholder}
+            required={field.required}
+            rows={3}
+            value={value || ''}
+            onChange={e => onChange(e.target.value)}
+          />
+        </div>
+      );
+
+    case 'checkbox_group':
+      return (
+        <div className="space-y-4 md:col-span-2">
+          {field.section_title && (
+            <h3 className="text-xl font-bold pr-3" style={{ borderRight: `4px solid ${BRAND_ORANGE}` }}>{field.section_title}</h3>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            {(field.options || []).map(opt => (
+              <label key={opt} className="flex items-center gap-3 cursor-pointer hover:text-[#e94f1c] transition-colors">
+                <input
+                  type="checkbox"
+                  checked={(value || []).includes(opt)}
+                  onChange={() => {
+                    const arr = value || [];
+                    onChange(arr.includes(opt) ? arr.filter(c => c !== opt) : [...arr, opt]);
+                  }}
+                  className="w-5 h-5 rounded"
+                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', accentColor: BRAND_ORANGE }}
+                />
+                <span className="text-sm">{opt}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+
+    case 'checkbox':
+      return (
+        <div className="md:col-span-2">
+          <div className="flex items-center justify-between p-4 rounded-2xl" style={{ background: `${BRAND_ORANGE}15`, border: `1px solid ${BRAND_ORANGE}30` }}>
+            <label className="flex items-center gap-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={value || false}
+                onChange={e => onChange(e.target.checked)}
+                className="w-6 h-6 rounded"
+                style={{ accentColor: BRAND_ORANGE }}
+              />
+              <span className="font-bold text-xs md:text-sm">{field.label}</span>
+            </label>
+          </div>
+        </div>
+      );
+
+    default:
+      return null;
+  }
 }
 
 export default function BookingForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    phone: '',
-    email: '',
-    contact_name: '',
-    event_date: '',
-    event_type: '',
-    celebrant_name: '',
-    parents_names: '',
-    guests_count: '',
-    siblings_names: '',
-    event_contents: [],
-    event_nature: '',
-    guest_type: '',
-    age_range: '',
-    laser_addition: false,
-    musical_line: '',
-    expectations: '',
-    style_notes: '',
-    special_requests: '',
-  });
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [bfSettings, setBfSettings] = useState({});
+  const [formData, setFormData] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const eventTypes = ['בר מצווה', 'בת מצווה', 'חתונה', 'יום הולדת', 'אירוע פרטי', 'אירוע חברה', 'חינה', 'אחר'];
-  const contentOptions = ['DJ', 'תאורה', 'לייזר', 'אפקטים מיוחדים', 'משחקים', 'KAHOOT', 'מסך/מקרן', 'אחר'];
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
-  const handleContentChange = (content) => {
-    setFormData(prev => ({
-      ...prev,
-      event_contents: prev.event_contents.includes(content)
-        ? prev.event_contents.filter(c => c !== content)
-        : [...prev.event_contents, content]
-    }));
+  const loadSettings = async () => {
+    try {
+      const list = await base44.entities.BookingFormSettings.list();
+      if (list.length > 0) setBfSettings(list[0]);
+    } catch { /* public form, settings might not load for non-auth users */ }
+
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        const user = await base44.auth.me();
+        if (user?.role === 'admin') setIsAdmin(true);
+      }
+    } catch { /* not logged in */ }
+
+    setSettingsLoading(false);
   };
+
+  const fields = (bfSettings.form_fields && bfSettings.form_fields.length > 0) ? bfSettings.form_fields : DEFAULT_FIELDS;
+  const visibleFields = fields.filter(f => f.visible !== false);
+
+  const title = bfSettings.form_title || 'Skitza Production';
+  const subtitle = bfSettings.form_subtitle || 'טופס פרטי אירוע';
+  const description = bfSettings.form_description || 'נשמח להכיר אתכם ולהפוך את האירוע שלכם לבלתי נשכח';
+  const buttonText = bfSettings.form_button_text || 'שלח פרטים לצוות Skitza';
+  const bgType = bfSettings.form_bg_type || 'image';
+  const bgUrl = bfSettings.form_bg_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1600&q=60';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await base44.entities.Lead.create({
-        ...formData,
-        guests_count: formData.guests_count ? Number(formData.guests_count) : undefined,
-        status: 'NEW',
-        source: 'BASE44_FORM',
-      });
+      const submitData = { ...formData };
+      if (submitData.guests_count) submitData.guests_count = Number(submitData.guests_count);
+      await base44.entities.Lead.create({ ...submitData, status: 'NEW', source: 'BASE44_FORM' });
       setSubmitted(true);
       toast.success('הפנייה נשלחה בהצלחה!');
     } catch (error) {
@@ -114,246 +196,108 @@ export default function BookingForm() {
     }
   };
 
+  const formLink = bfSettings.form_link || `${window.location.origin}/BookingForm`;
+
   if (submitted) {
-    return <BookingSuccess />;
+    return <BookingSuccess settings={bfSettings} />;
+  }
+
+  if (settingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0a0a' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: BRAND_ORANGE }} />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif', backgroundColor: '#0a0a0a' }}>
-      {/* Background atmosphere */}
+      {/* Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img
-          src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1600&q=60"
-          alt="DJ atmosphere"
-          className="w-full h-full object-cover opacity-30 blur-sm scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]" />
+        {bgType === 'video' ? (
+          <video src={bgUrl} className="w-full h-full object-cover opacity-30 blur-sm scale-110" autoPlay muted loop playsInline />
+        ) : (
+          <img src={bgUrl} alt="רקע" className="w-full h-full object-cover opacity-30 blur-sm scale-110" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-[#0a0a0a]" />
       </div>
 
-      {/* Split layout */}
-      <main className="relative z-10 flex flex-col lg:flex-row min-h-screen w-full">
-        {/* Hero / Video section - on left in desktop (order-2 in RTL) */}
-        <div className="order-1 lg:order-2">
-          <BookingHero />
-        </div>
+      {/* Centered content */}
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
+        {/* Header */}
+        <header className="w-full max-w-3xl text-center mb-10">
+          <div className="inline-block mb-4">
+            <h1 className="text-3xl md:text-5xl font-extrabold uppercase tracking-widest text-white">
+              {title.includes('Production') ? (
+                <>{title.split('Production')[0]}<span style={{ color: BRAND_ORANGE }}>Production</span>{title.split('Production')[1] || ''}</>
+              ) : title}
+            </h1>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{subtitle}</h2>
+          <p className="text-gray-400 text-sm md:text-base">{description}</p>
+        </header>
 
-        {/* Form section */}
-        <div className="w-full lg:w-1/2 p-6 md:p-12 lg:p-16 flex flex-col items-center z-10 order-2 lg:order-1">
-          {/* Header */}
-          <header className="w-full max-w-2xl text-center mb-10">
-            <div className="inline-block mb-4">
-              <h1 className="text-3xl md:text-5xl font-extrabold uppercase tracking-widest text-white">
-                Skitza <span style={{ color: BRAND_ORANGE }}>Production</span>
-              </h1>
+        {/* Glass card form - centered and wider */}
+        <section className="w-full max-w-3xl rounded-3xl p-6 md:p-10 mb-12" style={{
+          background: 'rgba(15,15,15,0.8)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 32px 0 rgba(0,0,0,0.8)',
+        }}>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {visibleFields.map(field => (
+                <DynamicField
+                  key={field.key}
+                  field={field}
+                  value={formData[field.key]}
+                  onChange={val => setFormData(prev => ({ ...prev, [field.key]: val }))}
+                />
+              ))}
             </div>
-            <h2 className="text-2xl font-bold mb-2">טופס פרטי אירוע</h2>
-            <p className="text-gray-400 text-sm md:text-base">נשמח להכיר אתכם ולהפוך את האירוע שלכם לבלתי נשכח</p>
-          </header>
 
-          {/* Glass card form */}
-          <section className="w-full max-w-2xl rounded-3xl p-6 md:p-8 mb-12" style={{
-            background: 'rgba(15,15,15,0.8)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 8px 32px 0 rgba(0,0,0,0.8)',
-          }}>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* פרטי קשר */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">שם מלא / חברה *</label>
-                  <PillInput
-                    placeholder="הכנס שם מלא"
-                    required
-                    value={formData.contact_name}
-                    onChange={e => setFormData({ ...formData, contact_name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">מספר טלפון *</label>
-                  <PillInput
-                    type="tel"
-                    placeholder="050-0000000"
-                    required
-                    value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">אימייל (אופציונלי)</label>
-                  <PillInput
-                    type="email"
-                    placeholder="example@gmail.com"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">סוג אירוע *</label>
-                  <PillSelect
-                    required
-                    value={formData.event_type}
-                    onChange={e => setFormData({ ...formData, event_type: e.target.value })}
-                  >
-                    <option value="" disabled>בחר סוג אירוע...</option>
-                    {eventTypes.map(type => (
-                      <option key={type} value={type} style={{ background: '#1a1a1a' }}>{type}</option>
-                    ))}
-                  </PillSelect>
-                </div>
+            {/* Submit */}
+            <div className="pt-6 flex justify-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative inline-flex items-center justify-center px-12 py-4 font-bold text-white rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                style={{ backgroundColor: BRAND_ORANGE, boxShadow: '0 0 20px rgba(233,79,28,0.5)' }}
+              >
+                <Send className="w-5 h-5 ml-3 rotate-180" />
+                <span>{loading ? 'שולח...' : buttonText}</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* Admin-only: Form link */}
+        {isAdmin && (
+          <div className="w-full max-w-3xl rounded-xl p-4 mb-8" style={{ background: 'rgba(233,79,28,0.1)', border: '1px solid rgba(233,79,28,0.3)' }}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <Link className="w-4 h-4" style={{ color: BRAND_ORANGE }} />
+                <span className="font-semibold">קישור לטופס (מנהל בלבד):</span>
               </div>
-
-              {/* פרטי האירוע */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4" style={{ color: BRAND_ORANGE }}>תאריך האירוע *</label>
-                  <PillInput
-                    type="date"
-                    required
-                    value={formData.event_date}
-                    onChange={e => setFormData({ ...formData, event_date: e.target.value })}
-                    className="[color-scheme:dark]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">שם חוגג/ת</label>
-                  <PillInput
-                    placeholder="שמות החוגגים"
-                    value={formData.celebrant_name}
-                    onChange={e => setFormData({ ...formData, celebrant_name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">כמות אורחים משוערת</label>
-                  <PillInput
-                    type="number"
-                    placeholder="למשל: 300"
-                    value={formData.guests_count}
-                    onChange={e => setFormData({ ...formData, guests_count: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">שמות הורים</label>
-                  <PillInput
-                    placeholder="שמות ההורים"
-                    value={formData.parents_names}
-                    onChange={e => setFormData({ ...formData, parents_names: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">שמות אחים</label>
-                  <PillInput
-                    placeholder="במידה ורלוונטי"
-                    value={formData.siblings_names}
-                    onChange={e => setFormData({ ...formData, siblings_names: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">טווח גילאים</label>
-                  <PillInput
-                    placeholder="לדוגמה: 13-16"
-                    value={formData.age_range}
-                    onChange={e => setFormData({ ...formData, age_range: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* תכני האירוע */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold pr-3" style={{ borderRight: `4px solid ${BRAND_ORANGE}` }}>סמנו תכנים שיהיו באירוע:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  {contentOptions.map(content => (
-                    <label key={content} className="flex items-center gap-3 cursor-pointer hover:text-[#e94f1c] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={formData.event_contents.includes(content)}
-                        onChange={() => handleContentChange(content)}
-                        className="w-5 h-5 rounded accent-[#e94f1c]"
-                        style={{
-                          background: 'rgba(255,255,255,0.1)',
-                          border: '1px solid rgba(255,255,255,0.3)',
-                          accentColor: BRAND_ORANGE,
-                        }}
-                      />
-                      <span className="text-sm">{content}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* פרטים נוספים */}
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">אופי האירוע / סוג האורחים / טווח גילאים *</label>
-                  <PillTextarea
-                    placeholder="ספרו לנו על הקהל שלכם..."
-                    required
-                    rows={3}
-                    value={formData.event_nature}
-                    onChange={e => setFormData({ ...formData, event_nature: e.target.value })}
-                  />
-                </div>
-
-                {/* Laser addition */}
-                <div className="flex items-center justify-between p-4 rounded-2xl" style={{ background: `${BRAND_ORANGE}15`, border: `1px solid ${BRAND_ORANGE}30` }}>
-                  <label className="flex items-center gap-4 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.laser_addition}
-                      onChange={e => setFormData({ ...formData, laser_addition: e.target.checked })}
-                      className="w-6 h-6 rounded accent-[#e94f1c]"
-                      style={{ accentColor: BRAND_ORANGE }}
-                    />
-                    <span className="font-bold text-xs md:text-sm">תוספת לייזרים ותותחי עשן - שדרוג לאירוע בעלות של 500₪</span>
-                  </label>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">קו מוזיקלי / תיאום ציפיות *</label>
-                  <PillTextarea
-                    placeholder="איזה סגנונות אתם אוהבים?"
-                    required
-                    rows={3}
-                    value={formData.musical_line}
-                    onChange={e => setFormData({ ...formData, musical_line: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold mr-4">סגנונות דגשים / בקשות מיוחדות</label>
-                  <PillTextarea
-                    placeholder="יש לכם בקשות מיוחדות? ספרו לנו..."
-                    rows={3}
-                    value={formData.special_requests}
-                    onChange={e => setFormData({ ...formData, special_requests: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Submit */}
-              <div className="pt-6 flex justify-center">
+              <div className="flex items-center gap-2">
+                <code className="text-xs text-gray-400 bg-black/30 px-3 py-1 rounded-lg max-w-[300px] truncate" dir="ltr">{formLink}</code>
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="group relative inline-flex items-center justify-center px-12 py-4 font-bold text-white rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
-                  style={{
-                    backgroundColor: BRAND_ORANGE,
-                    boxShadow: '0 0 20px rgba(233,79,28,0.5)',
-                  }}
+                  onClick={() => { navigator.clipboard.writeText(formLink); toast.success('הקישור הועתק!'); }}
+                  className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold transition-colors"
+                  style={{ backgroundColor: BRAND_ORANGE, color: 'white' }}
                 >
-                  <Send className="w-5 h-5 ml-3 rotate-180" />
-                  <span>{loading ? 'שולח...' : 'שלח פרטים לצוות Skitza'}</span>
+                  <Copy className="w-3 h-3" />העתק
                 </button>
               </div>
-            </form>
-          </section>
+            </div>
+          </div>
+        )}
 
-          {/* Footer */}
-          <footer className="text-center text-gray-500 pb-12 w-full">
-            <p className="text-sm">© 2024 Skitza Production Group. All Rights Reserved.</p>
-          </footer>
-        </div>
+        {/* Footer */}
+        <footer className="text-center text-gray-500 pb-6 w-full">
+          <p className="text-sm">© 2024 Skitza Production Group. All Rights Reserved.</p>
+        </footer>
       </main>
     </div>
   );

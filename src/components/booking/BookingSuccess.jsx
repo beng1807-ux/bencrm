@@ -1,7 +1,14 @@
 import React from 'react';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 
-export default function BookingSuccess() {
+export default function BookingSuccess({ settings = {} }) {
+  const title = settings.success_title || 'הפנייה נשלחה בהצלחה!';
+  const subtitle = settings.success_subtitle || 'תודה שפניתם לסקיצה';
+  const description = settings.success_description || 'קיבלנו את הפרטים שלכם, נציג מטעמנו יחזור אליכם בהקדם כדי להתחיל לתכנן את האירוע המושלם.';
+  const buttonText = settings.success_button_text || 'שליחת טופס נוסף';
+  const bgType = settings.success_bg_type || 'image';
+  const bgUrl = settings.success_bg_url || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&q=60';
+
   return (
     <div className="relative min-h-screen flex flex-col text-white overflow-hidden" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif', backgroundColor: '#120a08' }}>
       {/* Background mesh */}
@@ -9,22 +16,20 @@ export default function BookingSuccess() {
         backgroundImage: 'radial-gradient(at 0% 0%, rgba(233,79,28,0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(233,79,28,0.1) 0px, transparent 50%)'
       }} />
 
-      {/* Background decorative image */}
+      {/* Background media */}
       <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#120a08] via-transparent to-[#120a08]" />
-        <img
-          src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&q=60"
-          alt="Party atmosphere"
-          className="w-full h-full object-cover"
-        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#120a08] via-transparent to-[#120a08] z-10" />
+        {bgType === 'video' ? (
+          <video src={bgUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+        ) : (
+          <img src={bgUrl} alt="רקע" className="w-full h-full object-cover" />
+        )}
       </div>
 
       {/* Header */}
       <header className="relative z-10 w-full px-6 py-6 flex items-center justify-between border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#e94f1c] rounded-lg text-white font-bold text-lg">
-            S
-          </div>
+          <div className="w-10 h-10 flex items-center justify-center bg-[#e94f1c] rounded-lg text-white font-bold text-lg">S</div>
           <h1 className="text-2xl font-bold tracking-tight text-white">סקיצה</h1>
         </div>
       </header>
@@ -49,11 +54,9 @@ export default function BookingSuccess() {
 
             {/* Text */}
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-bold text-white">הפנייה נשלחה בהצלחה!</h2>
-              <h3 className="text-xl md:text-2xl text-[#e94f1c] font-semibold">תודה שפניתם לסקיצה</h3>
-              <p className="text-slate-400 text-lg leading-relaxed max-w-md mx-auto">
-                קיבלנו את הפרטים שלכם, נציג מטעמנו יחזור אליכם בהקדם כדי להתחיל לתכנן את האירוע המושלם.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white">{title}</h2>
+              <h3 className="text-xl md:text-2xl text-[#e94f1c] font-semibold">{subtitle}</h3>
+              <p className="text-slate-400 text-lg leading-relaxed max-w-md mx-auto">{description}</p>
             </div>
 
             {/* Button */}
@@ -62,7 +65,7 @@ export default function BookingSuccess() {
                 onClick={() => window.location.reload()}
                 className="group w-full md:w-auto min-w-[240px] bg-[#e94f1c] hover:bg-[#e94f1c]/90 text-white font-bold py-4 px-8 rounded-lg transition-all flex items-center justify-center gap-3 text-lg mx-auto"
               >
-                <span>שליחת טופס נוסף</span>
+                <span>{buttonText}</span>
                 <ArrowRight className="w-5 h-5 group-hover:-translate-x-1 transition-transform rotate-180" />
               </button>
             </div>
