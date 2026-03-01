@@ -20,7 +20,7 @@ export default function Layout({ children, currentPageName }) {
     const loadData = async () => {
       try {
         // BookingForm is public - no auth required
-        if (currentPageName === 'BookingForm') {
+        if (currentPageName === 'BookingForm' || currentPageName === 'BookingSuccessPreview') {
           setAuthChecked(true);
           return;
         }
