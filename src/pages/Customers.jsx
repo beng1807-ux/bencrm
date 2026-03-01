@@ -536,35 +536,46 @@ export default function Customers() {
                     <div><Label className="text-xs text-gray-400">סוג אירוע</Label><p className="font-bold">{selectedLead.event_type}</p></div>
                     {selectedLead.celebrant_name && <div><Label className="text-xs text-gray-400">שם החוגג/ת</Label><p className="font-bold">{selectedLead.celebrant_name}</p></div>}
                     {selectedLead.guests_count && <div><Label className="text-xs text-gray-400">מוזמנים</Label><p className="font-bold">{selectedLead.guests_count}</p></div>}
-                    {selectedLead.parents_names && <div><Label className="text-xs text-gray-400">שמות הורים</Label><p className="font-bold">{selectedLead.parents_names}</p></div>}
-                    {selectedLead.siblings_names && <div><Label className="text-xs text-gray-400">שמות אחים</Label><p className="font-bold">{selectedLead.siblings_names}</p></div>}
-                    {selectedLead.age_range && <div><Label className="text-xs text-gray-400">טווח גילאים</Label><p className="font-bold">{selectedLead.age_range}</p></div>}
-                    {selectedLead.laser_addition && <div><Label className="text-xs text-gray-400">תוספת לייזר</Label><p className="font-bold">✅ כן</p></div>}
                   </div>
 
-                  {selectedLead.event_contents?.length > 0 && (
-                    <div>
-                      <Label className="text-xs text-gray-400 mb-2 block">תכני אירוע</Label>
-                      <div className="flex flex-wrap gap-2">{selectedLead.event_contents.map(c => <Badge key={c} variant="secondary">{c}</Badge>)}</div>
-                    </div>
-                  )}
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-primary transition-colors w-full py-2 group">
+                      <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
+                      <span>לפרטים נוספים</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {selectedLead.parents_names && <div><Label className="text-xs text-gray-400">שמות הורים</Label><p className="font-bold">{selectedLead.parents_names}</p></div>}
+                        {selectedLead.siblings_names && <div><Label className="text-xs text-gray-400">שמות אחים</Label><p className="font-bold">{selectedLead.siblings_names}</p></div>}
+                        {selectedLead.age_range && <div><Label className="text-xs text-gray-400">טווח גילאים</Label><p className="font-bold">{selectedLead.age_range}</p></div>}
+                        {selectedLead.laser_addition && <div><Label className="text-xs text-gray-400">תוספת לייזר</Label><p className="font-bold">✅ כן</p></div>}
+                      </div>
 
-                  {selectedLead.event_nature && (
-                    <div><Label className="text-xs text-gray-400 mb-1 block">אופי האירוע</Label>
-                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.event_nature}</p></div>
-                  )}
-                  {selectedLead.musical_line && (
-                    <div><Label className="text-xs text-gray-400 mb-1 block">קו מוזיקלי</Label>
-                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.musical_line}</p></div>
-                  )}
-                  {selectedLead.expectations && (
-                    <div><Label className="text-xs text-gray-400 mb-1 block">ציפיות</Label>
-                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.expectations}</p></div>
-                  )}
-                  {selectedLead.special_requests && (
-                    <div><Label className="text-xs text-gray-400 mb-1 block">בקשות מיוחדות</Label>
-                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.special_requests}</p></div>
-                  )}
+                      {selectedLead.event_contents?.length > 0 && (
+                        <div>
+                          <Label className="text-xs text-gray-400 mb-2 block">תכני אירוע</Label>
+                          <div className="flex flex-wrap gap-2">{selectedLead.event_contents.map(c => <Badge key={c} variant="secondary">{c}</Badge>)}</div>
+                        </div>
+                      )}
+
+                      {selectedLead.event_nature && (
+                        <div><Label className="text-xs text-gray-400 mb-1 block">אופי האירוע</Label>
+                          <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.event_nature}</p></div>
+                      )}
+                      {selectedLead.musical_line && (
+                        <div><Label className="text-xs text-gray-400 mb-1 block">קו מוזיקלי</Label>
+                          <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.musical_line}</p></div>
+                      )}
+                      {selectedLead.expectations && (
+                        <div><Label className="text-xs text-gray-400 mb-1 block">ציפיות</Label>
+                          <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.expectations}</p></div>
+                      )}
+                      {selectedLead.special_requests && (
+                        <div><Label className="text-xs text-gray-400 mb-1 block">בקשות מיוחדות</Label>
+                          <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{selectedLead.special_requests}</p></div>
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   <div className="border-t pt-4">
                     <Label className="text-xs text-gray-400 mb-2 block">עדכן סטטוס</Label>
