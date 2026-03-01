@@ -8,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles } from 'lucide-react';
+import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import EventSettingsTab from '../components/management/EventSettingsTab';
+import BookingFormSettingsTab from '../components/management/BookingFormSettingsTab';
 
 export default function Management() {
   const [settings, setSettings] = useState(null);
@@ -155,11 +156,12 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
           <TabsTrigger value="events_settings">אירועים</TabsTrigger>
+          <TabsTrigger value="booking_form">טופס הזמנה</TabsTrigger>
           <TabsTrigger value="branding">מיתוג</TabsTrigger>
           <TabsTrigger value="customers">לקוחות</TabsTrigger>
           <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
@@ -414,6 +416,10 @@ export default function Management() {
 
         <TabsContent value="events_settings">
           <EventSettingsTab eventSettings={eventSettings} setEventSettings={setEventSettings} />
+        </TabsContent>
+
+        <TabsContent value="booking_form">
+          <BookingFormSettingsTab />
         </TabsContent>
 
         <TabsContent value="branding">
