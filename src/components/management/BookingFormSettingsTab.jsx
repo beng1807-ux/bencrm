@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Trash2, Plus, GripVertical, Copy, Link, ChevronDown, ChevronUp, Image, Video } from 'lucide-react';
+import { Upload, Trash2, Plus, GripVertical, Copy, Link, ChevronDown, ChevronUp, Image, Video, Eye } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
 const FIELD_TYPES = [
