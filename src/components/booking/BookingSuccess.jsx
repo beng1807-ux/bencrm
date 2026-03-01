@@ -17,8 +17,8 @@ export default function BookingSuccess({ settings = {} }) {
       }} />
 
       {/* Background media */}
-      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#120a08] via-transparent to-[#120a08] z-10" />
+      <div className="absolute inset-0 z-0 opacity-50 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#120a08] via-[#120a08]/30 to-[#120a08]/60 z-10" />
         {bgType === 'video' ? (
           <video src={bgUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
         ) : (
