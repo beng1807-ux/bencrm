@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import BookingForm from './pages/BookingForm';
+import BookingSuccessPreview from './pages/BookingSuccessPreview';
 import Customers from './pages/Customers';
 import DJAvailability from './pages/DJAvailability';
 import DJs from './pages/DJs';
@@ -58,12 +59,12 @@ import Management from './pages/Management';
 import MyAvailability from './pages/MyAvailability';
 import MyShows from './pages/MyShows';
 import Tasks from './pages/Tasks';
-import BookingSuccessPreview from './pages/BookingSuccessPreview';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "BookingForm": BookingForm,
+    "BookingSuccessPreview": BookingSuccessPreview,
     "Customers": Customers,
     "DJAvailability": DJAvailability,
     "DJs": DJs,
@@ -74,7 +75,6 @@ export const PAGES = {
     "MyAvailability": MyAvailability,
     "MyShows": MyShows,
     "Tasks": Tasks,
-    "BookingSuccessPreview": BookingSuccessPreview,
 }
 
 export const pagesConfig = {

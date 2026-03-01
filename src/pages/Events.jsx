@@ -10,6 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import AddonSelector from '../components/events/AddonSelector';
+import PriceSummary from '../components/events/PriceSummary';
+import PaymentMethodModal from '../components/events/PaymentMethodModal';
 
 const PRIMARY = '#ec5b13';
 
@@ -48,6 +51,9 @@ export default function Events() {
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [creating, setCreating] = useState(false);
   const [eventSettings, setEventSettings] = useState({});
+  const [appSettings, setAppSettings] = useState({});
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [pendingPaymentStatus, setPendingPaymentStatus] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -65,6 +71,7 @@ export default function Events() {
       base44.entities.Package.filter({ active: true }),
       base44.entities.DJ.filter({ status: 'ACTIVE' }),
       base44.entities.EventSettings.list(),
+      base44.entities.AppSettings.list(),
     ]);
     setEvents(results[0].status === 'fulfilled' ? results[0].value : []);
     setCustomers(results[1].status === 'fulfilled' ? results[1].value : []);
@@ -72,6 +79,7 @@ export default function Events() {
     setPackages(results[3].status === 'fulfilled' ? results[3].value : []);
     setDJs(results[4].status === 'fulfilled' ? results[4].value : []);
     if (results[5].status === 'fulfilled' && results[5].value.length > 0) setEventSettings(results[5].value[0]);
+    if (results[6].status === 'fulfilled' && results[6].value.length > 0) setAppSettings(results[6].value[0]);
     setLoading(false);
   };
 
@@ -104,11 +112,23 @@ export default function Events() {
     return total;
   };
 
+  const handlePaymentStatusChange = (newStatus) => {
+    if (newStatus === 'DEPOSIT_PAID' || newStatus === 'PAID_FULL') {
+      setPendingPaymentStatus(newStatus);
+      setPaymentModalOpen(true);
+    } else {
+      setEditData({ ...editData, payment_status: newStatus });
+    }
+  };
+
+  const confirmPaymentMethod = (method) => {
+    setEditData({ ...editData, payment_status: pendingPaymentStatus, last_payment_method: method });
+    setPaymentModalOpen(false);
+    setPendingPaymentStatus(null);
+  };
+
   const saveEdit = async () => {
-    const priceTotal = calculatePrice(editData.package_id, editData.addon_ids);
-    const depositAmount = editData.deposit_amount || (priceTotal * 0.3);
-    const balanceAmount = priceTotal - (editData.payment_status === 'DEPOSIT_PAID' ? depositAmount : editData.payment_status === 'PAID_FULL' ? priceTotal : 0);
-    await base44.entities.Event.update(editData.id, { ...editData, price_total: priceTotal, deposit_amount: depositAmount, balance_amount: balanceAmount });
+    await base44.entities.Event.update(editData.id, editData);
     if (editData.customer_id && editData.event_date) {
       await syncDateToSource(editData.customer_id, editData.event_date);
     }
@@ -129,9 +149,13 @@ export default function Events() {
     }
   };
 
+  const depositPercent = appSettings.default_deposit_percent || 30;
+
   const createEvent = async () => {
-    const priceTotal = calculatePrice(newEvent.package_id, newEvent.addon_ids);
-    await base44.entities.Event.create({ ...newEvent, price_total: priceTotal, deposit_amount: priceTotal * 0.3, balance_amount: priceTotal, payment_status: 'PENDING', contract_status: 'DRAFT', event_status: 'PENDING' });
+    const total = calculatePrice(newEvent.package_id, newEvent.addon_ids);
+    const dep = newEvent.deposit_amount ?? Math.round(total * (depositPercent / 100));
+    const bal = newEvent.balance_amount ?? (total - dep);
+    await base44.entities.Event.create({ ...newEvent, price_total: total, deposit_amount: dep, balance_amount: bal, payment_status: 'PENDING', contract_status: 'DRAFT', event_status: 'PENDING' });
     if (newEvent.customer_id && newEvent.event_date) {
       await syncDateToSource(newEvent.customer_id, newEvent.event_date);
     }
