@@ -62,8 +62,33 @@ Deno.serve(async (req) => {
         name: lead.contact_name || 'לקוח חדש',
         total_events: 0,
         total_revenue: 0,
+        celebrant_name: lead.celebrant_name || '',
+        parents_names: lead.parents_names || '',
+        guests_count: lead.guests_count || null,
+        siblings_names: lead.siblings_names || '',
+        age_range: lead.age_range || '',
+        event_contents: lead.event_contents || [],
+        event_nature: lead.event_nature || '',
+        laser_addition: lead.laser_addition || false,
+        musical_line: lead.musical_line || '',
+        special_requests: lead.special_requests || '',
       });
       console.log(`[dealClosedHandler] Created new customer: ${customer.id}`);
+    } else {
+      // Update existing customer with latest lead data
+      await base44.asServiceRole.entities.Customer.update(customer.id, {
+        celebrant_name: lead.celebrant_name || customer.celebrant_name || '',
+        parents_names: lead.parents_names || customer.parents_names || '',
+        guests_count: lead.guests_count || customer.guests_count || null,
+        siblings_names: lead.siblings_names || customer.siblings_names || '',
+        age_range: lead.age_range || customer.age_range || '',
+        event_contents: lead.event_contents?.length ? lead.event_contents : (customer.event_contents || []),
+        event_nature: lead.event_nature || customer.event_nature || '',
+        laser_addition: lead.laser_addition ?? customer.laser_addition ?? false,
+        musical_line: lead.musical_line || customer.musical_line || '',
+        special_requests: lead.special_requests || customer.special_requests || '',
+      });
+      console.log(`[dealClosedHandler] Updated existing customer: ${customer.id}`);
     }
 
     // Get default package
