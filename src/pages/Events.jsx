@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List } from 'lucide-react';
+import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PRIMARY = '#ec5b13';
