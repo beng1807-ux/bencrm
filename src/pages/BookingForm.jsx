@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { Send, Copy, Link } from 'lucide-react';
+import { Send, Copy, Link, ArrowRight } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import BookingSuccess from '../components/booking/BookingSuccess';
 
 const BRAND_ORANGE = '#e94f1c';
