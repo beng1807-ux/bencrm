@@ -328,6 +328,20 @@ export default function BookingForm() {
           </div>
         )}
 
+        {/* Admin: Back to Dashboard */}
+        {isAdmin && (
+          <div className="w-full max-w-3xl mb-6">
+            <a
+              href={createPageUrl('Dashboard')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
+              style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}
+            >
+              <ArrowRight className="w-4 h-4 rotate-180" />
+              חזרה ללוח הבקרה
+            </a>
+          </div>
+        )}
+
         {/* Footer */}
         <footer className="text-center text-gray-500 pb-6 w-full">
           <p className="text-sm">© 2024 Skitza Production Group. All Rights Reserved.</p>
