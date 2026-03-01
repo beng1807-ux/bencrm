@@ -54,11 +54,17 @@ function DynamicField({ field, value, onChange }) {
             {field.label}{requiredMark}
           </label>
           <PillInput
-            type={field.type}
+            type={field.type === 'tel' ? 'tel' : field.type}
+            inputMode={field.type === 'tel' ? 'numeric' : undefined}
+            pattern={field.type === 'tel' ? '[0-9\\-\\s]*' : undefined}
             placeholder={field.placeholder}
             required={field.required}
             value={value || ''}
-            onChange={e => onChange(field.type === 'number' ? e.target.value : e.target.value)}
+            onChange={e => {
+              let val = e.target.value;
+              if (field.type === 'tel') val = val.replace(/[^0-9\-\s]/g, '');
+              onChange(val);
+            }}
             className={field.type === 'date' ? '[color-scheme:dark]' : ''}
           />
         </div>
@@ -147,6 +153,7 @@ export default function BookingForm() {
   const [bfSettings, setBfSettings] = useState({});
   const [formData, setFormData] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     loadSettings();
@@ -179,13 +186,35 @@ export default function BookingForm() {
   const bgType = bfSettings.form_bg_type || 'image';
   const bgUrl = bfSettings.form_bg_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1600&q=60';
 
+  const validateForm = () => {
+    const newErrors = {};
+    // Phone validation - digits only, min 10
+    if (formData.phone) {
+      const digitsOnly = formData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 10) {
+        newErrors.phone = 'מספר טלפון חייב להכיל לפחות 10 ספרות';
+      }
+      if (/[^0-9\-\s]/.test(formData.phone)) {
+        newErrors.phone = 'מספר טלפון חייב להכיל מספרים בלבד';
+      }
+    }
+    // Email validation
+    if (formData.email && formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'כתובת אימייל לא תקינה';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
     try {
-      const submitData = { ...formData };
-      if (submitData.guests_count) submitData.guests_count = Number(submitData.guests_count);
-      await base44.entities.Lead.create({ ...submitData, status: 'NEW', source: 'BASE44_FORM' });
+      await base44.functions.invoke('submitBookingForm', { formData });
       setSubmitted(true);
       toast.success('הפנייה נשלחה בהצלחה!');
     } catch (error) {
