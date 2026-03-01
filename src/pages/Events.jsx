@@ -436,7 +436,33 @@ export default function Events() {
               location: () => <div key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={editData.location || ''} onChange={e => setEditData({...editData, location: e.target.value})} /></div>,
               event_status: () => <div key="event_status"><Label>{fl.event_status || 'סטטוס אירוע'}</Label><Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => setEditData({...editData, payment_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
-              dj_id: () => <div key="dj_id"><Label>{fl.dj_id || 'DJ'}</Label><Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}><SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger><SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent></Select></div>,
+              dj_id: () => {
+                const selectedDj = djs.find(d => d.id === editData.dj_id);
+                const eventDate = editData.event_date;
+                const isUnavailable = selectedDj && eventDate && selectedDj.unavailable_dates?.includes(eventDate);
+                return (
+                  <div key="dj_id" className="col-span-2">
+                    <Label>{fl.dj_id || 'DJ'}</Label>
+                    <Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}>
+                      <SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger>
+                      <SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {selectedDj && eventDate && (
+                      isUnavailable ? (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                          <span><strong>{selectedDj.name}</strong> סימן/ה את התאריך {new Date(eventDate).toLocaleDateString('he-IL')} כלא זמין. ניתן לשבץ בכל זאת.</span>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                          <span><strong>{selectedDj.name}</strong> זמין/ה בתאריך {new Date(eventDate).toLocaleDateString('he-IL')}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                );
+              },
               last_payment_method: () => <div key="last_payment_method"><Label>{fl.last_payment_method || 'אמצעי תשלום'}</Label><Select value={editData.last_payment_method || ''} onValueChange={v => setEditData({...editData, last_payment_method: v})}><SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger><SelectContent>{['העברה','אשראי','מזומן','ביט'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>,
               notes: () => <div className="col-span-2" key="notes"><Label>{fl.notes || 'הערות'}</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>,
             };
