@@ -95,8 +95,8 @@ export default function Layout({ children, currentPageName }) {
   // For non-admin users, default page is MyShows not Dashboard
   const defaultDJPage = 'MyShows';
 
-  // BookingForm is public - render without layout
-  if (currentPageName === 'BookingForm') return children;
+  // BookingForm and BookingSuccessPreview - render without layout
+  if (currentPageName === 'BookingForm' || currentPageName === 'BookingSuccessPreview') return children;
 
   // Wait for auth check before rendering
   if (!authChecked) return (
