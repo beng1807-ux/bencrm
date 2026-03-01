@@ -217,7 +217,16 @@ export default function BookingFormSettingsTab() {
 
       {/* טקסטים ורקע - דף אישור */}
       <Card>
-        <CardHeader><CardTitle>הגדרות דף אישור</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>הגדרות דף אישור</span>
+            <a href={createPageUrl('BookingSuccessPreview')} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />תצוגה מקדימה
+              </Button>
+            </a>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
