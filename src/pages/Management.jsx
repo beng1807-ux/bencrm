@@ -739,6 +739,10 @@ export default function Management() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="whatsapp_agent">
+          <WhatsAppAgentTab />
+        </TabsContent>
+
       </Tabs>
     </div>
   );
