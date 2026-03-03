@@ -305,7 +305,10 @@ export default function EventCalendar() {
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">{selectedEvent?.event_type}</DialogTitle>
+            <DialogTitle className="text-xl font-black flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-teal-500" />
+              {selectedEvent?.event_type}
+            </DialogTitle>
           </DialogHeader>
           {selectedEvent && (
             <div className="space-y-4 mt-2">
@@ -363,7 +366,8 @@ export default function EventCalendar() {
 
               <Link
                 to={createPageUrl('Events')}
-                className="block w-full text-center bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                className="block w-full text-center text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                style={{ backgroundColor: '#ec5b13' }}
               >
                 פתח בדף אירועים
               </Link>
