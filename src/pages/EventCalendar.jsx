@@ -125,7 +125,13 @@ export default function EventCalendar() {
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
     setHoveredEvent(event);
-    setHoveredCustomer(customer);
+    // If customer not found, try leads
+    if (!customer) {
+      const lead = leads.find(l => l.id === event.customer_id);
+      setHoveredCustomer(lead ? { name: lead.contact_name, phone: lead.phone } : null);
+    } else {
+      setHoveredCustomer(customer);
+    }
     setHoveredDJ(dj);
   };
 
