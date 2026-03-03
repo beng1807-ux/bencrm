@@ -25,6 +25,7 @@ const PAYMENT_LABELS = { PENDING: 'ממתין', DEPOSIT_PAID: 'מקדמה שול
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [djs, setDJs] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('month');
@@ -48,13 +49,15 @@ export default function EventCalendar() {
   }, []);
 
   const loadData = async () => {
-    const [eventsData, customersData, djsData] = await Promise.all([
+    const [eventsData, customersData, leadsData, djsData] = await Promise.all([
       base44.entities.Event.list(),
       base44.entities.Customer.list(),
+      base44.entities.Lead.list(),
       base44.entities.DJ.list(),
     ]);
     setEvents(eventsData);
     setCustomers(customersData);
+    setLeads(leadsData);
     setDJs(djsData);
     setLoading(false);
   };

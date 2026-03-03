@@ -29,12 +29,12 @@ export default function DJs() {
 
   const loadDJs = async () => {
     try {
-      const [data, usersRes] = await Promise.all([
+      const [data, usersRes] = await Promise.allSettled([
         base44.entities.DJ.list('-created_date'),
         base44.functions.invoke('listAllUsers'),
       ]);
-      setDJs(data);
-      setUsers(usersRes.data.users || []);
+      setDJs(data.status === 'fulfilled' ? data.value : []);
+      setUsers(usersRes.status === 'fulfilled' ? (usersRes.value?.data?.users || []) : []);
     } catch { toast.error('שגיאה בטעינת DJ-ים'); }
     finally { setLoading(false); }
   };
