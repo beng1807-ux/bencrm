@@ -178,7 +178,15 @@ export default function EventCalendar() {
     );
   }
 
-  const selectedCustomer = selectedEvent ? customers.find(c => c.id === selectedEvent.customer_id) : null;
+  const getContactName = (customerId) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) return customer.name;
+    const lead = leads.find(l => l.id === customerId);
+    if (lead) return lead.contact_name;
+    return null;
+  };
+
+  const selectedCustomerName = selectedEvent ? getContactName(selectedEvent.customer_id) : null;
   const selectedDJ = selectedEvent ? djs.find(d => d.id === selectedEvent.dj_id) : null;
 
   return (
@@ -251,6 +259,7 @@ export default function EventCalendar() {
             events={filteredEvents}
             djs={djs}
             customers={customers}
+            leads={leads}
             getEventsForDate={getEventsForDate}
             getBlockedDJsForDate={getBlockedDJsForDate}
             onEventHover={handleEventHover}
@@ -266,6 +275,7 @@ export default function EventCalendar() {
             events={filteredEvents}
             djs={djs}
             customers={customers}
+            leads={leads}
             getEventsForDate={getEventsForDate}
             getBlockedDJsForDate={getBlockedDJsForDate}
             onEventHover={handleEventHover}
@@ -306,13 +316,10 @@ export default function EventCalendar() {
                     {new Date(selectedEvent.event_date).toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
                 </div>
-                {selectedCustomer && (
+                {selectedCustomerName && (
                   <div className="flex items-center gap-3">
                     <User className="w-4 h-4 text-teal-500" />
-                    <span className="text-sm font-semibold text-slate-700">{selectedCustomer.name}</span>
-                    {selectedCustomer.phone && (
-                      <span className="text-xs text-slate-400">{selectedCustomer.phone}</span>
-                    )}
+                    <span className="text-sm font-semibold text-slate-700">{selectedCustomerName}</span>
                   </div>
                 )}
                 {selectedEvent.location && (
