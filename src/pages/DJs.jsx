@@ -87,28 +87,26 @@ export default function DJs() {
   return (
     <div className="space-y-5" dir="rtl">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
         <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold mb-2" style={{ color: '#0f172a', fontFamily: 'Assistant, sans-serif' }}>תקליטנים</h1>
+          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a', fontFamily: 'Assistant, sans-serif' }}>תקליטנים</h2>
           <p className="text-slate-500 font-medium max-w-md">ניהול צוות ה-DJ-ים שלך</p>
         </div>
-        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3" />
+        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white relative z-10" style={{ backgroundColor: PRIMARY }}>
+          <Plus className="w-4 h-4 ml-2" />DJ חדש
+        </Button>
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         <Sparkles className="absolute left-8 top-1/2 -translate-y-1/2 w-20 h-20 text-primary/10" />
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-          {selected.size > 0 && (
-            <Button variant="destructive" size="sm" onClick={deleteSelected}>
-              <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
-            </Button>
-          )}
-        </div>
-        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
-          <Plus className="w-4 h-4 ml-2" />DJ חדש
-        </Button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+        {selected.size > 0 && (
+          <Button variant="destructive" size="sm" onClick={deleteSelected}>
+            <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
+          </Button>
+        )}
       </div>
 
       {/* Cards View */}

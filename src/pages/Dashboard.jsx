@@ -162,10 +162,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8" style={{ fontFamily: 'Assistant, sans-serif' }}>
-      {/* Greeting */}
-      <div>
-        <h2 className="text-4xl font-extrabold text-[#181311] tracking-tight">{greetingText}</h2>
-        <p className="mt-2 font-medium text-[#886c63]">{subtitleText}</p>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{greetingText}</h2>
+          <p className="text-slate-500 font-medium max-w-md">{subtitleText}</p>
+        </div>
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       </div>
 
       {/* Bento Grid */}
