@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,11 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ListChecks, CheckCircle, Circle, Plus, Pencil, Trash2 } from 'lucide-react';
-import ViewToggle from '@/components/shared/ViewToggle';
+import { ListChecks, CheckCircle, Circle, Plus, Pencil, Trash2, Calendar, TrendingUp, LayoutGrid, List, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
-const PRIMARY = '#e94f1c';
+const PRIMARY = '#ec5b13';
 
 const PRIORITY_LABELS = { HIGH: 'גבוהה', NORMAL: 'רגילה', LOW: 'נמוכה' };
 const PRIORITY_COLORS = { HIGH: 'bg-red-100 text-red-700', NORMAL: 'bg-blue-100 text-blue-700', LOW: 'bg-gray-100 text-gray-700' };
@@ -25,6 +24,8 @@ export default function Tasks() {
   const [editData, setEditData] = useState({});
   const [createOpen, setCreateOpen] = useState(false);
   const [newTask, setNewTask] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => { loadTasks(); }, []);
 
@@ -36,7 +37,7 @@ export default function Tasks() {
     finally { setLoading(false); }
   };
 
-  const toggleSelect = (id, e) => { e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const toggleSelect = (id, e) => { if (e) e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
   const toggleAll = () => setSelected(prev => prev.size === tasks.length ? new Set() : new Set(tasks.map(t => t.id)));
 
   const toggleDone = async (task, e) => {
@@ -71,155 +72,255 @@ export default function Tasks() {
   };
 
   const createTask = async () => {
+    if (!newTask.title) { toast.error('חובה להזין כותרת'); return; }
     await base44.entities.Task.create({ ...newTask, status: 'OPEN', priority: newTask.priority || 'NORMAL' });
     await loadTasks();
     toast.success('משימה חדשה נוצרה');
     setCreateOpen(false); setNewTask({});
   };
 
-  const openTasks = tasks.filter(t => t.status === 'OPEN');
-  const doneTasks = tasks.filter(t => t.status === 'DONE');
+  // Stats calculations
+  const stats = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const isToday = (d) => d && d.startsWith(todayStr);
+    const isThisWeek = (d) => d && new Date(d) >= startOfWeek;
+    const isThisMonth = (d) => d && new Date(d) >= startOfMonth;
+
+    const newToday = tasks.filter(t => isToday(t.created_date?.split('T')[0])).length;
+    const doneToday = tasks.filter(t => t.status === 'DONE' && isToday(t.updated_date?.split('T')[0])).length;
+    const doneWeek = tasks.filter(t => t.status === 'DONE' && isThisWeek(t.updated_date)).length;
+    const doneMonth = tasks.filter(t => t.status === 'DONE' && isThisMonth(t.updated_date)).length;
+    const openTotal = tasks.filter(t => t.status === 'OPEN').length;
+    const doneTotal = tasks.filter(t => t.status === 'DONE').length;
+
+    return { newToday, doneToday, doneWeek, doneMonth, openTotal, doneTotal };
+  }, [tasks]);
+
+  const completionRate = stats.openTotal + stats.doneTotal > 0
+    ? Math.round((stats.doneTotal / (stats.openTotal + stats.doneTotal)) * 100) : 0;
+
+  // Filtering
+  const filteredTasks = tasks.filter(t => {
+    const matchSearch = !searchTerm || t.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  const openTasks = filteredTasks.filter(t => t.status === 'OPEN');
+  const doneTasks = filteredTasks.filter(t => t.status === 'DONE');
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }} /></div>;
 
-  const TaskCard = ({ task }) => {
-    const isSelected = selected.has(task.id);
-    const isDone = task.status === 'DONE';
-    return (
-      <div
-        className={`bg-white p-4 rounded-xl shadow-sm border transition-all hover:shadow-md cursor-pointer
-          ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-[#e5dedc] hover:border-primary/20'}
-          ${isDone ? 'opacity-60' : ''}`}
-        onClick={() => openEdit(task)}>
-        <div className="flex items-start gap-3">
-          <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => toggleSelect(task.id, e)} className="mt-1 flex-shrink-0" />
-          <div
-            className="flex-shrink-0 mt-0.5 cursor-pointer"
-            onClick={e => toggleDone(task, e)}>
-            {isDone
-              ? <CheckCircle className="w-5 h-5 text-green-500" />
-              : <Circle className="w-5 h-5 text-[#886c63]" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className={`font-bold text-[#181311] ${isDone ? 'line-through text-[#886c63]' : ''}`}>{task.title}</p>
-            {task.due_at && <p className="text-xs text-[#886c63] mt-0.5">יעד: {new Date(task.due_at).toLocaleDateString('he-IL')}</p>}
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge>
-            <button onClick={e => openEdit(task, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-            <button onClick={e => deleteTask(task.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="space-y-5" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-[#181311] tracking-tight">משימות</h1>
-          <p className="mt-1 font-medium text-[#886c63] text-sm">{openTasks.length} פתוחות, {doneTasks.length} הושלמו</p>
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>משימות</h2>
+          <p className="text-slate-500 font-medium max-w-md">ניהול המשימות שלך — תעדוף, מעקב וביצוע</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white" style={{ backgroundColor: PRIMARY }}>
-          <Plus className="w-4 h-4 ml-2" />משימה חדשה
-        </Button>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-        {selected.size > 0 && (
-          <Button variant="destructive" size="sm" onClick={deleteSelected}>
-            <Trash2 className="w-4 h-4 ml-1" />מחק {selected.size} נבחרים
-          </Button>
-        )}
-      </div>
-
-      {/* Cards View */}
-      {viewMode === 'cards' && (
-        <div className="space-y-5">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Circle className="w-4 h-4" style={{ color: PRIMARY }} />
-              <span className="font-extrabold text-[#181311]">פתוחות</span>
-              <span className="text-xs bg-[#e5dedc] text-[#886c63] px-2 py-0.5 rounded-full font-bold">{openTasks.length}</span>
-            </div>
-            <div className="space-y-3">
-              {openTasks.map(t => <TaskCard key={t.id} task={t} />)}
-              {openTasks.length === 0 && (
-                <div className="bg-white rounded-xl p-10 text-center border border-[#e5dedc]">
-                  <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-500" />
-                  <p className="text-[#886c63]">כל המשימות הושלמו! 🎉</p>
-                </div>
-              )}
+        <div className="flex items-center gap-8 relative z-10">
+          <div className="relative flex items-center justify-center w-28 h-28">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle className="text-slate-200" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeWidth="8" />
+              <circle className="text-primary" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeDasharray="301.59" strokeDashoffset={301.59 * (1 - completionRate / 100)} strokeLinecap="round" strokeWidth="10" />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+              <span className="text-2xl font-black text-slate-900">{stats.doneTotal}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">מתוך {stats.openTotal + stats.doneTotal}</span>
             </div>
           </div>
-          {doneTasks.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="font-extrabold text-[#886c63]">הושלמו</span>
-                <span className="text-xs bg-[#e5dedc] text-[#886c63] px-2 py-0.5 rounded-full font-bold">{doneTasks.length}</span>
-              </div>
-              <div className="space-y-3">{doneTasks.map(t => <TaskCard key={t.id} task={t} />)}</div>
-            </div>
-          )}
+          <div className="text-right">
+            <p className="text-sm font-bold text-slate-400">שיעור השלמה</p>
+            <p className="text-xl font-black text-primary">{completionRate}% הושלמו</p>
+          </div>
         </div>
-      )}
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      </div>
 
-      {/* Table View */}
-      {viewMode === 'table' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#e5dedc] bg-[#f8f6f6] text-[#886c63] text-xs font-bold">
-                <th className="px-4 py-3"><Checkbox checked={selected.size === tasks.length && tasks.length > 0} onCheckedChange={toggleAll} /></th>
-                <th className="text-right px-4 py-3">כותרת</th>
-                <th className="text-right px-4 py-3">עדיפות</th>
-                <th className="text-right px-4 py-3">תאריך יעד</th>
-                <th className="text-right px-4 py-3">סטטוס</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.length === 0 && <tr><td colSpan={6} className="text-center text-[#886c63] py-10">אין משימות</td></tr>}
-              {tasks.map(task => {
-                const isSelected = selected.has(task.id);
-                const isDone = task.status === 'DONE';
-                return (
-                  <tr key={task.id} className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
-                    onClick={() => openEdit(task)}>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(task.id, { stopPropagation: () => {} })} /></td>
-                    <td className="px-4 py-3 font-bold text-[#181311]">
-                      <div className="flex items-center gap-2">
-                        <div onClick={e => toggleDone(task, e)} className="cursor-pointer">
-                          {isDone ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-[#886c63]" />}
-                        </div>
-                        <span className={isDone ? 'line-through text-[#886c63]' : ''}>{task.title}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3"><Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge></td>
-                    <td className="px-4 py-3 text-[#886c63]">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {isDone ? 'הושלם' : 'פתוח'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button onClick={e => openEdit(task, e)} className="p-1.5 text-[#886c63] hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={e => deleteTask(task.id, e)} className="p-1.5 text-[#886c63] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary"><Plus className="w-6 h-6" /></div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full text-blue-500 bg-blue-500/10">היום</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">משימות חדשות היום</p>
+          <h3 className="text-3xl font-extrabold mt-1">{stats.newToday}</h3>
         </div>
-      )}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><CheckCircle className="w-6 h-6" /></div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full text-emerald-500 bg-emerald-500/10">היום</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">בוצעו היום</p>
+          <h3 className="text-3xl font-extrabold mt-1">{stats.doneToday}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500"><TrendingUp className="w-6 h-6" /></div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-500 bg-amber-500/10">שבועי</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">בוצעו השבוע</p>
+          <h3 className="text-3xl font-extrabold mt-1">{stats.doneWeek}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-slate-500/10 text-slate-500"><Calendar className="w-6 h-6" /></div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full text-slate-500 bg-slate-500/10">חודשי</span>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">בוצעו החודש</p>
+          <h3 className="text-3xl font-extrabold mt-1">{stats.doneMonth}</h3>
+        </div>
+      </div>
+
+      {/* Main Container */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* Toolbar */}
+        <div className="p-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button onClick={() => setViewMode('table')}
+                className={`px-6 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <List className="w-4 h-4" />רשימה
+              </button>
+              <button onClick={() => setViewMode('cards')}
+                className={`px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <LayoutGrid className="w-4 h-4" />כרטיסים
+              </button>
+            </div>
+            <div className="h-6 w-px bg-slate-200" />
+            <div className="flex items-center gap-4">
+              <button onClick={() => setFilterStatus('ALL')} className={`text-sm font-black pb-1 ${filterStatus === 'ALL' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הכל</button>
+              <button onClick={() => setFilterStatus('OPEN')} className={`text-sm font-bold pb-1 ${filterStatus === 'OPEN' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>פתוחות</button>
+              <button onClick={() => setFilterStatus('DONE')} className={`text-sm font-bold pb-1 ${filterStatus === 'DONE' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הושלמו</button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input className="pr-10 w-64 bg-slate-50 border-slate-200" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            </div>
+            {selected.size > 0 && (
+              <Button variant="destructive" size="sm" onClick={deleteSelected} className="flex items-center gap-2 font-bold">
+                <Trash2 className="w-4 h-4" />מחק {selected.size} נבחרים
+              </Button>
+            )}
+            <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold text-white" style={{ backgroundColor: PRIMARY }}>
+              <Plus className="w-4 h-4 ml-2" />משימה חדשה
+            </Button>
+          </div>
+        </div>
+
+        {/* Cards View */}
+        {viewMode === 'cards' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {filteredTasks.map(task => {
+              const isSelected = selected.has(task.id);
+              const isDone = task.status === 'DONE';
+              return (
+                <div key={task.id}
+                  onClick={() => openEdit(task)}
+                  className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isDone ? 'opacity-60' : ''} ${isSelected ? 'border-primary/40 bg-primary/5' : ''}`}>
+                  <div className="absolute top-6 left-6 flex items-center gap-2">
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${isDone ? 'bg-green-50 text-green-500' : 'bg-orange-50 text-orange-500'}`}>
+                      {isDone ? 'הושלם' : 'פתוח'}
+                    </span>
+                  </div>
+                  <div className="absolute top-6 right-6 flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(task.id)} />
+                    <div className="cursor-pointer" onClick={e => toggleDone(task, e)}>
+                      {isDone ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-slate-400" />}
+                    </div>
+                  </div>
+                  <div className="mb-6 pr-16 pt-4">
+                    <h4 className={`text-xl font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Calendar className="w-5 h-5" />
+                      <span className="text-sm font-bold">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : 'ללא תאריך יעד'}</span>
+                    </div>
+                    <Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredTasks.length === 0 && (
+              <div className="col-span-full bg-white rounded-xl p-12 text-center text-slate-500 border border-slate-200">
+                {filterStatus === 'DONE' ? 'אין משימות שהושלמו' : filterStatus === 'OPEN' ? 'כל המשימות הושלמו! 🎉' : 'אין משימות'}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Table View */}
+        {viewMode === 'table' && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 text-slate-500 text-sm font-bold uppercase tracking-wider">
+                  <th className="px-4 py-5 border-b border-slate-100"><Checkbox checked={selected.size === filteredTasks.length && filteredTasks.length > 0} onCheckedChange={toggleAll} /></th>
+                  <th className="px-8 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">משימה</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">עדיפות</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">תאריך יעד</th>
+                  <th className="px-6 py-5 border-b border-slate-100 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">סטטוס</th>
+                  <th className="px-8 py-5 border-b border-slate-100"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTasks.length === 0 && (
+                  <tr><td colSpan={6} className="text-center text-slate-500 py-10">אין משימות התואמות את הסינון</td></tr>
+                )}
+                {filteredTasks.map(task => {
+                  const isSelected = selected.has(task.id);
+                  const isDone = task.status === 'DONE';
+                  return (
+                    <tr key={task.id}
+                      onClick={() => openEdit(task)}
+                      className={`hover:bg-slate-50/50 transition-all group cursor-pointer ${isDone ? 'opacity-50' : ''} ${isSelected ? 'bg-primary/5' : ''}`}>
+                      <td className="px-4 py-6" onClick={e => e.stopPropagation()}>
+                        <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(task.id)} />
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="cursor-pointer" onClick={e => toggleDone(task, e)}>
+                            {isDone ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-slate-400" />}
+                          </div>
+                          <p className={`font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6"><Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge></td>
+                      <td className="px-6 py-6 text-sm font-bold text-slate-600">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : '—'}</td>
+                      <td className="px-6 py-6">
+                        <span className={`text-[10px] font-black px-3 py-1 rounded-full ${isDone ? 'bg-green-50 text-green-500' : 'bg-orange-50 text-orange-500'}`}>
+                          {isDone ? 'הושלם' : 'פתוח'}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-left" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1">
+                          <button onClick={e => openEdit(task, e)} className="p-2 text-slate-300 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={e => deleteTask(task.id, e)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="p-6 border-t border-slate-200 flex items-center justify-between">
+          <p className="text-sm text-slate-500">מציג {filteredTasks.length} משימות</p>
+        </div>
+      </div>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -249,7 +350,10 @@ export default function Tasks() {
               </Select>
             </div>
             <div><Label>תאריך יעד</Label><Input type="datetime-local" value={editData.due_at || ''} onChange={e => setEditData({...editData, due_at: e.target.value})} /></div>
-            <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+            <div className="flex gap-2">
+              <Button onClick={saveEdit} className="flex-1 font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
+              <Button variant="destructive" onClick={() => { setEditOpen(false); deleteTask(editData.id); }} className="font-bold"><Trash2 className="w-4 h-4 ml-1" />מחק</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
