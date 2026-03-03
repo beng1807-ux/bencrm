@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText } from 'lucide-react';
+import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import EventSettingsTab from '../components/management/EventSettingsTab';
 import BookingFormSettingsTab from '../components/management/BookingFormSettingsTab';
+import WhatsAppAgentTab from '../components/management/WhatsAppAgentTab';
 
 export default function Management() {
   const [settings, setSettings] = useState(null);
