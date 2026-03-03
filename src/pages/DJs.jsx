@@ -29,14 +29,15 @@ export default function DJs() {
 
   const loadDJs = async () => {
     try {
-      const [data, usersRes] = await Promise.allSettled([
-        base44.entities.DJ.list('-created_date'),
-        base44.functions.invoke('listAllUsers'),
-      ]);
-      setDJs(data.status === 'fulfilled' ? data.value : []);
-      setUsers(usersRes.status === 'fulfilled' ? (usersRes.value?.data?.users || []) : []);
+      const data = await base44.entities.DJ.list('-created_date');
+      setDJs(data);
     } catch { toast.error('שגיאה בטעינת DJ-ים'); }
     finally { setLoading(false); }
+    // Load users in background (non-blocking)
+    try {
+      const usersRes = await base44.functions.invoke('listAllUsers');
+      setUsers(usersRes.data?.users || []);
+    } catch { /* ignore - users list is optional */ }
   };
 
   const toggleSelect = (id, e) => { e.stopPropagation(); setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
