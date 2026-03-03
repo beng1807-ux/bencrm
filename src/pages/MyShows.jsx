@@ -104,15 +104,16 @@ export default function MyShows() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{isAdmin ? 'הופעות תקליטנים' : 'לוח ההופעות שלי'}</h1>
-          <p className="text-gray-600">{djProfile?.name} - {upcomingEvents.length} אירועים קרובים</p>
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{isAdmin ? 'הופעות תקליטנים' : 'לוח ההופעות שלי'}</h2>
+          <p className="text-slate-500 font-medium max-w-md">{djProfile?.name} - {upcomingEvents.length} אירועים קרובים</p>
         </div>
         {isAdmin && allDJs.length > 0 && (
           <Select value={selectedDJId} onValueChange={selectDJ}>
-            <SelectTrigger className="w-52 bg-white">
+            <SelectTrigger className="w-52 bg-white relative z-10">
               <SelectValue placeholder="בחר תקליטן" />
             </SelectTrigger>
             <SelectContent>
@@ -122,6 +123,7 @@ export default function MyShows() {
             </SelectContent>
           </Select>
         )}
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       </div>
 
       <div>

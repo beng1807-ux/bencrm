@@ -156,26 +156,31 @@ export default function DJAvailability() {
   const futureDates = (manageDJ?.unavailable_dates || []).filter(d => new Date(d) >= new Date()).sort();
 
   return (
-    <div className="space-y-5" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
-      <div>
-        <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-2">
-          <Calendar className="w-8 h-8" />
-          זמינות תקליטנים
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">צפייה וניהול תאריכים חסומים לכל תקליטן</p>
+    <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>זמינות תקליטנים</h2>
+          <p className="text-slate-500 font-medium max-w-md">צפייה וניהול תאריכים חסומים לכל תקליטן</p>
+        </div>
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       </div>
 
       {/* Stats */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="bg-white border rounded-xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
-          <User className="w-4 h-4 text-gray-400" />
-          <span className="text-sm font-bold text-gray-500">סה״כ תקליטנים</span>
-          <span className="text-xl font-black text-gray-900">{djs.length}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary"><User className="w-6 h-6" /></div>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">סה״כ תקליטנים</p>
+          <h3 className="text-3xl font-extrabold mt-1">{djs.length}</h3>
         </div>
-        <div className="bg-white border rounded-xl px-4 py-2.5 flex items-center gap-2.5 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
-          <span className="text-sm font-bold text-gray-500">פעילים</span>
-          <span className="text-xl font-black text-gray-900">{djs.filter(d => d.status === 'ACTIVE').length}</span>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><User className="w-6 h-6" /></div>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">פעילים</p>
+          <h3 className="text-3xl font-extrabold mt-1">{djs.filter(d => d.status === 'ACTIVE').length}</h3>
         </div>
       </div>
 
