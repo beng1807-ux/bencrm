@@ -157,7 +157,7 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10">
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
@@ -167,6 +167,9 @@ export default function Management() {
           <TabsTrigger value="customers">לקוחות</TabsTrigger>
           <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
           <TabsTrigger value="nav">סרגל ניווט</TabsTrigger>
+          <TabsTrigger value="whatsapp_agent" className="flex items-center gap-1">
+            <MessageCircle className="w-3.5 h-3.5" />סוכן ווצאפ
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings">
