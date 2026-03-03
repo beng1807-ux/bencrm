@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Music, Ban } from 'lucide-react';
+import React from 'react';
+import { Music, Ban, User } from 'lucide-react';
 
 const getContractColor = (contractStatus) => {
   switch (contractStatus) {
@@ -12,7 +12,7 @@ const getContractColor = (contractStatus) => {
 };
 
 export default function CalendarDayCell({ 
-  date, events, blockedDJs, customers, djs, isToday, isCurrentMonth,
+  date, events, blockedDJs, customers, leads, djs, isToday, isCurrentMonth,
   onEventHover, onEventLeave, onDJBlockHover, onDJBlockLeave, onEventClick, onDJBlockClick 
 }) {
   if (!date) {
@@ -22,6 +22,14 @@ export default function CalendarDayCell({
   const dayNum = date.getDate();
   const isFriday = date.getDay() === 5;
   const isSaturday = date.getDay() === 6;
+
+  const getContactName = (customerId) => {
+    const customer = customers?.find(c => c.id === customerId);
+    if (customer) return customer.name;
+    const lead = leads?.find(l => l.id === customerId);
+    if (lead) return lead.contact_name;
+    return null;
+  };
 
   return (
     <div className={`min-h-[120px] rounded-xl border transition-all duration-200 p-2 flex flex-col gap-1 ${
@@ -44,7 +52,7 @@ export default function CalendarDayCell({
           {dayNum}
         </span>
         {events.length > 0 && (
-          <span className="text-[9px] font-black text-slate-300">{events.length}</span>
+          <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 rounded-full">{events.length}</span>
         )}
       </div>
 
@@ -52,25 +60,35 @@ export default function CalendarDayCell({
       <div className="flex-1 space-y-1 overflow-hidden">
         {events.slice(0, 3).map(event => {
           const colors = getContractColor(event.contract_status);
-          const customer = customers.find(c => c.id === event.customer_id);
-          const dj = djs.find(d => d.id === event.dj_id);
+          const contactName = getContactName(event.customer_id);
+          const dj = djs?.find(d => d.id === event.dj_id);
+          const customer = customers?.find(c => c.id === event.customer_id);
           
           return (
             <div
               key={event.id}
-              className={`${colors.bg} ${colors.border} border-r-2 rounded-lg px-2 py-1 cursor-pointer transition-all hover:shadow-sm hover:scale-[1.02]`}
+              className={`${colors.bg} ${colors.border} border-r-2 rounded-lg px-2 py-1.5 cursor-pointer transition-all hover:shadow-sm hover:scale-[1.02]`}
               onMouseEnter={(e) => onEventHover(event, customer, dj, e)}
               onMouseLeave={onEventLeave}
-              onClick={() => onEventClick(event)}
+              onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
             >
               <div className="flex items-center gap-1">
                 <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`} />
-                <span className={`text-[10px] font-bold ${colors.text} truncate`}>
+                <span className={`text-[10px] font-black ${colors.text} truncate`}>
                   {event.event_type}
                 </span>
               </div>
-              {customer && (
-                <p className="text-[9px] text-slate-400 truncate pr-2.5">{customer.name}</p>
+              {contactName && (
+                <div className="flex items-center gap-1 pr-2.5">
+                  <User className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
+                  <p className="text-[9px] font-semibold text-slate-500 truncate">{contactName}</p>
+                </div>
+              )}
+              {dj && (
+                <div className="flex items-center gap-1 pr-2.5">
+                  <Music className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
+                  <p className="text-[9px] font-semibold text-slate-400 truncate">{dj.name}</p>
+                </div>
               )}
             </div>
           );
@@ -88,7 +106,7 @@ export default function CalendarDayCell({
             className="bg-violet-50 border border-violet-200 border-r-2 border-r-violet-500 rounded-lg px-2 py-1 cursor-pointer hover:shadow-sm hover:scale-[1.02] transition-all"
             onMouseEnter={(e) => onDJBlockHover(blockedDJs, e)}
             onMouseLeave={onDJBlockLeave}
-            onClick={() => onDJBlockClick(blockedDJs)}
+            onClick={(e) => { e.stopPropagation(); onDJBlockClick(blockedDJs); }}
           >
             <div className="flex items-center gap-1">
               <Ban className="w-2.5 h-2.5 text-violet-500 flex-shrink-0" />

@@ -2,7 +2,7 @@ import React from 'react';
 import CalendarDayCell from './CalendarDayCell';
 
 export default function MonthView({ 
-  currentDate, events, djs, customers, getEventsForDate, getBlockedDJsForDate,
+  currentDate, events, djs, customers, leads, getEventsForDate, getBlockedDJsForDate,
   onEventHover, onEventLeave, onDJBlockHover, onDJBlockLeave, onEventClick, onDJBlockClick
 }) {
   const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -63,6 +63,7 @@ export default function MonthView({
               events={dayEvents}
               blockedDJs={blockedDJs}
               customers={customers}
+              leads={leads}
               djs={djs}
               isToday={isToday}
               isCurrentMonth={currentMonth}
