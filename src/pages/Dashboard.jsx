@@ -270,11 +270,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* --- WhatsApp Agent (5) --- */}
-        <div className="col-span-12 lg:col-span-5">
-          <WhatsAppAgentCard />
-        </div>
-
         {/* --- Recent Activity (5) --- */}
         <div className="col-span-12 lg:col-span-5">
           <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col h-full" style={{ borderColor: `${PRIMARY}10` }}>
