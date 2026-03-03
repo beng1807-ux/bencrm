@@ -5,6 +5,51 @@ import { MessageCircle, Copy, Check } from 'lucide-react';
 
 const PRIMARY = '#e94f1c';
 
+function WhatsAppAgentCard() {
+  const [copied, setCopied] = useState(false);
+  const whatsappUrl = base44.agents.getWhatsAppConnectURL('skitza_crm');
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(whatsappUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200 shadow-sm h-full flex flex-col justify-between">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+          <MessageCircle className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h3 className="font-black text-[#181311] text-lg">סוכן WhatsApp</h3>
+          <p className="text-sm text-[#886c63] mt-1 leading-relaxed">
+            חבר את הסוכן לווצאפ כדי לנהל את ה-CRM דרך הודעות. הסוכן יכול למצוא לקוחות, אירועים ותקליטנים, להוסיף ולעדכן נתונים, ולבצע שאילתות.
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 mt-5">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+        >
+          <MessageCircle className="w-4 h-4" />
+          חבר לווצאפ
+        </a>
+        <button
+          onClick={copyLink}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl border border-green-300 bg-white hover:bg-green-50 text-green-700 font-bold text-sm transition-colors"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? 'הועתק!' : 'העתק קישור'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [settings, setSettings] = useState({});
   const [stats, setStats] = useState({ totalLeads: 0, activeEvents: 0, pendingPayments: 0, thisMonthRevenue: 0, newLeads: 0, upcomingEvents: 0 });
