@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
-import { MessageCircle, Copy, Check } from 'lucide-react';
 
 const PRIMARY = '#e94f1c';
 
