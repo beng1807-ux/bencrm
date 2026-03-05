@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const cleanPhone = formData.phone.replace(/\D/g, '');
 
     // Build lead data
-    const leadData = { ...formData, phone: cleanPhone, status: 'NEW', source: 'BASE44_FORM' };
+    const leadData = { ...formData, phone: cleanPhone, status: 'FORM_FILLED', source: 'BASE44_FORM' };
     if (leadData.guests_count) leadData.guests_count = Number(leadData.guests_count);
 
     // Search for existing lead by phone (service role - no auth needed)
@@ -22,16 +22,15 @@ Deno.serve(async (req) => {
     const existingLeads = await base44.asServiceRole.entities.Lead.filter({ phone: cleanPhone });
 
     if (existingLeads.length > 0) {
-      // Found existing lead - update with new data (don't override status)
+      // Found existing lead - update with new data + set status to FORM_FILLED
       lead = existingLeads[0];
       const updateData = { ...leadData };
-      delete updateData.status; // keep existing status
       delete updateData.source; // keep existing source
       await base44.asServiceRole.entities.Lead.update(lead.id, updateData);
       lead = { ...lead, ...updateData };
       isUpdate = true;
     } else {
-      // New lead
+      // New lead with FORM_FILLED status
       lead = await base44.asServiceRole.entities.Lead.create(leadData);
     }
 
@@ -89,6 +88,18 @@ Deno.serve(async (req) => {
         body: emailBody,
         from_name: 'Skitza CRM'
       });
+    }
+
+    // Create quote handling task
+    try {
+      await base44.asServiceRole.entities.Task.create({
+        title: `טיפול בהצעת מחיר - ${formData.contact_name}`,
+        related_lead_id: lead.id,
+        priority: 'HIGH',
+        status: 'OPEN',
+      });
+    } catch (taskErr) {
+      console.error('Task creation failed:', taskErr.message);
     }
 
     return Response.json({ success: true, isUpdate, leadId: lead.id });

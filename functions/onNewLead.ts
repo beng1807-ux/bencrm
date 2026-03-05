@@ -20,7 +20,13 @@ Deno.serve(async (req) => {
       console.warn('[onNewLead] ✖ No lead data in payload');
       return Response.json({ error: 'No lead data' }, { status: 400 });
     }
-    console.log(`[onNewLead] ✓ Lead: ${lead.id} - ${lead.contact_name} - ${lead.phone}`);
+    console.log(`[onNewLead] ✓ Lead: ${lead.id} - ${lead.contact_name} - ${lead.phone} - status: ${lead.status}`);
+
+    // Skip WhatsApp + task for form-filled leads (handled by submitBookingForm)
+    if (lead.status === 'FORM_FILLED') {
+      console.log('[onNewLead] ℹ Lead filled form - skipping WhatsApp & task (handled by submitBookingForm)');
+      return Response.json({ message: 'Form-filled lead - skipped' });
+    }
 
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
