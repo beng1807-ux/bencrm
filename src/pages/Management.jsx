@@ -158,7 +158,10 @@ export default function Management() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-10">
+        <TabsList className="grid w-full grid-cols-11">
+          <TabsTrigger value="crm_guide" className="flex items-center gap-1">
+            <BookOpen className="w-3.5 h-3.5" />מדריך CRM
+          </TabsTrigger>
           <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
           <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
           <TabsTrigger value="packages">מחירון</TabsTrigger>
@@ -742,6 +745,10 @@ export default function Management() {
 
         <TabsContent value="whatsapp_agent">
           <WhatsAppAgentTab />
+        </TabsContent>
+
+        <TabsContent value="crm_guide">
+          <CrmGuideTab />
         </TabsContent>
 
       </Tabs>
