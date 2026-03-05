@@ -253,7 +253,7 @@ export default function CrmGuideTab() {
   const [activeSection, setActiveSection] = useState(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       {/* Hero */}
       <div className="bg-gradient-to-l from-orange-50 to-white rounded-2xl p-8 border border-orange-100">
         <div className="flex items-center gap-3 mb-3">
