@@ -17,6 +17,7 @@ const PRIMARY = '#e94f1c';
 
 const LEAD_COLS = [
   { key: 'NEW',           label: 'חדש',          dot: 'bg-blue-500' },
+  { key: 'FORM_FILLED',   label: 'מילא טופס',    dot: 'bg-cyan-500' },
   { key: 'FIRST_CONTACT', label: 'נוצר קשר',     dot: 'bg-amber-500' },
   { key: 'QUOTE_SENT',    label: 'נשלחה הצעה',   dot: 'bg-purple-500' },
 ];
