@@ -89,7 +89,61 @@ async function sendPaymentReminder(base44, event, customers, settings, reminderN
         metadata: { template_key: templateKey, simulated: true },
       });
     } else {
-      throw new Error('WhatsApp API לא מחובר');
+      // שליחה אמיתית דרך GREEN API
+      console.log(`[paymentReminders] 📱 Sending real WhatsApp for reminder ${reminderNumber}`);
+      const GREEN_ID = Deno.env.get('GREEN_ID');
+      const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
+
+      if (!GREEN_ID || !GREEN_TOKEN) {
+        throw new Error('GREEN API לא מוגדר - חסר GREEN_ID או GREEN_TOKEN');
+      }
+
+      if (!customer.phone) {
+        throw new Error('אין מספר טלפון ללקוח');
+      }
+
+      let phoneNumber = customer.phone.replace(/[\s\-\(\)\.]/g, '');
+      if (phoneNumber.startsWith('0')) {
+        phoneNumber = '972' + phoneNumber.substring(1);
+      }
+      if (phoneNumber.startsWith('+')) {
+        phoneNumber = phoneNumber.substring(1);
+      }
+
+      const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
+      const whatsappResponse = await fetch(greenApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId: `${phoneNumber}@c.us`,
+          message: messageText
+        })
+      });
+
+      const whatsappResult = await whatsappResponse.json();
+
+      if (whatsappResponse.ok && whatsappResult.idMessage) {
+        console.log(`[paymentReminders] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
+
+        await base44.asServiceRole.entities.ConversationMessage.create({
+          customer_id: customer.id,
+          event_id: event.id,
+          channel: 'WHATSAPP',
+          sender: 'OWNER',
+          message_text: messageText,
+          timestamp: new Date().toISOString(),
+        });
+
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_name: 'Event',
+          entity_id: event.id,
+          action: 'SEND_MESSAGE',
+          diff_summary: `תזכורת תשלום ${reminderNumber} נשלחה בוואטסאפ`,
+          metadata: { template_key: templateKey, whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
+        });
+      } else {
+        throw new Error(`WhatsApp send failed: ${JSON.stringify(whatsappResult)}`);
+      }
     }
 
     // עדכון שהתזכורת נשלחה
