@@ -23,12 +23,16 @@ Deno.serve(async (req) => {
     console.log(`[onDJAssigned] ✓ Settings loaded. WhatsApp mode: ${settings.whatsapp_send_mode}`);
 
     // טעינת נתונים
-    const [dj, customer] = await Promise.all([
-      base44.asServiceRole.entities.DJ.filter({ id: eventData.dj_id }).then((r) => r[0]),
-      base44.asServiceRole.entities.Customer.filter({ id: eventData.customer_id }).then(
-        (r) => r[0]
-      ),
-    ]);
+    let dj, customer;
+    try {
+      [dj, customer] = await Promise.all([
+        base44.asServiceRole.entities.DJ.get(eventData.dj_id),
+        base44.asServiceRole.entities.Customer.get(eventData.customer_id).catch(() => null),
+      ]);
+    } catch (fetchErr) {
+      console.error(`[onDJAssigned] ✖ Failed to fetch DJ/Customer: ${fetchErr.message}`);
+      return Response.json({ error: fetchErr.message }, { status: 500 });
+    }
 
     if (!dj) {
       console.warn('[onDJAssigned] ✖ DJ not found');
