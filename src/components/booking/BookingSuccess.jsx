@@ -1,7 +1,23 @@
-import React from 'react';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, ArrowRight, Home } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '../../utils';
+import { Link } from 'react-router-dom';
 
 export default function BookingSuccess({ settings = {} }) {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) return;
+        const user = await base44.auth.me();
+        if (user?.role === 'admin') setIsAdmin(true);
+      } catch {}
+    };
+    checkAdmin();
+  }, []);
   const title = settings.success_title || 'הפנייה נשלחה בהצלחה!';
   const subtitle = settings.success_subtitle || 'תודה שפניתם לסקיצה';
   const description = settings.success_description || 'קיבלנו את הפרטים שלכם, נציג מטעמנו יחזור אליכם בהקדם כדי להתחיל לתכנן את האירוע המושלם.';
@@ -60,7 +76,7 @@ export default function BookingSuccess({ settings = {} }) {
             </div>
 
             {/* Button */}
-            <div className="w-full pt-4">
+            <div className="w-full pt-4 flex flex-col items-center gap-3">
               <button
                 onClick={() => window.location.reload()}
                 className="group w-full md:w-auto min-w-[240px] bg-[#e94f1c] hover:bg-[#e94f1c]/90 text-white font-bold py-4 px-8 rounded-lg transition-all flex items-center justify-center gap-3 text-lg mx-auto"
@@ -68,6 +84,15 @@ export default function BookingSuccess({ settings = {} }) {
                 <span>{buttonText}</span>
                 <ArrowRight className="w-5 h-5 group-hover:-translate-x-1 transition-transform rotate-180" />
               </button>
+              {isAdmin && (
+                <Link
+                  to={createPageUrl('Dashboard')}
+                  className="w-full md:w-auto min-w-[240px] border border-white/20 hover:border-white/40 text-white font-bold py-3 px-8 rounded-lg transition-all flex items-center justify-center gap-2 text-base"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>חזרה ללוח הבקרה</span>
+                </Link>
+              )}
             </div>
 
             {/* Footer note */}
