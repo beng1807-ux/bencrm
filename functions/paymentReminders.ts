@@ -11,7 +11,11 @@ Deno.serve(async (req) => {
     }
     const settings = settingsList[0];
 
-    const now = new Date();
+    // חישוב תאריך היום בלבד (ללא שעות) כדי להשוות ימים בצורה מדויקת
+    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date(todayStr);
+    console.log(`[paymentReminders] 📅 Today: ${todayStr}, Reminder1: ${settings.payment_reminder_1_days_before}d, Reminder2: ${settings.payment_reminder_2_days_before}d`);
+
     const events = await base44.asServiceRole.entities.Event.list();
     const customers = await base44.asServiceRole.entities.Customer.list();
     let sentCount = 0;
@@ -20,13 +24,15 @@ Deno.serve(async (req) => {
       if (event.payment_status === 'PAID_FULL') continue;
 
       const eventDate = new Date(event.event_date);
-      const daysUntilEvent = Math.floor((eventDate - now) / (1000 * 60 * 60 * 24));
+      const daysUntilEvent = Math.round((eventDate - today) / (1000 * 60 * 60 * 24));
+      console.log(`[paymentReminders] Event ${event.id}: date=${event.event_date}, daysUntil=${daysUntilEvent}, payStatus=${event.payment_status}`);
 
       // תזכורת 1
       if (
         daysUntilEvent === settings.payment_reminder_1_days_before &&
         !event.payment_reminder_1_sent_at
       ) {
+        console.log(`[paymentReminders] ➡ Sending reminder 1 for event ${event.id}`);
         await sendPaymentReminder(base44, event, customers, settings, 1);
         sentCount++;
       }
@@ -36,6 +42,7 @@ Deno.serve(async (req) => {
         daysUntilEvent === settings.payment_reminder_2_days_before &&
         !event.payment_reminder_2_sent_at
       ) {
+        console.log(`[paymentReminders] ➡ Sending reminder 2 for event ${event.id}`);
         await sendPaymentReminder(base44, event, customers, settings, 2);
         sentCount++;
       }
