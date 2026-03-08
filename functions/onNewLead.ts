@@ -119,8 +119,8 @@ Deno.serve(async (req) => {
             throw new Error('אין מספר טלפון בליד');
           }
 
-          // נרמול מספר טלפון
-          let phoneNumber = lead.phone.replace(/[\s\-\(\)\.]/g, '');
+          // נרמול מספר טלפון - השאר רק ספרות
+          let phoneNumber = lead.phone.replace(/[^\d+]/g, '');
           if (phoneNumber.startsWith('0')) {
             phoneNumber = '972' + phoneNumber.substring(1);
           }
