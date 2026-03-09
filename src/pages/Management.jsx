@@ -353,6 +353,15 @@ export default function Management() {
 
         <TabsContent value="templates">
           <div className="space-y-4">
+            {selectedTemplates.size > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                <span className="text-sm font-bold text-red-700">{selectedTemplates.size} תבניות נבחרו</span>
+                <Button variant="destructive" size="sm" onClick={deleteSelectedTemplates} className="flex items-center gap-1">
+                  <Trash2 className="w-4 h-4" />מחק נבחרים
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectedTemplates(new Set())}>בטל בחירה</Button>
+              </div>
+            )}
             {templates.map(template => {
               const placeholderMap = {
                 NEW_LEAD: ['{contact_name}', '{event_date}', '{event_type}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
@@ -369,11 +378,19 @@ export default function Management() {
                 <Card key={template.id}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>{template.template_name}</span>
-                      <Switch
-                        checked={template.active}
-                        onCheckedChange={v => saveTemplate({...template, active: v})}
-                      />
+                      <div className="flex items-center gap-3">
+                        <Checkbox checked={selectedTemplates.has(template.id)} onCheckedChange={() => toggleTemplateSelect(template.id)} />
+                        <span>{template.template_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={template.active}
+                          onCheckedChange={v => saveTemplate({...template, active: v})}
+                        />
+                        <Button variant="ghost" size="sm" onClick={() => deleteTemplate(template.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -418,56 +435,72 @@ export default function Management() {
         </TabsContent>
 
         <TabsContent value="packages">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-3">
             <Button onClick={() => savePackage({ item_type: 'PACKAGE', active: true, price: 0, item_name: 'חבילה חדשה' })} className="bg-orange-500 hover:bg-orange-600">
               <PackageIcon className="w-4 h-4 ml-2" />
               הוסף חבילה/תוספת
             </Button>
+            {selectedPackages.size > 0 && (
+              <>
+                <Button variant="destructive" size="sm" onClick={deleteSelectedPackages} className="flex items-center gap-1">
+                  <Trash2 className="w-4 h-4" />מחק {selectedPackages.size} נבחרים
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectedPackages(new Set())}>בטל בחירה</Button>
+              </>
+            )}
           </div>
           <div className="space-y-4">
             {packages.map(pkg => (
-              <Card key={pkg.id}>
+              <Card key={pkg.id} className={selectedPackages.has(pkg.id) ? 'border-orange-300 bg-orange-50/30' : ''}>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-4 gap-4">
-                    <Input
-                      value={pkg.item_name}
-                      onChange={e => {
-                        const updated = packages.map(p => 
-                          p.id === pkg.id ? {...p, item_name: e.target.value} : p
-                        );
-                        setPackages(updated);
-                      }}
-                      placeholder="שם"
-                    />
-                    <Input
-                      type="number"
-                      value={pkg.price}
-                      onChange={e => {
-                        const updated = packages.map(p => 
-                          p.id === pkg.id ? {...p, price: Number(e.target.value)} : p
-                        );
-                        setPackages(updated);
-                      }}
-                      placeholder="מחיר"
-                    />
-                    <Select
-                      value={pkg.item_type}
-                      onValueChange={v => {
-                        const updated = packages.map(p => 
-                          p.id === pkg.id ? {...p, item_type: v} : p
-                        );
-                        setPackages(updated);
-                      }}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PACKAGE">חבילה</SelectItem>
-                        <SelectItem value="ADDON">תוספת</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={() => savePackage(pkg)} size="sm" className="bg-orange-500 hover:bg-orange-600">
-                      שמור
-                    </Button>
+                  <div className="flex items-center gap-4">
+                    <Checkbox checked={selectedPackages.has(pkg.id)} onCheckedChange={() => togglePackageSelect(pkg.id)} />
+                    <div className="grid grid-cols-4 gap-4 flex-1">
+                      <Input
+                        value={pkg.item_name}
+                        onChange={e => {
+                          const updated = packages.map(p => 
+                            p.id === pkg.id ? {...p, item_name: e.target.value} : p
+                          );
+                          setPackages(updated);
+                        }}
+                        placeholder="שם"
+                      />
+                      <Input
+                        type="number"
+                        value={pkg.price}
+                        onChange={e => {
+                          const updated = packages.map(p => 
+                            p.id === pkg.id ? {...p, price: Number(e.target.value)} : p
+                          );
+                          setPackages(updated);
+                        }}
+                        placeholder="מחיר"
+                      />
+                      <Select
+                        value={pkg.item_type}
+                        onValueChange={v => {
+                          const updated = packages.map(p => 
+                            p.id === pkg.id ? {...p, item_type: v} : p
+                          );
+                          setPackages(updated);
+                        }}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PACKAGE">חבילה</SelectItem>
+                          <SelectItem value="ADDON">תוספת</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button onClick={() => savePackage(pkg)} size="sm" className="bg-orange-500 hover:bg-orange-600 flex-1">
+                          שמור
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => deletePackage(pkg.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
