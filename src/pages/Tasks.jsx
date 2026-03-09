@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { ListChecks, CheckCircle, Circle, Plus, Pencil, Trash2, Calendar, TrendingUp, LayoutGrid, List, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -106,7 +107,7 @@ export default function Tasks() {
 
   // Filtering
   const filteredTasks = tasks.filter(t => {
-    const matchSearch = !searchTerm || t.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = !searchTerm || t.title?.toLowerCase().includes(searchTerm.toLowerCase()) || t.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -240,6 +241,7 @@ export default function Tasks() {
                   </div>
                   <div className="mb-6 pr-16 pt-4">
                     <h4 className={`text-xl font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</h4>
+                    {task.description && <p className="text-sm text-slate-500 mt-1 line-clamp-2">{task.description}</p>}
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-500">
@@ -292,7 +294,10 @@ export default function Tasks() {
                           <div className="cursor-pointer" onClick={e => toggleDone(task, e)}>
                             {isDone ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5 text-slate-400" />}
                           </div>
-                          <p className={`font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</p>
+                          <div>
+                            <p className={`font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</p>
+                            {task.description && <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{task.description}</p>}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-6"><Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge></td>
@@ -328,6 +333,7 @@ export default function Tasks() {
           <DialogHeader><DialogTitle>עריכת משימה</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div><Label>כותרת</Label><Input value={editData.title || ''} onChange={e => setEditData({...editData, title: e.target.value})} /></div>
+            <div><Label>תיאור</Label><Textarea value={editData.description || ''} onChange={e => setEditData({...editData, description: e.target.value})} placeholder="תיאור המשימה..." className="min-h-[80px]" /></div>
             <div>
               <Label>עדיפות</Label>
               <Select value={editData.priority || 'NORMAL'} onValueChange={v => setEditData({...editData, priority: v})}>
@@ -364,6 +370,7 @@ export default function Tasks() {
           <DialogHeader><DialogTitle>משימה חדשה</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div><Label>כותרת *</Label><Input value={newTask.title || ''} onChange={e => setNewTask({...newTask, title: e.target.value})} /></div>
+            <div><Label>תיאור</Label><Textarea value={newTask.description || ''} onChange={e => setNewTask({...newTask, description: e.target.value})} placeholder="תיאור המשימה..." className="min-h-[80px]" /></div>
             <div>
               <Label>עדיפות</Label>
               <Select value={newTask.priority || 'NORMAL'} onValueChange={v => setNewTask({...newTask, priority: v})}>
