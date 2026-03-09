@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText, MessageCircle, BookOpen } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText, MessageCircle, BookOpen, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import EventSettingsTab from '../components/management/EventSettingsTab';
 import BookingFormSettingsTab from '../components/management/BookingFormSettingsTab';
@@ -24,6 +25,8 @@ export default function Management() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [selectedTemplates, setSelectedTemplates] = useState(new Set());
+  const [selectedPackages, setSelectedPackages] = useState(new Set());
 
   useEffect(() => {
     loadData();
@@ -137,6 +140,44 @@ export default function Management() {
       console.error('Error saving package:', error);
       toast.error('שגיאה בשמירת החבילה');
     }
+  };
+
+  const deleteTemplate = async (id) => {
+    if (!confirm('למחוק תבנית זו?')) return;
+    await base44.entities.MessageTemplate.delete(id);
+    toast.success('התבנית נמחקה');
+    loadData();
+  };
+
+  const deleteSelectedTemplates = async () => {
+    if (!confirm(`למחוק ${selectedTemplates.size} תבניות?`)) return;
+    await Promise.all([...selectedTemplates].map(id => base44.entities.MessageTemplate.delete(id)));
+    setSelectedTemplates(new Set());
+    toast.success('תבניות נמחקו');
+    loadData();
+  };
+
+  const deletePackage = async (id) => {
+    if (!confirm('למחוק חבילה/תוספת זו?')) return;
+    await base44.entities.Package.delete(id);
+    toast.success('החבילה נמחקה');
+    loadData();
+  };
+
+  const deleteSelectedPackages = async () => {
+    if (!confirm(`למחוק ${selectedPackages.size} חבילות?`)) return;
+    await Promise.all([...selectedPackages].map(id => base44.entities.Package.delete(id)));
+    setSelectedPackages(new Set());
+    toast.success('חבילות נמחקו');
+    loadData();
+  };
+
+  const toggleTemplateSelect = (id) => {
+    setSelectedTemplates(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+
+  const togglePackageSelect = (id) => {
+    setSelectedPackages(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
   if (loading) {
