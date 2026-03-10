@@ -63,6 +63,28 @@ export default function Events() {
 
   useEffect(() => { loadData(); }, []);
 
+  // Handle URL params for deep linking
+  useEffect(() => {
+    if (!loading && events.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const eventId = params.get('eventId');
+      const upcoming = params.get('upcoming');
+      
+      if (eventId) {
+        const event = events.find(e => e.id === eventId);
+        if (event) openEdit(event);
+      } else if (upcoming === 'true') {
+        // Sort by date ascending, show only future events
+        const now = new Date();
+        const futureEvents = events.filter(e => new Date(e.event_date) >= now && e.event_status !== 'CANCELLED');
+        if (futureEvents.length > 0) {
+          const sorted = [...futureEvents].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+          openEdit(sorted[0]);
+        }
+      }
+    }
+  }, [loading, events]);
+
   useEffect(() => {
     if (createOpen) {
       loadData();

@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { ListChecks, CheckCircle, Circle, Plus, Pencil, Trash2, Calendar, TrendingUp, LayoutGrid, List, Search } from 'lucide-react';
+import { ListChecks, CheckCircle, Circle, Plus, Pencil, Trash2, Calendar, TrendingUp, LayoutGrid, List, Search, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const PRIMARY = '#ec5b13';
 
@@ -18,6 +20,8 @@ const PRIORITY_COLORS = { HIGH: 'bg-red-100 text-red-700', NORMAL: 'bg-blue-100 
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [taskEvents, setTaskEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('cards');
   const [selected, setSelected] = useState(new Set());
@@ -32,8 +36,14 @@ export default function Tasks() {
 
   const loadTasks = async () => {
     try {
-      const data = await base44.entities.Task.list('-created_date');
+      const [data, leadsData, eventsData] = await Promise.all([
+        base44.entities.Task.list('-created_date'),
+        base44.entities.Lead.list(),
+        base44.entities.Event.list(),
+      ]);
       setTasks(data);
+      setLeads(leadsData);
+      setTaskEvents(eventsData);
     } catch { toast.error('שגיאה בטעינת משימות'); }
     finally { setLoading(false); }
   };
@@ -244,11 +254,27 @@ export default function Tasks() {
                     {task.description && <p className="text-sm text-slate-500 mt-1 line-clamp-2">{task.description}</p>}
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Calendar className="w-5 h-5" />
-                      <span className="text-sm font-bold">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : 'ללא תאריך יעד'}</span>
-                    </div>
-                    <Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge>
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <Calendar className="w-5 h-5" />
+                    <span className="text-sm font-bold">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : 'ללא תאריך יעד'}</span>
+                  </div>
+                  <Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge>
+                  {task.related_lead_id && (() => {
+                    const lead = leads.find(l => l.id === task.related_lead_id);
+                    return lead ? (
+                      <Link to={createPageUrl(`Customers?status=${lead.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
+                        <ExternalLink className="w-3.5 h-3.5" />{lead.contact_name}
+                      </Link>
+                    ) : null;
+                  })()}
+                  {task.related_event_id && (() => {
+                    const ev = taskEvents.find(e => e.id === task.related_event_id);
+                    return ev ? (
+                      <Link to={createPageUrl(`Events?eventId=${ev.id}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
+                        <ExternalLink className="w-3.5 h-3.5" />{ev.event_type} — {new Date(ev.event_date).toLocaleDateString('he-IL')}
+                      </Link>
+                    ) : null;
+                  })()}
                   </div>
                 </div>
               );
@@ -297,6 +323,24 @@ export default function Tasks() {
                           <div>
                             <p className={`font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</p>
                             {task.description && <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{task.description}</p>}
+                            <div className="flex items-center gap-3 mt-1">
+                              {task.related_lead_id && (() => {
+                                const lead = leads.find(l => l.id === task.related_lead_id);
+                                return lead ? (
+                                  <Link to={createPageUrl(`Customers?status=${lead.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+                                    <ExternalLink className="w-3 h-3" />{lead.contact_name}
+                                  </Link>
+                                ) : null;
+                              })()}
+                              {task.related_event_id && (() => {
+                                const ev = taskEvents.find(e => e.id === task.related_event_id);
+                                return ev ? (
+                                  <Link to={createPageUrl(`Events?eventId=${ev.id}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+                                    <ExternalLink className="w-3 h-3" />{ev.event_type}
+                                  </Link>
+                                ) : null;
+                              })()}
+                            </div>
                           </div>
                         </div>
                       </td>

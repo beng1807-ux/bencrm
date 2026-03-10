@@ -178,10 +178,10 @@ export default function Dashboard() {
         {/* --- Stats col (4) --- */}
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
           {[
-            { label: labelNewLeads, value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, href: createPageUrl('Customers'), icon: (
+            { label: labelNewLeads, value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, href: createPageUrl('Customers?status=NEW'), icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
             )},
-            { label: labelUpcoming, value: stats.upcomingEvents, sub: `${stats.activeEvents} אירועים פעילים`, href: createPageUrl('Events'), icon: (
+            { label: labelUpcoming, value: stats.upcomingEvents, sub: `${stats.activeEvents} אירועים פעילים`, href: createPageUrl('Events?upcoming=true'), icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             )},
             { label: labelRevenue, value: `₪${stats.thisMonthRevenue.toLocaleString()}`, sub: `${stats.pendingPayments} ממתינים לתשלום`, href: createPageUrl('Events'), icon: (
@@ -205,7 +205,7 @@ export default function Dashboard() {
         <div className="col-span-12 lg:col-span-8">
           <div className="bg-white h-full rounded-xl overflow-hidden border shadow-sm relative" style={{ borderColor: `${PRIMARY}15`, background: `linear-gradient(135deg, ${PRIMARY}08 0%, white 55%)` }}>
             {nextEvent ? (
-              <Link to={createPageUrl('Events')} className="block h-full p-8 flex flex-col justify-between min-h-[280px] hover:opacity-90 transition-opacity">
+              <Link to={createPageUrl(`Events?eventId=${nextEvent.id}`)} className="block h-full p-8 flex flex-col justify-between min-h-[280px] hover:opacity-90 transition-opacity">
                 <div>
                   <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}>
                     אירוע הבא

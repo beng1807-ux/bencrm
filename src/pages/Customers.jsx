@@ -51,7 +51,7 @@ const EVENT_TYPES = ['חתונה','בר מצווה','בת מצווה','יום ה
 // ── KanbanColumn ────────────────────────────────────────────────
 function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect, onCloseDeal }) {
   return (
-    <div className="flex flex-col gap-2 min-w-0">
+    <div id={`kanban-col-${col.key}`} className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center gap-2 px-1 mb-1">
         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${col.dot}`} />
         <span className="font-bold text-gray-800 text-sm truncate">{col.label}</span>
@@ -220,7 +220,36 @@ export default function Customers() {
   const [editOpen, setEditOpen] = useState(false);
   const [editData, setEditData] = useState({});
 
+  // Handle URL params for deep linking
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const statusParam = params.get('status');
+    if (statusParam) {
+      // Check if it's a lead status or customer status
+      if (LEAD_COLS.some(c => c.key === statusParam)) {
+        setPhaseFilter('lead');
+      } else if (CUSTOMER_COLS.some(c => c.key === statusParam)) {
+        setPhaseFilter('customer');
+      }
+      setViewMode('kanban');
+    }
+  }, []);
+
   useEffect(() => { loadData(); }, []);
+
+  // After data loads, scroll to the relevant kanban column if status param exists
+  useEffect(() => {
+    if (!loading && leads.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status');
+      if (statusParam) {
+        setTimeout(() => {
+          const el = document.getElementById(`kanban-col-${statusParam}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    }
+  }, [loading, leads]);
 
   const loadData = async () => {
     try {
