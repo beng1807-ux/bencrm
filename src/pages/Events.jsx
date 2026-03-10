@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import AddonSelector from '../components/events/AddonSelector';
 import PriceSummary from '../components/events/PriceSummary';
 import PaymentMethodModal from '../components/events/PaymentMethodModal';
@@ -432,8 +434,14 @@ export default function Events() {
                         <p className="text-sm font-bold text-slate-700">{eventDate.toLocaleDateString('he-IL')}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{dayName}</p>
                       </td>
-                      <td className="px-6 py-6">
-                        <span className="text-sm font-black text-slate-700">{customerName}</span>
+                      <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
+                        {event.customer_id ? (
+                          <Link to={createPageUrl(`Customers?status=${(() => { const lead = leads.find(l => l.id === event.customer_id); return lead?.status || 'DEAL_CLOSED'; })()}`)} className="text-sm font-black text-primary hover:underline">
+                            {customerName}
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-black text-slate-700">{customerName}</span>
+                        )}
                       </td>
                       <td className="px-6 py-6 text-sm font-bold text-slate-600">
                         <span className="flex items-center gap-1.5">
