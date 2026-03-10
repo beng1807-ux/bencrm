@@ -156,38 +156,21 @@ export default function Tasks() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary"><Plus className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-blue-500 bg-blue-500/10">היום</span>
+        {[
+          { label: 'משימות חדשות היום', value: stats.newToday, icon: <Plus className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: 'היום', badgeColor: 'text-blue-500 bg-blue-500/10', onClick: () => { setFilterStatus('OPEN'); } },
+          { label: 'בוצעו היום', value: stats.doneToday, icon: <CheckCircle className="w-6 h-6" />, iconBg: 'bg-emerald-500/10 text-emerald-500', badge: 'היום', badgeColor: 'text-emerald-500 bg-emerald-500/10', onClick: () => { setFilterStatus('DONE'); } },
+          { label: 'בוצעו השבוע', value: stats.doneWeek, icon: <TrendingUp className="w-6 h-6" />, iconBg: 'bg-amber-500/10 text-amber-500', badge: 'שבועי', badgeColor: 'text-amber-500 bg-amber-500/10', onClick: () => { setFilterStatus('DONE'); } },
+          { label: 'בוצעו החודש', value: stats.doneMonth, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-slate-500/10 text-slate-500', badge: 'חודשי', badgeColor: 'text-slate-500 bg-slate-500/10', onClick: () => { setFilterStatus('DONE'); } },
+        ].map((s, i) => (
+          <div key={i} onClick={s.onClick} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${s.iconBg}`}>{s.icon}</div>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full ${s.badgeColor}`}>{s.badge}</span>
+            </div>
+            <p className="text-slate-500 text-sm font-medium">{s.label}</p>
+            <h3 className="text-3xl font-extrabold mt-1">{s.value}</h3>
           </div>
-          <p className="text-slate-500 text-sm font-medium">משימות חדשות היום</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.newToday}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><CheckCircle className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-emerald-500 bg-emerald-500/10">היום</span>
-          </div>
-          <p className="text-slate-500 text-sm font-medium">בוצעו היום</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.doneToday}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-500/10 text-amber-500"><TrendingUp className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-500 bg-amber-500/10">שבועי</span>
-          </div>
-          <p className="text-slate-500 text-sm font-medium">בוצעו השבוע</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.doneWeek}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-slate-500/10 text-slate-500"><Calendar className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-slate-500 bg-slate-500/10">חודשי</span>
-          </div>
-          <p className="text-slate-500 text-sm font-medium">בוצעו החודש</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.doneMonth}</h3>
-        </div>
+        ))}
       </div>
 
       {/* Main Container */}

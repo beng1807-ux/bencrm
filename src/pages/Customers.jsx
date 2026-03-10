@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake, ChevronDown, Users, Music } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -413,20 +415,20 @@ export default function Customers() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <Link to={createPageUrl('Customers?status=NEW')} onClick={() => setPhaseFilter('lead')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500"><Users className="w-6 h-6" /></div>
           </div>
           <p className="text-slate-500 text-sm font-medium">לידים</p>
           <h3 className="text-3xl font-extrabold mt-1">{leadPhaseLeads.length}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        </Link>
+        <Link to={createPageUrl('Customers?status=DEAL_CLOSED')} onClick={() => setPhaseFilter('customer')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-500"><Handshake className="w-6 h-6" /></div>
           </div>
           <p className="text-slate-500 text-sm font-medium">לקוחות פעילים</p>
           <h3 className="text-3xl font-extrabold mt-1">{customerPhaseLeads.length}</h3>
-        </div>
+        </Link>
       </div>
 
       {/* Multi-select delete */}

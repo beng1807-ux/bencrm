@@ -261,23 +261,23 @@ export default function Events() {
       {(() => {
         const visibleStats = eventSettings.visible_stats || ['events_this_month', 'open_contracts', 'monthly_revenue', 'new_leads'];
         const statCards = [
-          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+12%', badgeColor: 'text-emerald-500 bg-emerald-500/10' },
-          { key: 'open_contracts', label: eventSettings.stat_open_contracts_label || 'חוזים פתוחים', value: pendingContracts, icon: <FileText className="w-6 h-6" />, iconBg: 'bg-amber-500/10 text-amber-500', badge: 'בהמתנה', badgeColor: 'text-amber-500 bg-amber-500/10' },
-          { key: 'monthly_revenue', label: eventSettings.stat_monthly_revenue_label || 'הכנסות החודש', value: `₪${totalRevenue.toLocaleString()}`, icon: <TrendingUp className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+18%', badgeColor: 'text-emerald-500 bg-emerald-500/10' },
-          { key: 'new_leads', label: eventSettings.stat_new_leads_label || 'לידים חדשים', value: 28, icon: <User className="w-6 h-6" />, iconBg: 'bg-slate-500/10 text-slate-500', badge: 'חדש', badgeColor: 'text-slate-500 bg-slate-500/10' },
+          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+12%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events?upcoming=true') },
+          { key: 'open_contracts', label: eventSettings.stat_open_contracts_label || 'חוזים פתוחים', value: pendingContracts, icon: <FileText className="w-6 h-6" />, iconBg: 'bg-amber-500/10 text-amber-500', badge: 'בהמתנה', badgeColor: 'text-amber-500 bg-amber-500/10', href: createPageUrl('Events') },
+          { key: 'monthly_revenue', label: eventSettings.stat_monthly_revenue_label || 'הכנסות החודש', value: `₪${totalRevenue.toLocaleString()}`, icon: <TrendingUp className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+18%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events') },
+          { key: 'new_leads', label: eventSettings.stat_new_leads_label || 'לידים חדשים', value: 28, icon: <User className="w-6 h-6" />, iconBg: 'bg-slate-500/10 text-slate-500', badge: 'חדש', badgeColor: 'text-slate-500 bg-slate-500/10', href: createPageUrl('Customers?status=NEW') },
         ].filter(s => visibleStats.includes(s.key));
         const cols = statCards.length <= 2 ? 'lg:grid-cols-2' : statCards.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
         return statCards.length > 0 ? (
           <div className={`grid grid-cols-1 md:grid-cols-2 ${cols} gap-6`}>
             {statCards.map(s => (
-              <div key={s.key} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <Link key={s.key} to={s.href} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${s.iconBg}`}>{s.icon}</div>
                   <span className={`text-xs font-bold px-2 py-1 rounded-full ${s.badgeColor}`}>{s.badge}</span>
                 </div>
                 <p className="text-slate-500 text-sm font-medium">{s.label}</p>
                 <h3 className="text-3xl font-extrabold mt-1">{s.value}</h3>
-              </div>
+              </Link>
             ))}
           </div>
         ) : null;
