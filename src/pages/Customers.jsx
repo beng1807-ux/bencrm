@@ -665,10 +665,15 @@ export default function Customers() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2 flex items-center gap-3 py-2 px-3 rounded-lg bg-violet-50 border border-violet-200 cursor-pointer"
-              onClick={() => setEditData({...editData, is_dj_lead: !editData.is_dj_lead})}>
-              <Checkbox checked={editData.is_dj_lead === true} onCheckedChange={v => setEditData({...editData, is_dj_lead: !!v})} />
-              <span className="flex items-center gap-1.5 text-sm font-medium"><Music className="w-4 h-4 text-violet-600" />DJ סקיצה</span>
+            <div className="col-span-2 flex items-center gap-3 py-2 px-3 rounded-lg bg-violet-50 border border-violet-200">
+              <Checkbox
+                id="dj-lead-checkbox"
+                checked={editData.is_dj_lead === true}
+                onCheckedChange={v => setEditData(prev => ({...prev, is_dj_lead: !!v}))}
+              />
+              <label htmlFor="dj-lead-checkbox" className="flex items-center gap-1.5 text-sm font-medium cursor-pointer select-none">
+                <Music className="w-4 h-4 text-violet-600" />DJ סקיצה
+              </label>
             </div>
             <div className="col-span-2">
               <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
