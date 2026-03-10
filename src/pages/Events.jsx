@@ -71,10 +71,16 @@ export default function Events() {
       const params = new URLSearchParams(window.location.search);
       const eventId = params.get('eventId');
       const upcoming = params.get('upcoming');
+      const thisMonthParam = params.get('thisMonth');
       
       if (eventId) {
         const event = events.find(e => e.id === eventId);
         if (event) openEdit(event);
+      } else if (thisMonthParam === 'true') {
+        // Filter to show only this month's events via search
+        const now = new Date();
+        const monthName = now.toLocaleDateString('he-IL', { month: 'long' });
+        setSearchTerm(monthName);
       } else if (upcoming === 'true') {
         // Sort by date ascending, show only future events
         const now = new Date();
@@ -261,7 +267,7 @@ export default function Events() {
       {(() => {
         const visibleStats = eventSettings.visible_stats || ['events_this_month', 'open_contracts', 'monthly_revenue', 'new_leads'];
         const statCards = [
-          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+12%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events?upcoming=true') },
+          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+12%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events?thisMonth=true') },
           { key: 'open_contracts', label: eventSettings.stat_open_contracts_label || 'חוזים פתוחים', value: pendingContracts, icon: <FileText className="w-6 h-6" />, iconBg: 'bg-amber-500/10 text-amber-500', badge: 'בהמתנה', badgeColor: 'text-amber-500 bg-amber-500/10', href: createPageUrl('Events') },
           { key: 'monthly_revenue', label: eventSettings.stat_monthly_revenue_label || 'הכנסות החודש', value: `₪${totalRevenue.toLocaleString()}`, icon: <TrendingUp className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+18%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events') },
           { key: 'new_leads', label: eventSettings.stat_new_leads_label || 'לידים חדשים', value: 28, icon: <User className="w-6 h-6" />, iconBg: 'bg-slate-500/10 text-slate-500', badge: 'חדש', badgeColor: 'text-slate-500 bg-slate-500/10', href: createPageUrl('Customers?status=NEW') },
