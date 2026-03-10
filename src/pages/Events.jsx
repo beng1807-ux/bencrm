@@ -55,6 +55,7 @@ export default function Events() {
   const [newEvent, setNewEvent] = useState({});
   const [filterType, setFilterType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterThisMonth, setFilterThisMonth] = useState(false);
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [creating, setCreating] = useState(false);
@@ -77,10 +78,7 @@ export default function Events() {
         const event = events.find(e => e.id === eventId);
         if (event) openEdit(event);
       } else if (thisMonthParam === 'true') {
-        // Filter to show only this month's events via search
-        const now = new Date();
-        const monthName = now.toLocaleDateString('he-IL', { month: 'long' });
-        setSearchTerm(monthName);
+        setFilterThisMonth(true);
       } else if (upcoming === 'true') {
         // Sort by date ascending, show only future events
         const now = new Date();
@@ -230,7 +228,12 @@ export default function Events() {
     const matchSearch = !searchTerm || 
       e.event_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customerName?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchType && matchSearch;
+    const matchMonth = !filterThisMonth || (() => {
+      const d = new Date(e.event_date);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })();
+    return matchType && matchSearch && matchMonth;
   });
 
   return (
