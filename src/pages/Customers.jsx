@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake, ChevronDown, Users } from 'lucide-react';
+import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake, ChevronDown, Users, Music } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ const PRIMARY = '#e94f1c';
 const LEAD_COLS = [
   { key: 'NEW',           label: 'חדש',          dot: 'bg-blue-500' },
   { key: 'FORM_FILLED',   label: 'מילא טופס',    dot: 'bg-cyan-500' },
+  { key: 'DJ_SKITZA',     label: 'DJ סקיצה',     dot: 'bg-violet-500' },
   { key: 'FIRST_CONTACT', label: 'נוצר קשר',     dot: 'bg-amber-500' },
   { key: 'QUOTE_SENT',    label: 'נשלחה הצעה',   dot: 'bg-purple-500' },
 ];
@@ -94,6 +95,7 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => { e.stopPropagation(); onSelect(lead.id); }} className="flex-shrink-0" />
+          {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
           <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug truncate">
             {lead.contact_name}
             {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
@@ -165,9 +167,12 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
                 className={`border-b border-[#e5dedc]/50 hover:bg-primary/5 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Checkbox checked={isSelected} onCheckedChange={() => onSelect(lead.id)} /></td>
                 <td className="px-4 py-3 font-bold text-[#181311]">
-                  {lead.contact_name}
-                  {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
-                </td>
+                   <span className="flex items-center gap-1.5">
+                     {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
+                     {lead.contact_name}
+                     {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
+                   </span>
+                 </td>
                 <td className="px-4 py-3 text-[#886c63]">{typeInfo.emoji} {lead.event_type}</td>
                 <td className="px-4 py-3 text-[#886c63]">{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</td>
                 <td className="px-4 py-3 text-[#886c63]">{lead.phone}</td>
@@ -656,6 +661,10 @@ export default function Customers() {
                   <SelectItem value="CANCELLED">בוטל</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="col-span-2 flex items-center gap-3 py-2 px-3 rounded-lg bg-violet-50 border border-violet-200">
+              <Checkbox checked={editData.is_dj_lead || false} onCheckedChange={v => setEditData({...editData, is_dj_lead: v})} />
+              <Label className="flex items-center gap-1.5 cursor-pointer"><Music className="w-4 h-4 text-violet-600" />DJ סקיצה</Label>
             </div>
             <div className="col-span-2">
               <Button onClick={saveEdit} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>שמור שינויים</Button>
