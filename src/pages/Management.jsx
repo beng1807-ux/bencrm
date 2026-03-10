@@ -235,44 +235,34 @@ export default function Management() {
                 <p className="text-xs text-gray-400 mt-1">המייל הזה ישמש לקבלת התראות על פניות חדשות מטופס ההזמנה ודברים נוספים</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>שעת שליחה (שעה)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={settings.send_hour || 10}
-                    onChange={e => setSettings({...settings, send_hour: Number(e.target.value)})}
-                  />
-                </div>
-                <div>
-                  <Label>שעת שליחה (דקות)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={settings.send_minute || 0}
-                    onChange={e => setSettings({...settings, send_minute: Number(e.target.value)})}
-                  />
+              <div>
+                <Label className="mb-1">שעת שליחת הודעות אוטומטיות</Label>
+                <p className="text-xs text-gray-400 mb-3">באיזו שעה ביום תישלחנה הודעות מתוזמנות (תזכורות תשלום, תזכורת אירוע, תודה)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>שעה</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="23"
+                      value={settings.send_hour || 10}
+                      onChange={e => setSettings({...settings, send_hour: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>דקות</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={settings.send_minute || 0}
+                      onChange={e => setSettings({...settings, send_minute: Number(e.target.value)})}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>חסימת שליחה בשבת וחגים</Label>
-                  <Switch
-                    checked={settings.block_sabbath_and_holidays}
-                    onCheckedChange={v => setSettings({...settings, block_sabbath_and_holidays: v})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>שליחה ביום עסקים הבא במקרה חסימה</Label>
-                  <Switch
-                    checked={settings.fallback_send_next_business_day}
-                    onCheckedChange={v => setSettings({...settings, fallback_send_next_business_day: v})}
-                  />
-                </div>
                 <div className="flex items-center justify-between">
                   <Label>אוטומציות פעילות</Label>
                   <Switch
