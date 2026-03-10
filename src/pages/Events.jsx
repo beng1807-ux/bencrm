@@ -32,6 +32,12 @@ const getCustomerName = (customerId, customers, leads) => {
   return 'לא משויך ללקוח';
 };
 
+const isEventDjLead = (event, leads) => {
+  if (!event.lead_id) return false;
+  const lead = leads.find(l => l.id === event.lead_id);
+  return lead?.is_dj_lead === true;
+};
+
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -305,11 +311,13 @@ export default function Events() {
               const customerName = getCustomerName(event.customer_id, customers, leads);
               const dj = djs.find(d => d.id === event.dj_id);
               const isCancelled = event.event_status === 'CANCELLED';
+              const hasDjSkitza = isEventDjLead(event, leads);
               return (
                 <div key={event.id}
                   onClick={() => openEdit(event)}
                   className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''} ${selected.has(event.id) ? 'border-primary/40 bg-primary/5' : ''}`}>
                   <div className="absolute top-6 left-6 flex items-center gap-2">
+                    {hasDjSkitza && <span className="text-[10px] font-black px-3 py-1 rounded-lg bg-violet-100 text-violet-700 flex items-center gap-1"><Music className="w-3 h-3" />DJ סקיצה</span>}
                     <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${getStatusColor(event.event_status)}`}>
                       {STATUS_LABELS[event.event_status]}
                     </span>
@@ -372,6 +380,7 @@ export default function Events() {
                   const customerName = getCustomerName(event.customer_id, customers, leads);
                   const dj = djs.find(d => d.id === event.dj_id);
                   const isCancelled = event.event_status === 'CANCELLED';
+                  const hasDjSkitza = isEventDjLead(event, leads);
                   const eventDate = new Date(event.event_date);
                   const dayName = eventDate.toLocaleDateString('he-IL', { weekday: 'long' });
                   
@@ -405,7 +414,10 @@ export default function Events() {
                         <span className="text-sm font-black text-slate-700">{customerName}</span>
                       </td>
                       <td className="px-6 py-6 text-sm font-bold text-slate-600">
-                        {dj?.name || <span className="italic text-slate-400">טרם נקבע</span>}
+                        <span className="flex items-center gap-1.5">
+                          {hasDjSkitza && <span className="w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center flex-shrink-0" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
+                          {hasDjSkitza ? (dj?.name || <span className="italic text-slate-400">טרם שובץ</span>) : <span className="italic text-slate-400">ללא DJ סקיצה</span>}
+                        </span>
                       </td>
                       <td className="px-6 py-6">
                         <span className="text-base font-black text-slate-900">₪{event.price_total?.toLocaleString()}</span>
@@ -467,12 +479,25 @@ export default function Events() {
               event_status: () => <div key="event_status"><Label>{fl.event_status || 'סטטוס אירוע'}</Label><Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => handlePaymentStatusChange(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               dj_id: () => {
+                const eventLead = leads.find(l => l.id === editData.lead_id);
+                const hasDjSkitza = eventLead?.is_dj_lead === true;
+                if (!hasDjSkitza) {
+                  return (
+                    <div key="dj_id" className="col-span-2">
+                      <Label>{fl.dj_id || 'DJ'}</Label>
+                      <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg text-sm text-slate-500 border border-slate-200">
+                        <Music className="w-4 h-4" />
+                        <span>שיבוץ DJ זמין רק לאירועים עם DJ סקיצה</span>
+                      </div>
+                    </div>
+                  );
+                }
                 const selectedDj = djs.find(d => d.id === editData.dj_id);
                 const eventDate = editData.event_date;
                 const isUnavailable = selectedDj && eventDate && selectedDj.unavailable_dates?.includes(eventDate);
                 return (
                   <div key="dj_id" className="col-span-2">
-                    <Label>{fl.dj_id || 'DJ'}</Label>
+                    <Label>{fl.dj_id || 'DJ'} <span className="text-xs text-violet-600 font-bold mr-1">🎵 DJ סקיצה</span></Label>
                     <Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}>
                       <SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger>
                       <SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
