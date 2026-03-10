@@ -309,7 +309,8 @@ export default function Events() {
             </div>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-4">
-              <button onClick={() => setFilterType('ALL')} className={`text-sm font-black pb-1 ${filterType === 'ALL' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>כל האירועים</button>
+              <button onClick={() => { setFilterType('ALL'); setFilterThisMonth(false); }} className={`text-sm font-black pb-1 ${filterType === 'ALL' && !filterThisMonth ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>כל האירועים</button>
+              {filterThisMonth && <button onClick={() => setFilterThisMonth(false)} className="text-sm font-black pb-1 text-primary border-b-2 border-primary flex items-center gap-1">החודש ✕</button>}
               <button onClick={() => setFilterType('חתונה')} className={`text-sm font-bold pb-1 ${filterType === 'חתונה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>חתונות</button>
               <button onClick={() => setFilterType('אירוע חברה')} className={`text-sm font-bold pb-1 ${filterType === 'אירוע חברה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>אירועי חברה</button>
               <button onClick={() => setFilterType('יום הולדת')} className={`text-sm font-bold pb-1 ${filterType === 'יום הולדת' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>מסיבות</button>
