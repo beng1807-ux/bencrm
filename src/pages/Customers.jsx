@@ -665,14 +665,20 @@ export default function Customers() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2 flex items-center gap-3 py-2 px-3 rounded-lg bg-violet-50 border border-violet-200">
+            <div className={`col-span-2 flex items-center gap-3 py-3 px-4 rounded-lg border-2 transition-all duration-200 ${
+              editData.is_dj_lead ? 'bg-green-100 border-green-500' : 'bg-gray-50 border-gray-200'
+            }`}>
               <Checkbox
                 id="dj-lead-checkbox"
                 checked={editData.is_dj_lead === true}
                 onCheckedChange={v => setEditData(prev => ({...prev, is_dj_lead: !!v}))}
+                className={editData.is_dj_lead ? 'border-green-600 data-[state=checked]:bg-green-600' : ''}
               />
-              <label htmlFor="dj-lead-checkbox" className="flex items-center gap-1.5 text-sm font-medium cursor-pointer select-none">
-                <Music className="w-4 h-4 text-violet-600" />DJ סקיצה
+              <label htmlFor="dj-lead-checkbox" className={`flex items-center gap-1.5 text-sm font-bold cursor-pointer select-none ${
+                editData.is_dj_lead ? 'text-green-800' : 'text-gray-500'
+              }`}>
+                <Music className={`w-4 h-4 ${editData.is_dj_lead ? 'text-green-600' : 'text-gray-400'}`} />
+                DJ סקיצה {editData.is_dj_lead ? '✓' : ''}
               </label>
             </div>
             <div className="col-span-2">
