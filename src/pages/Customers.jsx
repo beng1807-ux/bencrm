@@ -530,7 +530,10 @@ export default function Customers() {
           {selectedLead && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-black">{selectedLead.contact_name}</DialogTitle>
+                <DialogTitle className="text-xl font-black flex items-center gap-2">
+                  {selectedLead.contact_name}
+                  {selectedLead.is_dj_lead && <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 flex items-center gap-1"><Music className="w-3.5 h-3.5" />DJ סקיצה</span>}
+                </DialogTitle>
               </DialogHeader>
               <Tabs defaultValue="info">
                 <TabsList className="grid w-full grid-cols-3">
