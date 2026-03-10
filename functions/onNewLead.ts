@@ -119,15 +119,17 @@ Deno.serve(async (req) => {
             throw new Error('אין מספר טלפון בליד');
           }
 
-          // נרמול מספר טלפון - השאר רק ספרות
-          let phoneNumber = lead.phone.replace(/[^\d+]/g, '');
+          // נרמול מספר טלפון - השאר רק ספרות (0-9)
+          let phoneNumber = lead.phone.replace(/[^0-9]/g, '');
           if (phoneNumber.startsWith('0')) {
             phoneNumber = '972' + phoneNumber.substring(1);
           }
-          if (phoneNumber.startsWith('+')) {
-            phoneNumber = phoneNumber.substring(1);
+          // ודא שהמספר תקין (9-15 ספרות)
+          if (phoneNumber.length < 9 || phoneNumber.length > 15) {
+            console.warn(`[onNewLead] ⚠ Invalid phone after normalization: "${phoneNumber}" (from "${lead.phone}")`);
+            throw new Error(`מספר טלפון לא תקין: ${lead.phone}`);
           }
-          console.log(`[onNewLead] 📞 Normalized phone: ${phoneNumber}`);
+          console.log(`[onNewLead] 📞 Normalized phone: ${phoneNumber} (from "${lead.phone}")`);
 
           const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
 
