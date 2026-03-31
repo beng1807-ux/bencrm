@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   console.log('[onDJAssigned] ▶ Triggered');
@@ -11,46 +11,43 @@ Deno.serve(async (req) => {
       console.log('[onDJAssigned] ℹ No DJ change - skipping');
       return Response.json({ message: 'No DJ change' });
     }
-    console.log(`[onDJAssigned] ✓ DJ changed to: ${eventData.dj_id} (was: ${old_data?.dj_id || 'none'})`);
+    console.log(`[onDJAssigned] ✓ DJ changed to: ${eventData.dj_id}`);
 
     // בדיקת הגדרות
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
-      console.log('[onDJAssigned] ℹ Automations disabled - skipping');
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
-    console.log(`[onDJAssigned] ✓ Settings loaded. WhatsApp mode: ${settings.whatsapp_send_mode}`);
 
     // טעינת נתונים
-    let dj, customer;
+    let dj, contact;
     try {
-      [dj, customer] = await Promise.all([
+      [dj, contact] = await Promise.all([
         base44.asServiceRole.entities.DJ.get(eventData.dj_id),
-        base44.asServiceRole.entities.Customer.get(eventData.customer_id).catch(() => null),
+        base44.asServiceRole.entities.Contact.get(eventData.contact_id).catch(() => null),
       ]);
     } catch (fetchErr) {
-      console.error(`[onDJAssigned] ✖ Failed to fetch DJ/Customer: ${fetchErr.message}`);
+      console.error(`[onDJAssigned] ✖ Failed to fetch DJ/Contact: ${fetchErr.message}`);
       return Response.json({ error: fetchErr.message }, { status: 500 });
     }
 
     if (!dj) {
-      console.warn('[onDJAssigned] ✖ DJ not found');
       return Response.json({ message: 'DJ not found' });
     }
-    console.log(`[onDJAssigned] ✓ DJ: ${dj.name} (${dj.phone}), Customer: ${customer?.name || 'unknown'}`);
+    console.log(`[onDJAssigned] ✓ DJ: ${dj.name}, Contact: ${contact?.contact_name || 'unknown'}`);
 
     // ניסיון שליחת הודעה
     const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
       template_key: 'DJ_ASSIGNED',
       active: true,
     });
-    console.log(`[onDJAssigned] ✓ Found ${templateList.length} DJ_ASSIGNED templates`);
 
     if (templateList.length > 0) {
       const template = templateList[0];
       const messageText = template.template_text
-        .replace('{customer_name}', customer?.name || '')
+        .replace('{customer_name}', contact?.contact_name || '')
+        .replace('{contact_name}', contact?.contact_name || '')
         .replace('{dj_name}', dj.name || '')
         .replace('{dj_phone}', dj.phone || '')
         .replace('{event_date}', new Date(eventData.event_date).toLocaleDateString('he-IL'))
@@ -59,13 +56,10 @@ Deno.serve(async (req) => {
         .replace('{owner_name}', settings.owner_name || '')
         .replace('{owner_phone}', settings.owner_phone || '');
 
-      console.log(`[onDJAssigned] 📝 Message prepared (${messageText.length} chars)`);
-
       try {
         if (settings.whatsapp_send_mode === 'לוג בלבד') {
-          console.log('[onDJAssigned] ℹ Log-only mode - saving to conversation');
           await base44.asServiceRole.entities.ConversationMessage.create({
-            customer_id: customer?.id || eventData.customer_id,
+            contact_id: contact?.id || eventData.contact_id,
             event_id: eventData.id,
             channel: 'SYSTEM',
             sender: 'SYSTEM',
@@ -80,51 +74,34 @@ Deno.serve(async (req) => {
             diff_summary: `הודעת DJ_ASSIGNED נרשמה ל-${dj.name}`,
             metadata: { template_key: 'DJ_ASSIGNED', dj_id: dj.id, simulated: true },
           });
-          console.log('[onDJAssigned] ✓ Message logged successfully');
         } else {
-          // שליחה אמיתית דרך GREEN API
-          console.log('[onDJAssigned] 📱 Attempting real WhatsApp send via GREEN API');
           const GREEN_ID = Deno.env.get('GREEN_ID');
           const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
 
           if (!GREEN_ID || !GREEN_TOKEN) {
-            console.error('[onDJAssigned] ✖ GREEN API credentials not configured');
-            throw new Error('GREEN API לא מוגדר - חסר GREEN_ID או GREEN_TOKEN');
+            throw new Error('GREEN API לא מוגדר');
           }
-
           if (!dj.phone) {
-            console.warn('[onDJAssigned] ⚠ No phone number on DJ - skipping WhatsApp');
             throw new Error('אין מספר טלפון ל-DJ');
           }
 
-          // נרמול מספר טלפון של ה-DJ
           let phoneNumber = dj.phone.replace(/[\s\-\(\)\.]/g, '');
-          if (phoneNumber.startsWith('0')) {
-            phoneNumber = '972' + phoneNumber.substring(1);
-          }
-          if (phoneNumber.startsWith('+')) {
-            phoneNumber = phoneNumber.substring(1);
-          }
-          console.log(`[onDJAssigned] 📞 Normalized DJ phone: ${phoneNumber}`);
+          if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
+          if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
 
           const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
-
           const whatsappResponse = await fetch(greenApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chatId: `${phoneNumber}@c.us`,
-              message: messageText
-            })
+            body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, message: messageText }),
           });
 
           const whatsappResult = await whatsappResponse.json();
 
           if (whatsappResponse.ok && whatsappResult.idMessage) {
-            console.log(`[onDJAssigned] ✅ WhatsApp sent to DJ successfully: ${whatsappResult.idMessage}`);
-
+            console.log(`[onDJAssigned] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
             await base44.asServiceRole.entities.ConversationMessage.create({
-              customer_id: customer?.id || eventData.customer_id,
+              contact_id: contact?.id || eventData.contact_id,
               event_id: eventData.id,
               channel: 'WHATSAPP',
               sender: 'OWNER',
@@ -140,7 +117,6 @@ Deno.serve(async (req) => {
               metadata: { template_key: 'DJ_ASSIGNED', dj_id: dj.id, whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
             });
           } else {
-            console.error(`[onDJAssigned] ✖ WhatsApp send failed:`, JSON.stringify(whatsappResult));
             throw new Error(`WhatsApp send failed: ${JSON.stringify(whatsappResult)}`);
           }
         }
@@ -151,11 +127,7 @@ Deno.serve(async (req) => {
           entity_id: eventData.id,
           action: 'SEND_FAILED',
           diff_summary: `כשל בשליחה ל-DJ: ${error.message}`,
-          metadata: {
-            template_key: 'DJ_ASSIGNED',
-            dj_id: dj.id,
-            error_message: error.message,
-          },
+          metadata: { template_key: 'DJ_ASSIGNED', dj_id: dj.id, error_message: error.message },
         });
       }
     }

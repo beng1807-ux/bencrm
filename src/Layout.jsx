@@ -75,7 +75,7 @@ export default function Layout({ children, currentPageName }) {
   const n = navSettings;
   const adminMenuItems = [
     { name: n.nav_dashboard || 'לוח בקרה', page: 'Dashboard', icon: LayoutDashboard },
-    { name: n.nav_customers || 'לקוחות', page: 'Customers', icon: Users },
+    { name: n.nav_customers || 'אנשי קשר', page: 'Customers', icon: Users },
     { name: n.nav_events || 'אירועים', page: 'Events', icon: Sparkles },
     { name: n.nav_calendar || 'יומן', page: 'EventCalendar', icon: Calendar },
     { name: n.nav_djs || 'תקליטנים', page: 'DJs', icon: Music },

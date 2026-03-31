@@ -1,0 +1,213 @@
+{
+  "type": "object",
+  "properties": {
+    "contact_type": {
+      "type": "string",
+      "enum": [
+        "lead",
+        "customer"
+      ],
+      "default": "lead",
+      "description": "\u05e1\u05d5\u05d2 \u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8 (\u05dc\u05d9\u05d3 \u05d0\u05d5 \u05dc\u05e7\u05d5\u05d7)"
+    },
+    "phone": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "\u05db\u05ea\u05d5\u05d1\u05ea \u05d0\u05d9\u05de\u05d9\u05d9\u05dc"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "\u05d1\u05e8 \u05de\u05e6\u05d5\u05d5\u05d4",
+        "\u05d1\u05ea \u05de\u05e6\u05d5\u05d5\u05d4",
+        "\u05d7\u05ea\u05d5\u05e0\u05d4",
+        "\u05d9\u05d5\u05dd \u05d4\u05d5\u05dc\u05d3\u05ea",
+        "\u05d0\u05d9\u05e8\u05d5\u05e2 \u05e4\u05e8\u05d8\u05d9",
+        "\u05d0\u05d9\u05e8\u05d5\u05e2 \u05d7\u05d1\u05e8\u05d4",
+        "\u05d7\u05d9\u05e0\u05d4",
+        "\u05d0\u05d7\u05e8"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "celebrant_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05d7\u05d5\u05d2\u05d2/\u05ea"
+    },
+    "parents_names": {
+      "type": "string",
+      "description": "\u05e9\u05de\u05d5\u05ea \u05d4\u05d4\u05d5\u05e8\u05d9\u05dd"
+    },
+    "guests_count": {
+      "type": "number",
+      "description": "\u05db\u05de\u05d5\u05ea \u05de\u05d5\u05d6\u05de\u05e0\u05d9\u05dd \u05de\u05e9\u05d5\u05e2\u05e8\u05ea"
+    },
+    "siblings_names": {
+      "type": "string",
+      "description": "\u05e9\u05de\u05d5\u05ea \u05d0\u05d7\u05d9\u05dd"
+    },
+    "event_contents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "DJ",
+          "\u05ea\u05d0\u05d5\u05e8\u05d4",
+          "\u05dc\u05d9\u05d9\u05d6\u05e8",
+          "\u05d0\u05e4\u05e7\u05d8\u05d9\u05dd \u05de\u05d9\u05d5\u05d7\u05d3\u05d9\u05dd",
+          "\u05de\u05e9\u05d7\u05e7\u05d9\u05dd",
+          "KAHOOT",
+          "\u05de\u05e1\u05da/\u05de\u05e7\u05e8\u05df",
+          "\u05d0\u05d7\u05e8"
+        ]
+      },
+      "description": "\u05ea\u05db\u05e0\u05d9 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "event_nature": {
+      "type": "string",
+      "description": "\u05d0\u05d5\u05e4\u05d9 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "guest_type": {
+      "type": "string",
+      "enum": [
+        "\u05d9\u05dc\u05d3\u05d9\u05dd",
+        "\u05e0\u05d5\u05e2\u05e8",
+        "\u05de\u05d1\u05d5\u05d2\u05e8\u05d9\u05dd",
+        "\u05de\u05e2\u05d5\u05e8\u05d1"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05d4\u05d0\u05d5\u05e8\u05d7\u05d9\u05dd"
+    },
+    "age_range": {
+      "type": "string",
+      "description": "\u05d8\u05d5\u05d5\u05d7 \u05d2\u05d9\u05dc\u05d0\u05d9\u05dd"
+    },
+    "laser_addition": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d5\u05e1\u05e4\u05ea \u05dc\u05d9\u05d9\u05d6\u05e8"
+    },
+    "musical_line": {
+      "type": "string",
+      "description": "\u05e7\u05d5 \u05de\u05d5\u05d6\u05d9\u05e7\u05dc\u05d9 \u05de\u05d1\u05d5\u05e7\u05e9"
+    },
+    "expectations": {
+      "type": "string",
+      "description": "\u05e6\u05d9\u05e4\u05d9\u05d5\u05ea \u05de\u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "style_notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05e2\u05dc \u05e1\u05d2\u05e0\u05d5\u05df"
+    },
+    "special_requests": {
+      "type": "string",
+      "description": "\u05d1\u05e7\u05e9\u05d5\u05ea \u05de\u05d9\u05d5\u05d7\u05d3\u05d5\u05ea"
+    },
+    "is_dj_lead": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d1\u05d7\u05e8 DJ \u05e9\u05dc \u05e1\u05e7\u05d9\u05e6\u05d4"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "FORM_FILLED",
+        "DJ_SKITZA",
+        "FIRST_CONTACT",
+        "QUOTE_SENT",
+        "DEAL_CLOSED",
+        "WAITING_PAYMENT",
+        "DEPOSIT_PAID",
+        "PAID_FULL",
+        "EVENT_DONE",
+        "CANCELLED"
+      ],
+      "default": "NEW",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "BASE44_FORM",
+        "EVENT_SQUARE_IMPORT",
+        "PHONE",
+        "EMAIL",
+        "REFERRAL",
+        "OTHER"
+      ],
+      "default": "BASE44_FORM",
+      "description": "\u05de\u05e7\u05d5\u05e8 \u05d0\u05d9\u05e9 \u05d4\u05e7\u05e9\u05e8"
+    },
+    "lost_reason": {
+      "type": "string",
+      "enum": [
+        "\u05de\u05d7\u05d9\u05e8 \u05d9\u05e7\u05e8",
+        "\u05ea\u05d0\u05e8\u05d9\u05da \u05ea\u05e4\u05d5\u05e1",
+        "\u05d1\u05d7\u05e8\u05d5 \u05e1\u05e4\u05e7 \u05d0\u05d7\u05e8",
+        "\u05dc\u05d0 \u05d4\u05e1\u05ea\u05d3\u05e8 \u05e2\u05dd \u05d4\u05d0\u05d5\u05dc\u05dd",
+        "\u05dc\u05d0 \u05e8\u05dc\u05d5\u05d5\u05e0\u05d8\u05d9/\u05d4\u05ea\u05dc\u05d1\u05d8\u05d5\u05ea",
+        "\u05dc\u05d0 \u05e2\u05e0\u05d5/\u05e0\u05e2\u05dc\u05de\u05d5",
+        "\u05d0\u05d7\u05e8"
+      ],
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d4\u05e4\u05e1\u05d3 (\u05d7\u05d5\u05d1\u05d4 \u05d0\u05dd \u05e1\u05d8\u05d8\u05d5\u05e1 CANCELLED)"
+    },
+    "external_event_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d0\u05d9\u05e8\u05d5\u05e2/\u05e2\u05e1\u05e7\u05d4 \u05d7\u05d9\u05e6\u05d5\u05e0\u05d9 (\u05dc\u05de\u05e0\u05d9\u05e2\u05ea \u05db\u05e4\u05d9\u05dc\u05d5\u05d9\u05d5\u05ea)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
+    "total_events": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05e1\u05da \u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd (\u05de\u05d7\u05d5\u05e9\u05d1)"
+    },
+    "total_revenue": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05e1\u05da \u05d4\u05db\u05e0\u05e1\u05d5\u05ea (\u05de\u05d7\u05d5\u05e9\u05d1)"
+    }
+  },
+  "required": [
+    "phone",
+    "contact_name",
+    "status"
+  ],
+  "name": "Contact",
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

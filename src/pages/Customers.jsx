@@ -256,7 +256,7 @@ export default function Customers() {
   const loadData = async () => {
     try {
       const [leadsData, csList] = await Promise.all([
-        base44.entities.Lead.list('-created_date'),
+        base44.entities.Contact.list('-created_date'),
         base44.entities.CustomerSettings.list(),
       ]);
       setLeads(leadsData);
@@ -269,7 +269,7 @@ export default function Customers() {
   };
 
   const loadLeads = async () => {
-    const data = await base44.entities.Lead.list('-created_date');
+    const data = await base44.entities.Contact.list('-created_date');
     setLeads(data);
   };
 
@@ -280,8 +280,8 @@ export default function Customers() {
     setDetailsOpen(true);
     try {
       const [events, messages] = await Promise.all([
-        base44.entities.Event.filter({ lead_id: lead.id }),
-        base44.entities.ConversationMessage.filter({ lead_id: lead.id }, '-timestamp'),
+        base44.entities.Event.filter({ contact_id: lead.id }),
+        base44.entities.ConversationMessage.filter({ contact_id: lead.id }, '-timestamp'),
       ]);
       setLeadEvents(events);
       setLeadMessages(messages);
@@ -296,13 +296,13 @@ export default function Customers() {
         if (!reason) return;
         extra = { lost_reason: reason };
       }
-      await base44.entities.Lead.update(leadId, { status: newStatus, ...extra });
+      await base44.entities.Contact.update(leadId, { status: newStatus, ...extra });
       
       if (newStatus === 'DEAL_CLOSED') {
-        toast.info('יוצר לקוח ואירוע...');
-        const response = await base44.functions.invoke('dealClosedHandler', { lead_id: leadId });
+        toast.info('יוצר אירוע...');
+        const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
         if (response.data?.success) {
-          toast.success('עסקה נסגרה — לקוח ואירוע נוצרו');
+          toast.success('עסקה נסגרה — אירוע נוצר');
         } else {
           toast.success('הסטטוס עודכן');
         }
@@ -319,7 +319,7 @@ export default function Customers() {
 
   const deleteLead = async (leadId) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק?')) return;
-    await base44.entities.Lead.delete(leadId);
+    await base44.entities.Contact.delete(leadId);
     await loadLeads();
     toast.success('הרשומה נמחקה');
     setDetailsOpen(false);
@@ -327,7 +327,7 @@ export default function Customers() {
 
   const deleteSelected = async () => {
     if (!confirm(`למחוק ${multiSelected.size} רשומות?`)) return;
-    await Promise.all([...multiSelected].map(id => base44.entities.Lead.delete(id)));
+    await Promise.all([...multiSelected].map(id => base44.entities.Contact.delete(id)));
     setMultiSelected(new Set());
     await loadLeads();
     toast.success('רשומות נמחקו');
@@ -337,12 +337,12 @@ export default function Customers() {
   const selectAll = (list) => setMultiSelected(prev => prev.size === list.length ? new Set() : new Set(list.map(l => l.id)));
 
   const closeDeal = async (leadId) => {
-    if (!confirm('לסגור עסקה? הליד ישנה סטטוס ל-"נסגרה עסקה"')) return;
-    await base44.entities.Lead.update(leadId, { status: 'DEAL_CLOSED' });
-    toast.info('יוצר לקוח ואירוע...');
-    const response = await base44.functions.invoke('dealClosedHandler', { lead_id: leadId });
+    if (!confirm('לסגור עסקה?')) return;
+    await base44.entities.Contact.update(leadId, { status: 'DEAL_CLOSED' });
+    toast.info('יוצר אירוע...');
+    const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
     if (response.data?.success) {
-      toast.success('עסקה נסגרה — לקוח ואירוע נוצרו');
+      toast.success('עסקה נסגרה — אירוע נוצר');
     } else {
       toast.success('סטטוס עודכן');
     }
@@ -351,7 +351,7 @@ export default function Customers() {
 
   const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
   const saveEdit = async () => {
-    await base44.entities.Lead.update(editData.id, editData);
+    await base44.entities.Contact.update(editData.id, editData);
     await loadLeads();
     setEditOpen(false);
     toast.success('עודכן בהצלחה');
@@ -363,7 +363,7 @@ export default function Customers() {
       return;
     }
     try {
-      await base44.entities.Lead.create({ ...newLead, status: 'NEW' });
+      await base44.entities.Contact.create({ ...newLead, status: 'NEW', contact_type: 'lead' });
       await loadLeads();
       toast.success('נוצר בהצלחה');
       setCreateOpen(false);
@@ -480,13 +480,13 @@ export default function Customers() {
               for (const id of multiSelected) {
                 const l = leads.find(x => x.id === id);
                 if (l && LEAD_COLS.some(c => c.key === l.status)) {
-                  await base44.entities.Lead.update(id, { status: 'DEAL_CLOSED' });
-                  await base44.functions.invoke('dealClosedHandler', { lead_id: id });
+                  await base44.entities.Contact.update(id, { status: 'DEAL_CLOSED' });
+                  await base44.functions.invoke('dealClosedHandler', { contact_id: id });
                 }
               }
               setMultiSelected(new Set());
               await loadLeads();
-              toast.success('עסקאות נסגרו — לקוחות ואירועים נוצרו');
+              toast.success('עסקאות נסגרו — אירועים נוצרו');
             }}>
             <Handshake className="w-4 h-4 ml-1" />סגור עסקה ({multiSelected.size})
           </Button>
@@ -722,7 +722,7 @@ export default function Customers() {
       {/* ── Create Dialog ── */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader><DialogTitle>הוסף ליד / לקוח חדש</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>הוסף איש קשר חדש</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div><Label>שם איש קשר *</Label><Input value={newLead.contact_name || ''} onChange={e => setNewLead({...newLead, contact_name: e.target.value})} /></div>
             <div><Label>טלפון *</Label><Input value={newLead.phone || ''} onChange={e => setNewLead({...newLead, phone: e.target.value})} /></div>

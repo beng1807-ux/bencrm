@@ -45,10 +45,9 @@ export default function Dashboard() {
         return;
       }
 
-      const [leads, events, customers, auditLogs, settingsList] = await Promise.all([
-        base44.entities.Lead.list(),
+      const [contacts, events, auditLogs, settingsList] = await Promise.all([
+        base44.entities.Contact.list(),
         base44.entities.Event.list(),
-        base44.entities.Customer.list(),
         base44.entities.AuditLog.list('-created_date', 5),
         base44.entities.AppSettings.list(),
       ]);
@@ -58,7 +57,7 @@ export default function Dashboard() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const nextWeek = new Date(now); nextWeek.setDate(nextWeek.getDate() + 7);
 
-      const newLeads = leads.filter(l => l.status === 'NEW').length;
+      const newLeads = contacts.filter(c => c.contact_type === 'lead' && c.status === 'NEW').length;
       const activeEvents = events.filter(e => !['COMPLETED', 'CANCELLED'].includes(e.event_status)).length;
       const pendingPayments = events.filter(e => e.payment_status !== 'PAID_FULL').length;
       const thisMonthRevenue = events
@@ -74,19 +73,20 @@ export default function Dashboard() {
         .sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
       if (futureEvents.length > 0) {
         setNextEvent(futureEvents[0]);
-        setNextEventCustomer(customers.find(c => c.id === futureEvents[0].customer_id) || null);
+        const contact = contacts.find(c => c.id === futureEvents[0].contact_id);
+        setNextEventCustomer(contact ? { name: contact.contact_name } : null);
       }
 
-      // Weekly leads by day of week (last 7 days)
+      // Weekly contacts by day of week (last 7 days)
       const weekly = [0, 0, 0, 0, 0, 0, 0];
-      leads.forEach(lead => {
-        const d = new Date(lead.created_date);
+      contacts.filter(c => c.contact_type === 'lead').forEach(contact => {
+        const d = new Date(contact.created_date);
         if ((now - d) < 7 * 86400000) weekly[d.getDay()]++;
       });
       setWeeklyLeads(weekly);
       setRecentActivity(auditLogs);
 
-      setStats({ totalLeads: leads.length, activeEvents, pendingPayments, thisMonthRevenue, newLeads, upcomingEvents: upcomingEventsCount });
+      setStats({ totalLeads: contacts.filter(c => c.contact_type === 'lead').length, activeEvents, pendingPayments, thisMonthRevenue, newLeads, upcomingEvents: upcomingEventsCount });
     } catch (err) {
       console.error(err);
     } finally {

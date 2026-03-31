@@ -12,7 +12,7 @@ const getContractColor = (contractStatus) => {
 };
 
 export default function CalendarDayCell({ 
-  date, events, blockedDJs, customers, leads, djs, isToday, isCurrentMonth,
+  date, events, blockedDJs, contacts, djs, isToday, isCurrentMonth,
   onEventHover, onEventLeave, onDJBlockHover, onDJBlockLeave, onEventClick, onDJBlockClick 
 }) {
   if (!date) {
@@ -23,12 +23,9 @@ export default function CalendarDayCell({
   const isFriday = date.getDay() === 5;
   const isSaturday = date.getDay() === 6;
 
-  const getContactName = (customerId) => {
-    const customer = customers?.find(c => c.id === customerId);
-    if (customer) return customer.name;
-    const lead = leads?.find(l => l.id === customerId);
-    if (lead) return lead.contact_name;
-    return null;
+  const getContactName = (contactId) => {
+    const contact = contacts?.find(c => c.id === contactId);
+    return contact ? contact.contact_name : null;
   };
 
   return (
@@ -60,15 +57,15 @@ export default function CalendarDayCell({
       <div className="flex-1 space-y-1 overflow-hidden">
         {events.slice(0, 3).map(event => {
           const colors = getContractColor(event.contract_status);
-          const contactName = getContactName(event.customer_id);
+          const contactName = getContactName(event.contact_id);
           const dj = djs?.find(d => d.id === event.dj_id);
-          const customer = customers?.find(c => c.id === event.customer_id);
+          const contact = contacts?.find(c => c.id === event.contact_id);
           
           return (
             <div
               key={event.id}
               className={`${colors.bg} ${colors.border} border-r-2 rounded-lg px-2 py-1.5 cursor-pointer transition-all hover:shadow-sm hover:scale-[1.02]`}
-              onMouseEnter={(e) => onEventHover(event, customer, dj, e)}
+              onMouseEnter={(e) => onEventHover(event, contact ? { name: contact.contact_name, phone: contact.phone } : null, dj, e)}
               onMouseLeave={onEventLeave}
               onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
             >

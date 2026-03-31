@@ -20,7 +20,7 @@ const PRIORITY_COLORS = { HIGH: 'bg-red-100 text-red-700', NORMAL: 'bg-blue-100 
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
-  const [leads, setLeads] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [taskEvents, setTaskEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('cards');
@@ -36,13 +36,13 @@ export default function Tasks() {
 
   const loadTasks = async () => {
     try {
-      const [data, leadsData, eventsData] = await Promise.all([
+      const [data, contactsData, eventsData] = await Promise.all([
         base44.entities.Task.list('-created_date'),
-        base44.entities.Lead.list(),
+        base44.entities.Contact.list(),
         base44.entities.Event.list(),
       ]);
       setTasks(data);
-      setLeads(leadsData);
+      setContacts(contactsData);
       setTaskEvents(eventsData);
     } catch { toast.error('שגיאה בטעינת משימות'); }
     finally { setLoading(false); }
@@ -242,11 +242,11 @@ export default function Tasks() {
                     <span className="text-sm font-bold">{task.due_at ? new Date(task.due_at).toLocaleDateString('he-IL') : 'ללא תאריך יעד'}</span>
                   </div>
                   <Badge className={PRIORITY_COLORS[task.priority]}>{PRIORITY_LABELS[task.priority]}</Badge>
-                  {task.related_lead_id && (() => {
-                    const lead = leads.find(l => l.id === task.related_lead_id);
-                    return lead ? (
-                      <Link to={createPageUrl(`Customers?status=${lead.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
-                        <ExternalLink className="w-3.5 h-3.5" />{lead.contact_name}
+                  {task.related_contact_id && (() => {
+                    const contact = contacts.find(c => c.id === task.related_contact_id);
+                    return contact ? (
+                      <Link to={createPageUrl(`Customers?status=${contact.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
+                        <ExternalLink className="w-3.5 h-3.5" />{contact.contact_name}
                       </Link>
                     ) : null;
                   })()}
@@ -307,11 +307,11 @@ export default function Tasks() {
                             <p className={`font-black text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>{task.title}</p>
                             {task.description && <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{task.description}</p>}
                             <div className="flex items-center gap-3 mt-1">
-                              {task.related_lead_id && (() => {
-                                const lead = leads.find(l => l.id === task.related_lead_id);
-                                return lead ? (
-                                  <Link to={createPageUrl(`Customers?status=${lead.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
-                                    <ExternalLink className="w-3 h-3" />{lead.contact_name}
+                              {task.related_contact_id && (() => {
+                                const contact = contacts.find(c => c.id === task.related_contact_id);
+                                return contact ? (
+                                  <Link to={createPageUrl(`Customers?status=${contact.status}`)} onClick={e => e.stopPropagation()} className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+                                    <ExternalLink className="w-3 h-3" />{contact.contact_name}
                                   </Link>
                                 ) : null;
                               })()}

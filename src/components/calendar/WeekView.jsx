@@ -2,7 +2,7 @@ import React from 'react';
 import CalendarDayCell from './CalendarDayCell';
 
 export default function WeekView({ 
-  weekDays, events, djs, customers, leads, getEventsForDate, getBlockedDJsForDate,
+  weekDays, events, djs, contacts, getEventsForDate, getBlockedDJsForDate,
   onEventHover, onEventLeave, onDJBlockHover, onDJBlockLeave, onEventClick, onDJBlockClick
 }) {
   const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -32,8 +32,7 @@ export default function WeekView({
               date={date}
               events={dayEvents}
               blockedDJs={blockedDJs}
-              customers={customers}
-              leads={leads}
+              contacts={contacts}
               djs={djs}
               isToday={isToday}
               isCurrentMonth={true}

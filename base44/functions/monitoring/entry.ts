@@ -1,10 +1,9 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // בדיקת הגדרות
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
       return Response.json({ message: 'Automations disabled' });
@@ -12,27 +11,26 @@ Deno.serve(async (req) => {
     const settings = settingsList[0];
 
     const now = new Date();
-    const leads = await base44.asServiceRole.entities.Lead.list();
+    const contacts = await base44.asServiceRole.entities.Contact.list();
     const events = await base44.asServiceRole.entities.Event.list();
     let tasksCreated = 0;
 
     // מעקב הצעות שלא טופלו
-    for (const lead of leads) {
-      if (lead.status === 'QUOTE_SENT') {
-        const createdDate = new Date(lead.created_date);
+    for (const contact of contacts) {
+      if (contact.status === 'QUOTE_SENT') {
+        const createdDate = new Date(contact.created_date);
         const hoursSince = (now - createdDate) / (1000 * 60 * 60);
 
         if (hoursSince >= settings.quote_followup_hours) {
-          // בדיקה אם כבר יש משימה
           const existingTasks = await base44.asServiceRole.entities.Task.filter({
-            related_lead_id: lead.id,
+            related_contact_id: contact.id,
             status: 'OPEN',
           });
 
           if (existingTasks.length === 0) {
             await base44.asServiceRole.entities.Task.create({
-              title: `מעקב הצעת מחיר - ${lead.contact_name}`,
-              related_lead_id: lead.id,
+              title: `מעקב הצעת מחיר - ${contact.contact_name}`,
+              related_contact_id: contact.id,
               priority: 'HIGH',
               status: 'OPEN',
             });

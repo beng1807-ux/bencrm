@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
@@ -12,26 +12,25 @@ Deno.serve(async (req) => {
     // Clean phone - digits only
     const cleanPhone = formData.phone.replace(/\D/g, '');
 
-    // Build lead data
-    const leadData = { ...formData, phone: cleanPhone, status: 'FORM_FILLED', source: 'BASE44_FORM' };
-    if (leadData.guests_count) leadData.guests_count = Number(leadData.guests_count);
+    // Build contact data
+    const contactData = { ...formData, phone: cleanPhone, status: 'FORM_FILLED', source: 'BASE44_FORM', contact_type: 'lead' };
+    if (contactData.guests_count) contactData.guests_count = Number(contactData.guests_count);
 
-    // Search for existing lead by phone (service role - no auth needed)
-    let lead = null;
+    // Search for existing contact by phone
+    let contact = null;
     let isUpdate = false;
-    const existingLeads = await base44.asServiceRole.entities.Lead.filter({ phone: cleanPhone });
+    const existingContacts = await base44.asServiceRole.entities.Contact.filter({ phone: cleanPhone });
 
-    if (existingLeads.length > 0) {
-      // Found existing lead - update with new data + set status to FORM_FILLED
-      lead = existingLeads[0];
-      const updateData = { ...leadData };
+    if (existingContacts.length > 0) {
+      contact = existingContacts[0];
+      const updateData = { ...contactData };
       delete updateData.source; // keep existing source
-      await base44.asServiceRole.entities.Lead.update(lead.id, updateData);
-      lead = { ...lead, ...updateData };
+      delete updateData.contact_type; // don't downgrade customer to lead
+      await base44.asServiceRole.entities.Contact.update(contact.id, updateData);
+      contact = { ...contact, ...updateData };
       isUpdate = true;
     } else {
-      // New lead with FORM_FILLED status
-      lead = await base44.asServiceRole.entities.Lead.create(leadData);
+      contact = await base44.asServiceRole.entities.Contact.create(contactData);
     }
 
     // Get notification email
@@ -59,7 +58,7 @@ Deno.serve(async (req) => {
 
       const emailBody = `
 <div dir="rtl" style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-  <h2 style="color:#e94f1c;">${isUpdate ? '🔄 עדכון פרטי ליד קיים' : '🎉 פנייה חדשה מטופס ההזמנה!'}</h2>
+  <h2 style="color:#e94f1c;">${isUpdate ? '🔄 עדכון פרטי איש קשר קיים' : '🎉 פנייה חדשה מטופס ההזמנה!'}</h2>
   <table style="width:100%;border-collapse:collapse;">
     <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">שם:</td><td style="padding:8px;border-bottom:1px solid #eee;">${formData.contact_name || '-'}</td></tr>
     <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;">טלפון:</td><td style="padding:8px;border-bottom:1px solid #eee;">${cleanPhone}</td></tr>
@@ -83,7 +82,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: notificationEmail,
         subject: isUpdate
-          ? `🔄 עדכון ליד: ${formData.contact_name} - ${formData.event_type || ''}`
+          ? `🔄 עדכון איש קשר: ${formData.contact_name} - ${formData.event_type || ''}`
           : `🎉 פנייה חדשה: ${formData.contact_name} - ${formData.event_type || ''}`,
         body: emailBody,
         from_name: 'Skitza CRM'
@@ -94,7 +93,7 @@ Deno.serve(async (req) => {
     try {
       await base44.asServiceRole.entities.Task.create({
         title: `טיפול בהצעת מחיר - ${formData.contact_name}`,
-        related_lead_id: lead.id,
+        related_contact_id: contact.id,
         priority: 'HIGH',
         status: 'OPEN',
       });
@@ -102,7 +101,7 @@ Deno.serve(async (req) => {
       console.error('Task creation failed:', taskErr.message);
     }
 
-    return Response.json({ success: true, isUpdate, leadId: lead.id });
+    return Response.json({ success: true, isUpdate, contactId: contact.id });
   } catch (error) {
     console.error('submitBookingForm error:', error);
     return Response.json({ error: error.message }, { status: 500 });

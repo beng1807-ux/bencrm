@@ -1,0 +1,159 @@
+{
+  "type": "object",
+  "properties": {
+    "contact_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "\u05d1\u05e8 \u05de\u05e6\u05d5\u05d5\u05d4",
+        "\u05d1\u05ea \u05de\u05e6\u05d5\u05d5\u05d4",
+        "\u05d7\u05ea\u05d5\u05e0\u05d4",
+        "\u05d9\u05d5\u05dd \u05d4\u05d5\u05dc\u05d3\u05ea",
+        "\u05d0\u05d9\u05e8\u05d5\u05e2 \u05e4\u05e8\u05d8\u05d9",
+        "\u05d0\u05d9\u05e8\u05d5\u05e2 \u05d7\u05d1\u05e8\u05d4",
+        "\u05d0\u05d7\u05e8"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "location": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05e7\u05d5\u05dd \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "package_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d7\u05d1\u05d9\u05dc\u05d4"
+    },
+    "addon_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05de\u05d6\u05d4\u05d9 \u05ea\u05d5\u05e1\u05e4\u05d5\u05ea"
+    },
+    "price_total": {
+      "type": "number",
+      "description": "\u05de\u05d7\u05d9\u05e8 \u05db\u05d5\u05dc\u05dc (\u05de\u05d7\u05d5\u05e9\u05d1)"
+    },
+    "deposit_amount": {
+      "type": "number",
+      "description": "\u05e1\u05db\u05d5\u05dd \u05de\u05e7\u05d3\u05de\u05d4"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "DEPOSIT_PAID",
+        "PAID_FULL"
+      ],
+      "default": "PENDING",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05ea\u05e9\u05dc\u05d5\u05dd"
+    },
+    "balance_amount": {
+      "type": "number",
+      "description": "\u05d9\u05ea\u05e8\u05d4 \u05dc\u05ea\u05e9\u05dc\u05d5\u05dd (\u05de\u05d7\u05d5\u05e9\u05d1)"
+    },
+    "last_payment_method": {
+      "type": "string",
+      "enum": [
+        "\u05d4\u05e2\u05d1\u05e8\u05d4",
+        "\u05d0\u05e9\u05e8\u05d0\u05d9",
+        "\u05de\u05d6\u05d5\u05de\u05df",
+        "\u05d1\u05d9\u05d8"
+      ],
+      "description": "\u05d0\u05de\u05e6\u05e2\u05d9 \u05ea\u05e9\u05dc\u05d5\u05dd \u05d0\u05d7\u05e8\u05d5\u05df"
+    },
+    "payment_reminder_1_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05ea\u05e9\u05dc\u05d5\u05dd 1"
+    },
+    "payment_reminder_2_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05ea\u05e9\u05dc\u05d5\u05dd 2"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e7\u05d1\u05e6\u05d9\u05dd \u05de\u05e6\u05d5\u05e8\u05e4\u05d9\u05dd"
+    },
+    "contract_status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "SENT",
+        "SIGNED",
+        "DECLINED"
+      ],
+      "default": "DRAFT",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d7\u05d5\u05d6\u05d4"
+    },
+    "contract_signed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d7\u05ea\u05d9\u05de\u05ea \u05d7\u05d5\u05d6\u05d4"
+    },
+    "event_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "CONFIRMED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELLED"
+      ],
+      "default": "PENDING",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2"
+    },
+    "dj_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 DJ \u05de\u05e9\u05d5\u05d1\u05e5"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    }
+  },
+  "required": [
+    "contact_id",
+    "event_date",
+    "event_type",
+    "package_id",
+    "price_total",
+    "contract_status",
+    "event_status"
+  ],
+  "name": "Event",
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

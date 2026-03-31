@@ -38,17 +38,32 @@ Deno.serve(async (req) => {
       },
     });
 
+    // עדכון סטטוס איש קשר בהתאם לתשלום
+    if (eventData.contact_id) {
+      const newContactStatus =
+        eventData.payment_status === 'PAID_FULL' ? 'PAID_FULL' :
+        eventData.payment_status === 'DEPOSIT_PAID' ? 'DEPOSIT_PAID' : null;
+
+      if (newContactStatus) {
+        await base44.asServiceRole.entities.Contact.update(eventData.contact_id, {
+          status: newContactStatus,
+        });
+        console.log(`[onPaymentChange] ✓ Contact status updated to ${newContactStatus}`);
+      }
+    }
+
     // שליחת אישור תשלום כש-PAID_FULL
     if (eventData.payment_status === 'PAID_FULL') {
       console.log('[onPaymentChange] 💰 PAID_FULL - sending confirmation');
 
-      const customer = await base44.asServiceRole.entities.Customer.filter({
-        id: eventData.customer_id,
-      }).then((r) => r[0]);
+      const contactList = await base44.asServiceRole.entities.Contact.filter({
+        id: eventData.contact_id,
+      });
+      const contact = contactList[0];
 
-      if (!customer) {
-        console.warn('[onPaymentChange] ⚠ Customer not found');
-        return Response.json({ message: 'Customer not found' });
+      if (!contact) {
+        console.warn('[onPaymentChange] ⚠ Contact not found');
+        return Response.json({ message: 'Contact not found' });
       }
 
       const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
@@ -64,7 +79,8 @@ Deno.serve(async (req) => {
       const template = templateList[0];
       const eventDateFormatted = eventData.event_date ? new Date(eventData.event_date).toLocaleDateString('he-IL') : '';
       const messageText = template.template_text
-        .replace('{customer_name}', customer.name || '')
+        .replace('{customer_name}', contact.contact_name || '')
+        .replace('{contact_name}', contact.contact_name || '')
         .replace('{event_date}', eventDateFormatted)
         .replace('{location}', eventData.location || 'לא צוין')
         .replace('{price_total}', eventData.price_total || '')
@@ -80,7 +96,7 @@ Deno.serve(async (req) => {
         if (settings.whatsapp_send_mode === 'לוג בלבד') {
           console.log('[onPaymentChange] ℹ Log-only mode');
           await base44.asServiceRole.entities.ConversationMessage.create({
-            customer_id: customer.id,
+            contact_id: contact.id,
             event_id: eventData.id,
             channel: 'SYSTEM',
             sender: 'SYSTEM',
@@ -105,11 +121,11 @@ Deno.serve(async (req) => {
             throw new Error('GREEN API לא מוגדר - חסר GREEN_ID או GREEN_TOKEN');
           }
 
-          if (!customer.phone) {
-            throw new Error('אין מספר טלפון ללקוח');
+          if (!contact.phone) {
+            throw new Error('אין מספר טלפון לאיש קשר');
           }
 
-          let phoneNumber = customer.phone.replace(/[^0-9]/g, '');
+          let phoneNumber = contact.phone.replace(/[^0-9]/g, '');
           if (phoneNumber.startsWith('0')) {
             phoneNumber = '972' + phoneNumber.substring(1);
           }
@@ -128,7 +144,7 @@ Deno.serve(async (req) => {
           if (whatsappResponse.ok && whatsappResult.idMessage) {
             console.log(`[onPaymentChange] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
             await base44.asServiceRole.entities.ConversationMessage.create({
-              customer_id: customer.id,
+              contact_id: contact.id,
               event_id: eventData.id,
               channel: 'WHATSAPP',
               sender: 'OWNER',

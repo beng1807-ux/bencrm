@@ -24,8 +24,7 @@ const PAYMENT_LABELS = { PENDING: 'ממתין', DEPOSIT_PAID: 'מקדמה שול
 
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [leads, setLeads] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [djs, setDJs] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('month');
@@ -49,15 +48,13 @@ export default function EventCalendar() {
   }, []);
 
   const loadData = async () => {
-    const [eventsData, customersData, leadsData, djsData] = await Promise.all([
+    const [eventsData, contactsData, djsData] = await Promise.all([
       base44.entities.Event.list(),
-      base44.entities.Customer.list(),
-      base44.entities.Lead.list(),
+      base44.entities.Contact.list(),
       base44.entities.DJ.list(),
     ]);
     setEvents(eventsData);
-    setCustomers(customersData);
-    setLeads(leadsData);
+    setContacts(contactsData);
     setDJs(djsData);
     setLoading(false);
   };
@@ -121,16 +118,15 @@ export default function EventCalendar() {
   };
 
   // Hover handlers
-  const handleEventHover = (event, customer, dj, e) => {
+  const handleEventHover = (event, contact, dj, e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
     setHoveredEvent(event);
-    // If customer not found, try leads
-    if (!customer) {
-      const lead = leads.find(l => l.id === event.customer_id);
-      setHoveredCustomer(lead ? { name: lead.contact_name, phone: lead.phone } : null);
+    if (!contact) {
+      const c = contacts.find(c => c.id === event.contact_id);
+      setHoveredCustomer(c ? { name: c.contact_name, phone: c.phone } : null);
     } else {
-      setHoveredCustomer(customer);
+      setHoveredCustomer(contact);
     }
     setHoveredDJ(dj);
   };
@@ -184,15 +180,12 @@ export default function EventCalendar() {
     );
   }
 
-  const getContactName = (customerId) => {
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) return customer.name;
-    const lead = leads.find(l => l.id === customerId);
-    if (lead) return lead.contact_name;
-    return null;
+  const getContactName = (contactId) => {
+    const contact = contacts.find(c => c.id === contactId);
+    return contact ? contact.contact_name : null;
   };
 
-  const selectedCustomerName = selectedEvent ? getContactName(selectedEvent.customer_id) : null;
+  const selectedCustomerName = selectedEvent ? getContactName(selectedEvent.contact_id) : null;
   const selectedDJ = selectedEvent ? djs.find(d => d.id === selectedEvent.dj_id) : null;
 
   return (
@@ -264,8 +257,7 @@ export default function EventCalendar() {
             currentDate={currentDate}
             events={filteredEvents}
             djs={djs}
-            customers={customers}
-            leads={leads}
+            contacts={contacts}
             getEventsForDate={getEventsForDate}
             getBlockedDJsForDate={getBlockedDJsForDate}
             onEventHover={handleEventHover}
@@ -280,8 +272,7 @@ export default function EventCalendar() {
             weekDays={getWeekDays()}
             events={filteredEvents}
             djs={djs}
-            customers={customers}
-            leads={leads}
+            contacts={contacts}
             getEventsForDate={getEventsForDate}
             getBlockedDJsForDate={getBlockedDJsForDate}
             onEventHover={handleEventHover}

@@ -12,7 +12,7 @@ export default function MyShows() {
   const [allDJs, setAllDJs] = useState([]);
   const [selectedDJId, setSelectedDJId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [customers, setCustomers] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,12 +26,12 @@ export default function MyShows() {
       setIsAdmin(admin);
 
       if (admin) {
-        const [djs, customersData] = await Promise.all([
+        const [djs, contactsData] = await Promise.all([
           base44.entities.DJ.list(),
-          base44.entities.Customer.list(),
+          base44.entities.Contact.list(),
         ]);
         setAllDJs(djs);
-        setCustomers(customersData);
+        setContacts(contactsData);
         if (djs.length > 0) {
           setSelectedDJId(djs[0].id);
           setDjProfile(djs[0]);
@@ -130,7 +130,7 @@ export default function MyShows() {
         <h2 className="text-xl font-semibold mb-4">אירועים קרובים</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {upcomingEvents.map(event => {
-            const customer = customers.find(c => c.id === event.customer_id);
+            const contact = contacts.find(c => c.id === event.contact_id);
             return (
               <Card key={event.id}>
                 <CardContent className="pt-6">
@@ -157,15 +157,15 @@ export default function MyShows() {
                           {event.location}
                         </div>
                       )}
-                      {customer && (
+                      {contact && (
                         <>
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
-                            {customer.name}
+                            {contact.contact_name}
                           </div>
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4" />
-                            {customer.phone}
+                            {contact.phone}
                           </div>
                         </>
                       )}
@@ -195,7 +195,7 @@ export default function MyShows() {
           <h2 className="text-xl font-semibold mb-4 text-gray-600">אירועים שהושלמו</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {pastEvents.map(event => {
-              const customer = customers.find(c => c.id === event.customer_id);
+              const contact = contacts.find(c => c.id === event.contact_id);
               return (
                 <Card key={event.id} className="opacity-75">
                   <CardContent className="pt-4">
@@ -203,8 +203,8 @@ export default function MyShows() {
                     <p className="text-sm text-gray-600">
                       {new Date(event.event_date).toLocaleDateString('he-IL')}
                     </p>
-                    {customer && (
-                      <p className="text-sm text-gray-600">{customer.name}</p>
+                    {contact && (
+                      <p className="text-sm text-gray-600">{contact.contact_name}</p>
                     )}
                   </CardContent>
                 </Card>

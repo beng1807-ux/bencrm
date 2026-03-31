@@ -26,24 +26,21 @@ const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID
 
 const CUSTOMER_STATUSES = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL','EVENT_DONE'];
 
-const getCustomerName = (customerId, customers, leads) => {
-  const customer = customers.find(c => c.id === customerId);
-  if (customer) return customer.name;
-  const lead = leads.find(l => l.id === customerId);
-  if (lead) return lead.contact_name;
-  return 'לא משויך ללקוח';
+const getContactName = (contactId, contacts) => {
+  const contact = contacts.find(c => c.id === contactId);
+  if (contact) return contact.contact_name;
+  return 'לא משויך';
 };
 
-const isEventDjLead = (event, leads) => {
-  if (!event.lead_id) return false;
-  const lead = leads.find(l => l.id === event.lead_id);
-  return lead?.is_dj_lead === true;
+const isEventDjLead = (event, contacts) => {
+  if (!event.contact_id) return false;
+  const contact = contacts.find(c => c.id === event.contact_id);
+  return contact?.is_dj_lead === true;
 };
 
 export default function Events() {
   const [events, setEvents] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [leads, setLeads] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [packages, setPackages] = useState([]);
   const [djs, setDJs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,20 +97,18 @@ export default function Events() {
   const loadData = async () => {
     const results = await Promise.allSettled([
       base44.entities.Event.list('-event_date'),
-      base44.entities.Customer.list(),
-      base44.entities.Lead.list(),
+      base44.entities.Contact.list(),
       base44.entities.Package.filter({ active: true }),
       base44.entities.DJ.filter({ status: 'ACTIVE' }),
       base44.entities.EventSettings.list(),
       base44.entities.AppSettings.list(),
     ]);
     setEvents(results[0].status === 'fulfilled' ? results[0].value : []);
-    setCustomers(results[1].status === 'fulfilled' ? results[1].value : []);
-    setLeads(results[2].status === 'fulfilled' ? results[2].value : []);
-    setPackages(results[3].status === 'fulfilled' ? results[3].value : []);
-    setDJs(results[4].status === 'fulfilled' ? results[4].value : []);
-    if (results[5].status === 'fulfilled' && results[5].value.length > 0) setEventSettings(results[5].value[0]);
-    if (results[6].status === 'fulfilled' && results[6].value.length > 0) setAppSettings(results[6].value[0]);
+    setContacts(results[1].status === 'fulfilled' ? results[1].value : []);
+    setPackages(results[2].status === 'fulfilled' ? results[2].value : []);
+    setDJs(results[3].status === 'fulfilled' ? results[3].value : []);
+    if (results[4].status === 'fulfilled' && results[4].value.length > 0) setEventSettings(results[4].value[0]);
+    if (results[5].status === 'fulfilled' && results[5].value.length > 0) setAppSettings(results[5].value[0]);
     setLoading(false);
   };
 
@@ -163,23 +158,17 @@ export default function Events() {
 
   const saveEdit = async () => {
     await base44.entities.Event.update(editData.id, editData);
-    if (editData.customer_id && editData.event_date) {
-      await syncDateToSource(editData.customer_id, editData.event_date);
+    if (editData.contact_id && editData.event_date) {
+      await syncDateToSource(editData.contact_id, editData.event_date);
     }
     await loadData();
     setEditOpen(false);
     toast.success('האירוע עודכן');
   };
 
-  const syncDateToSource = async (sourceId, newDate) => {
-    const lead = leads.find(l => l.id === sourceId);
-    if (lead) {
-      await base44.entities.Lead.update(sourceId, { event_date: newDate });
-      return;
-    }
-    const customer = customers.find(c => c.id === sourceId);
-    if (customer) {
-      await base44.entities.Customer.update(sourceId, { event_date: newDate });
+  const syncDateToSource = async (contactId, newDate) => {
+    if (contactId) {
+      await base44.entities.Contact.update(contactId, { event_date: newDate });
     }
   };
 
@@ -190,8 +179,8 @@ export default function Events() {
     const dep = newEvent.deposit_amount ?? Math.round(total * (depositPercent / 100));
     const bal = newEvent.balance_amount ?? (total - dep);
     await base44.entities.Event.create({ ...newEvent, price_total: total, deposit_amount: dep, balance_amount: bal, payment_status: 'PENDING', contract_status: 'DRAFT', event_status: 'PENDING' });
-    if (newEvent.customer_id && newEvent.event_date) {
-      await syncDateToSource(newEvent.customer_id, newEvent.event_date);
+    if (newEvent.contact_id && newEvent.event_date) {
+      await syncDateToSource(newEvent.contact_id, newEvent.event_date);
     }
     await loadData();
     toast.success('אירוע חדש נוצר');
@@ -203,12 +192,12 @@ export default function Events() {
       toast.error('יש למלא את כל השדות');
       return;
     }
-    const created = await base44.entities.Customer.create(newCustomer);
+    const created = await base44.entities.Contact.create({ contact_name: newCustomer.name, phone: newCustomer.phone, email: newCustomer.email, status: 'DEAL_CLOSED', contact_type: 'customer' });
     await loadData();
-    setNewEvent({ ...newEvent, customer_id: created.id });
+    setNewEvent({ ...newEvent, contact_id: created.id });
     setNewCustomerOpen(false);
     setNewCustomer({ name: '', phone: '', email: '' });
-    toast.success('לקוח חדש נוצר');
+    toast.success('איש קשר חדש נוצר');
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: PRIMARY }} /></div>;
@@ -224,7 +213,7 @@ export default function Events() {
 
   const filteredEvents = events.filter(e => {
     const matchType = filterType === 'ALL' || e.event_type === filterType;
-    const customerName = getCustomerName(e.customer_id, customers, leads);
+    const customerName = getContactName(e.contact_id, contacts);
     const matchSearch = !searchTerm || 
       e.event_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customerName?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -342,10 +331,10 @@ export default function Events() {
         {viewMode === 'cards' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
             {filteredEvents.map(event => {
-              const customerName = getCustomerName(event.customer_id, customers, leads);
+              const customerName = getContactName(event.contact_id, contacts);
               const dj = djs.find(d => d.id === event.dj_id);
               const isCancelled = event.event_status === 'CANCELLED';
-              const hasDjSkitza = isEventDjLead(event, leads);
+              const hasDjSkitza = isEventDjLead(event, contacts);
               return (
                 <div key={event.id}
                   onClick={() => openEdit(event)}
@@ -411,10 +400,10 @@ export default function Events() {
                   <tr><td colSpan={8} className="text-center text-slate-500 py-10">אין אירועים התואמים את הסינון</td></tr>
                 )}
                 {filteredEvents.map(event => {
-                  const customerName = getCustomerName(event.customer_id, customers, leads);
+                  const customerName = getContactName(event.contact_id, contacts);
                   const dj = djs.find(d => d.id === event.dj_id);
                   const isCancelled = event.event_status === 'CANCELLED';
-                  const hasDjSkitza = isEventDjLead(event, leads);
+                  const hasDjSkitza = isEventDjLead(event, contacts);
                   const eventDate = new Date(event.event_date);
                   const dayName = eventDate.toLocaleDateString('he-IL', { weekday: 'long' });
                   
@@ -445,8 +434,8 @@ export default function Events() {
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{dayName}</p>
                       </td>
                       <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
-                        {event.customer_id ? (
-                          <Link to={createPageUrl(`Customers?status=${(() => { const lead = leads.find(l => l.id === event.customer_id); return lead?.status || 'DEAL_CLOSED'; })()}`)} className="text-sm font-black text-primary hover:underline">
+                        {event.contact_id ? (
+                          <Link to={createPageUrl(`Customers?status=${(() => { const c = contacts.find(x => x.id === event.contact_id); return c?.status || 'DEAL_CLOSED'; })()}`)} className="text-sm font-black text-primary hover:underline">
                             {customerName}
                           </Link>
                         ) : (
@@ -505,7 +494,7 @@ export default function Events() {
             const visFields = eventSettings.edit_visible_fields || ['customer_id','event_date','event_type','package_id','location','event_status','payment_status','dj_id','last_payment_method','notes'];
             const fl = eventSettings.field_labels || {};
             const fieldMap = {
-              customer_id: () => <div className="col-span-2" key="customer_id"><Label>{fl.customer_id || 'לקוח'}</Label><Input value={getCustomerName(editData.customer_id, customers, leads)} disabled className="bg-slate-50" /></div>,
+              contact_id: () => <div className="col-span-2" key="contact_id"><Label>{fl.customer_id || 'איש קשר'}</Label><Input value={getContactName(editData.contact_id, contacts)} disabled className="bg-slate-50" /></div>,
               event_type: () => <div key="event_type"><Label>{fl.event_type || 'סוג אירוע'}</Label><Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>,
               package_id: () => (
                 <React.Fragment key="package_id">
@@ -519,8 +508,8 @@ export default function Events() {
               event_status: () => <div key="event_status"><Label>{fl.event_status || 'סטטוס אירוע'}</Label><Select value={editData.event_status || ''} onValueChange={v => setEditData({...editData, event_status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUS_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               payment_status: () => <div key="payment_status"><Label>{fl.payment_status || 'סטטוס תשלום'}</Label><Select value={editData.payment_status || ''} onValueChange={v => handlePaymentStatusChange(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PAYMENT_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select></div>,
               dj_id: () => {
-                const eventLead = leads.find(l => l.id === editData.lead_id);
-                const hasDjSkitza = eventLead?.is_dj_lead === true;
+                const eventContact = contacts.find(c => c.id === editData.contact_id);
+                const hasDjSkitza = eventContact?.is_dj_lead === true;
                 if (!hasDjSkitza) {
                   return (
                     <div key="dj_id" className="col-span-2">
@@ -581,28 +570,25 @@ export default function Events() {
           {(() => {
             const visFields = eventSettings.create_visible_fields || ['customer_id','event_date','event_type','package_id','location'];
             const fl = eventSettings.field_labels || {};
-            const closedLeads = leads.filter(l => ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(l.status));
-            const allOptions = [
-              ...customers.map(c => ({ id: c.id, name: c.name })),
-              ...closedLeads.map(l => ({ id: l.id, name: l.contact_name })),
-            ];
+            const customerContacts = contacts.filter(c => c.contact_type === 'customer' || ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(c.status));
+            const allOptions = customerContacts.map(c => ({ id: c.id, name: c.contact_name }));
             const createFieldMap = {
               customer_id: () => (
-                <div className="col-span-2" key="customer_id">
-                  <Label>{fl.customer_id || 'לקוח'} *</Label>
+                <div className="col-span-2" key="contact_id">
+                  <Label>{fl.customer_id || 'איש קשר'} *</Label>
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <Select value={newEvent.customer_id || ''} onValueChange={v => {
-                        const lead = leads.find(l => l.id === v);
-                        const updatedEvent = { ...newEvent, customer_id: v };
-                        if (lead?.event_date) updatedEvent.event_date = lead.event_date;
+                      <Select value={newEvent.contact_id || ''} onValueChange={v => {
+                        const contact = contacts.find(c => c.id === v);
+                        const updatedEvent = { ...newEvent, contact_id: v };
+                        if (contact?.event_date) updatedEvent.event_date = contact.event_date;
                         setNewEvent(updatedEvent);
                       }}>
-                        <SelectTrigger><SelectValue placeholder={allOptions.length === 0 ? "אין לקוחות - צור לקוח חדש" : "בחר לקוח"} /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={allOptions.length === 0 ? "אין אנשי קשר - צור חדש" : "בחר איש קשר"} /></SelectTrigger>
                         <SelectContent>{allOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0"><Plus className="w-4 h-4 ml-1" />לקוח חדש</Button>
+                    <Button type="button" variant="outline" onClick={() => setNewCustomerOpen(true)} className="flex-shrink-0"><Plus className="w-4 h-4 ml-1" />איש קשר חדש</Button>
                   </div>
                 </div>
               ),
@@ -639,7 +625,7 @@ export default function Events() {
       {/* New Customer Dialog */}
       <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
         <DialogContent className="max-w-md" dir="rtl">
-          <DialogHeader><DialogTitle>לקוח חדש</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>איש קשר חדש</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <Label>שם *</Label>
@@ -654,7 +640,7 @@ export default function Events() {
               <Input type="email" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} placeholder="example@email.com" />
             </div>
             <Button onClick={createCustomer} className="w-full font-bold text-white" style={{ backgroundColor: PRIMARY }}>
-              צור לקוח
+              צור איש קשר
             </Button>
           </div>
         </DialogContent>

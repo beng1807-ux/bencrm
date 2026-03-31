@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 function pick(obj, keys) {
   if (!obj || typeof obj !== 'object') return '';
@@ -37,7 +37,6 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // פענוח הבקשה - תומך ב-JSON וב-Form Data
     let incoming;
     const contentType = req.headers.get('content-type') || '';
 
@@ -60,7 +59,6 @@ Deno.serve(async (req) => {
 
     console.log(`[webhook] Keys: ${Object.keys(incoming || {}).join(', ')}`);
 
-    // מיפוי שדות מאירוע בריבוע
     const contactName = pick(incoming, ['Contact1Name', 'Contact2Name', 'contact_name', 'name']);
     const phone = pick(incoming, ['Contact1Phone', 'Contact2Phone', 'BizPhone', 'phone']);
     const email = pick(incoming, ['Contact1EMail', 'Contact2EMail', 'email']);
@@ -70,9 +68,6 @@ Deno.serve(async (req) => {
     const location = pick(incoming, ['ResourceName', 'location']);
     const eventDate = parseEventDate(pick(incoming, ['isoResourceStartTime', 'ResourceStartTime', 'event_date']));
 
-    console.log(`[webhook] Mapped → name=${contactName}, phone=${phone}, date=${eventDate}, extId=${externalId}`);
-
-    // חובה: טלפון או מזהה חיצוני
     if (!externalId && !phone) {
       return Response.json({ error: 'Missing phone or external_event_id' }, { status: 400 });
     }
@@ -81,38 +76,39 @@ Deno.serve(async (req) => {
     let existing = [];
     if (externalId) {
       try {
-        existing = await base44.asServiceRole.entities.Lead.filter({ external_event_id: externalId });
+        existing = await base44.asServiceRole.entities.Contact.filter({ external_event_id: externalId });
       } catch {}
     }
     if (existing.length === 0 && phone && eventDate) {
       try {
-        existing = await base44.asServiceRole.entities.Lead.filter({ phone, event_date: eventDate });
+        existing = await base44.asServiceRole.entities.Contact.filter({ phone, event_date: eventDate });
       } catch {}
     }
 
     if (existing.length > 0) {
       console.log(`[webhook] Duplicate → ${existing[0].id}`);
-      return Response.json({ success: true, message: 'Lead already exists', lead_id: existing[0].id });
+      return Response.json({ success: true, message: 'Contact already exists', contact_id: existing[0].id });
     }
 
-    // בניית הליד
-    const leadData = {
+    // בניית איש קשר
+    const contactData = {
       contact_name: contactName || 'ללא שם',
       phone: phone || '',
       status: 'NEW',
       source: 'EVENT_SQUARE_IMPORT',
+      contact_type: 'lead',
     };
 
-    if (email) leadData.email = email;
-    if (eventType) leadData.event_type = eventType;
-    if (eventDate) leadData.event_date = eventDate;
-    if (externalId) leadData.external_event_id = externalId;
-    if (guestsCount) leadData.guests_count = Number(guestsCount);
+    if (email) contactData.email = email;
+    if (eventType) contactData.event_type = eventType;
+    if (eventDate) contactData.event_date = eventDate;
+    if (externalId) contactData.external_event_id = externalId;
+    if (guestsCount) contactData.guests_count = Number(guestsCount);
 
-    const created = await base44.asServiceRole.entities.Lead.create(leadData);
-    console.log(`[webhook] ✅ Lead created: ${created.id}`);
+    const created = await base44.asServiceRole.entities.Contact.create(contactData);
+    console.log(`[webhook] ✅ Contact created: ${created.id}`);
 
-    return Response.json({ success: true, lead_id: created.id });
+    return Response.json({ success: true, contact_id: created.id });
   } catch (error) {
     console.error(`[webhook] ❌ ${error.message}`);
     return Response.json({ error: error.message }, { status: 500 });
