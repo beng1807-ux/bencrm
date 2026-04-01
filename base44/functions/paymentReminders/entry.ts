@@ -9,6 +9,8 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
+    const signature = settings.signature_text || 'קבוצת סקיצה';
+    const logoUrl = settings.logo_url_for_messages || '';
 
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr);
@@ -20,21 +22,18 @@ Deno.serve(async (req) => {
 
     for (const event of events) {
       if (event.payment_status === 'PAID_FULL') continue;
-      // Skip third-party paid events (DJ-only via אולמות הבריאה)
       if (event.is_third_party_paid) continue;
 
       const eventDate = new Date(event.event_date);
       const daysUntilEvent = Math.round((eventDate - today) / (1000 * 60 * 60 * 24));
 
-      // תזכורת 1
       if (daysUntilEvent === settings.payment_reminder_1_days_before && !event.payment_reminder_1_sent_at) {
-        await sendPaymentReminder(base44, event, contacts, settings, 1);
+        await sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, 1);
         sentCount++;
       }
 
-      // תזכורת 2
       if (daysUntilEvent === settings.payment_reminder_2_days_before && !event.payment_reminder_2_sent_at) {
-        await sendPaymentReminder(base44, event, contacts, settings, 2);
+        await sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, 2);
         sentCount++;
       }
     }
@@ -46,7 +45,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function sendPaymentReminder(base44, event, contacts, settings, reminderNumber) {
+async function sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, reminderNumber) {
   const contact = contacts.find((c) => c.id === event.contact_id);
   if (!contact) return;
 
@@ -61,13 +60,14 @@ async function sendPaymentReminder(base44, event, contacts, settings, reminderNu
   const template = templateList[0];
   const eventDateFormatted = new Date(event.event_date).toLocaleDateString('he-IL');
   const messageText = template.template_text
-    .replace('{customer_name}', contact.contact_name || '')
-    .replace('{contact_name}', contact.contact_name || '')
-    .replace('{event_date}', eventDateFormatted)
-    .replace('{balance}', event.balance_amount?.toLocaleString() || '0')
-    .replace('{owner_name}', settings.owner_name || '')
-    .replace('{owner_phone}', settings.owner_phone || '')
-    .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
+    .replace(/{customer_name}/g, contact.contact_name || '')
+    .replace(/{contact_name}/g, contact.contact_name || '')
+    .replace(/{event_date}/g, eventDateFormatted)
+    .replace(/{balance}/g, event.balance_amount?.toLocaleString() || '0')
+    .replace(/{owner_name}/g, signature)
+    .replace(/{owner_phone}/g, settings.owner_phone || '')
+    .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+    .replace(/{signature}/g, signature);
 
   try {
     if (settings.whatsapp_send_mode === 'לוג בלבד') {
@@ -108,6 +108,20 @@ async function sendPaymentReminder(base44, event, contacts, settings, reminderNu
       const whatsappResult = await whatsappResponse.json();
 
       if (whatsappResponse.ok && whatsappResult.idMessage) {
+        // Send logo
+        if (logoUrl) {
+          try {
+            const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
+            await fetch(logoApiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
+            });
+          } catch (logoErr) {
+            console.error(`[paymentReminders] ⚠ Logo send failed: ${logoErr.message}`);
+          }
+        }
+
         await base44.asServiceRole.entities.ConversationMessage.create({
           contact_id: contact.id,
           event_id: event.id,

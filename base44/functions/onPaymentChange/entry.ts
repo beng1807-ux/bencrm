@@ -6,24 +6,21 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { event, data: eventData, old_data } = await req.json();
 
-    // בדיקה שהתשלום השתנה
-    if (
-      !eventData.payment_status ||
-      eventData.payment_status === old_data?.payment_status
-    ) {
+    if (!eventData.payment_status || eventData.payment_status === old_data?.payment_status) {
       console.log('[onPaymentChange] ℹ No payment change - skipping');
       return Response.json({ message: 'No payment change' });
     }
 
     console.log(`[onPaymentChange] ✓ Payment: ${old_data?.payment_status} → ${eventData.payment_status}`);
 
-    // בדיקת הגדרות
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
       console.log('[onPaymentChange] ℹ Automations disabled');
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
+    const signature = settings.signature_text || 'קבוצת סקיצה';
+    const logoUrl = settings.logo_url_for_messages || '';
 
     // רישום לוג
     await base44.asServiceRole.entities.AuditLog.create({
@@ -79,16 +76,17 @@ Deno.serve(async (req) => {
       const template = templateList[0];
       const eventDateFormatted = eventData.event_date ? new Date(eventData.event_date).toLocaleDateString('he-IL') : '';
       const messageText = template.template_text
-        .replace('{customer_name}', contact.contact_name || '')
-        .replace('{contact_name}', contact.contact_name || '')
-        .replace('{event_date}', eventDateFormatted)
-        .replace('{location}', eventData.location || 'לא צוין')
-        .replace('{price_total}', eventData.price_total || '')
-        .replace('{deposit_amount}', eventData.deposit_amount || '')
-        .replace('{balance}', eventData.balance_amount || '')
-        .replace('{owner_name}', settings.owner_name || '')
-        .replace('{owner_phone}', settings.owner_phone || '')
-        .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
+        .replace(/{customer_name}/g, contact.contact_name || '')
+        .replace(/{contact_name}/g, contact.contact_name || '')
+        .replace(/{event_date}/g, eventDateFormatted)
+        .replace(/{location}/g, eventData.location || 'לא צוין')
+        .replace(/{price_total}/g, eventData.price_total || '')
+        .replace(/{deposit_amount}/g, eventData.deposit_amount || '')
+        .replace(/{balance}/g, eventData.balance_amount || '')
+        .replace(/{owner_name}/g, signature)
+        .replace(/{owner_phone}/g, settings.owner_phone || '')
+        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+        .replace(/{signature}/g, signature);
 
       console.log(`[onPaymentChange] 📝 Message prepared (${messageText.length} chars)`);
 
@@ -112,7 +110,6 @@ Deno.serve(async (req) => {
             metadata: { template_key: 'PAY_CONFIRMED', simulated: true },
           });
         } else {
-          // שליחה אמיתית דרך GREEN API
           console.log('[onPaymentChange] 📱 Sending via GREEN API');
           const GREEN_ID = Deno.env.get('GREEN_ID');
           const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
@@ -143,6 +140,21 @@ Deno.serve(async (req) => {
 
           if (whatsappResponse.ok && whatsappResult.idMessage) {
             console.log(`[onPaymentChange] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
+
+            // Send logo
+            if (logoUrl) {
+              try {
+                const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
+                await fetch(logoApiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
+                });
+              } catch (logoErr) {
+                console.error(`[onPaymentChange] ⚠ Logo send failed: ${logoErr.message}`);
+              }
+            }
+
             await base44.asServiceRole.entities.ConversationMessage.create({
               contact_id: contact.id,
               event_id: eventData.id,

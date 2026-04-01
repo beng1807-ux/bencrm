@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText, MessageCircle, BookOpen, Trash2 } from 'lucide-react';
+import { Settings, MessageSquare, Package as PackageIcon, Palette, Upload, Sparkles, FileText, MessageCircle, BookOpen, Trash2, ChevronUp, ChevronDown, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import EventSettingsTab from '../components/management/EventSettingsTab';
 import BookingFormSettingsTab from '../components/management/BookingFormSettingsTab';
@@ -223,16 +223,76 @@ export default function Management() {
               <CardTitle>הגדרות מערכת</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="mb-6">
-                <Label>מייל בעל העסק (לקבלת התראות)</Label>
-                <Input
-                  type="email"
-                  value={settings.owner_email || ''}
-                  onChange={e => setSettings({...settings, owner_email: e.target.value})}
-                  placeholder="beng1807@gmail.com"
-                  dir="ltr"
-                />
-                <p className="text-xs text-gray-400 mt-1">המייל הזה ישמש לקבלת התראות על פניות חדשות מטופס ההזמנה ודברים נוספים</p>
+              <div className="border-b pb-6 mb-6">
+                <h3 className="font-semibold mb-4">פרטי העסק</h3>
+                <p className="text-xs text-gray-400 mb-4">פרטים אלו משמשים בהודעות האוטומטיות ובמערכת</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>מייל בעל העסק</Label>
+                    <Input
+                      type="email"
+                      value={settings.owner_email || ''}
+                      onChange={e => setSettings({...settings, owner_email: e.target.value})}
+                      placeholder="beng1807@gmail.com"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <Label>טלפון בעל העסק</Label>
+                    <Input
+                      value={settings.owner_phone || ''}
+                      onChange={e => setSettings({...settings, owner_phone: e.target.value})}
+                      placeholder="050-1234567"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <Label>טלפון WhatsApp</Label>
+                    <Input
+                      value={settings.owner_whatsapp_phone || ''}
+                      onChange={e => setSettings({...settings, owner_whatsapp_phone: e.target.value})}
+                      placeholder="050-1234567"
+                      dir="ltr"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">אם שונה מהטלפון הרגיל</p>
+                  </div>
+                  <div>
+                    <Label>חתימה להודעות</Label>
+                    <Input
+                      value={settings.signature_text || ''}
+                      onChange={e => setSettings({...settings, signature_text: e.target.value})}
+                      placeholder="קבוצת סקיצה"
+                      dir="rtl"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">יופיע בסוף כל הודעה במקום {'{owner_name}'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-b pb-6 mb-6">
+                <h3 className="font-semibold mb-4">לוגו להודעות WhatsApp</h3>
+                <p className="text-xs text-gray-400 mb-3">תמונת לוגו שתצורף אחרי כל הודעת וואטסאפ</p>
+                <div className="flex items-center gap-4">
+                  {settings.logo_url_for_messages && (
+                    <img src={settings.logo_url_for_messages} alt="לוגו הודעות" className="h-16 object-contain rounded border p-1" />
+                  )}
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
+                    <Image size={16} />
+                    {settings.logo_url_for_messages ? 'החלף לוגו' : 'העלה לוגו'}
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      try {
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setSettings(prev => ({ ...prev, logo_url_for_messages: file_url }));
+                        toast.success('לוגו הועלה בהצלחה');
+                      } catch { toast.error('שגיאה בהעלאה'); }
+                    }} />
+                  </label>
+                  {settings.logo_url_for_messages && (
+                    <button onClick={() => setSettings(prev => ({ ...prev, logo_url_for_messages: '' }))} className="text-xs text-red-500 hover:underline">הסר לוגו</button>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -380,24 +440,46 @@ export default function Management() {
                 <Button variant="outline" size="sm" onClick={() => setSelectedTemplates(new Set())}>בטל בחירה</Button>
               </div>
             )}
-            {templates.map(template => {
+            {[...templates].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map((template, idx) => {
               const placeholderMap = {
-                NEW_LEAD: ['{contact_name}', '{event_date}', '{event_type}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
-                QUOTE_SENT: ['{customer_name}', '{event_date}', '{price_total}', '{deposit_amount}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
-                PAY_REMINDER_1: ['{customer_name}', '{event_date}', '{balance}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
-                PAY_REMINDER_2: ['{customer_name}', '{event_date}', '{balance}', '{owner_name}'],
-                PAY_CONFIRMED: ['{customer_name}', '{event_date}', '{location}', '{owner_name}', '{owner_phone}', '{owner_whatsapp_phone}'],
-                DJ_ASSIGNED: ['{customer_name}', '{dj_name}', '{dj_phone}', '{event_date}', '{location}', '{event_type}', '{owner_name}', '{owner_phone}'],
-                EVENT_REMINDER: ['{customer_name}', '{event_date}', '{location}', '{dj_name}', '{dj_phone}', '{owner_name}', '{owner_phone}'],
-                THANK_YOU: ['{customer_name}', '{owner_name}', '{owner_phone}'],
+                NEW_LEAD: ['{contact_name}', '{event_date}', '{event_type}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                QUOTE_SENT: ['{customer_name}', '{event_date}', '{price_total}', '{deposit_amount}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                DEAL_CLOSED: ['{customer_name}', '{event_date}', '{event_type}', '{signature}', '{owner_phone}'],
+                PAY_REMINDER_1: ['{customer_name}', '{event_date}', '{balance}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                PAY_REMINDER_2: ['{customer_name}', '{event_date}', '{balance}', '{signature}'],
+                PAY_CONFIRMED: ['{customer_name}', '{event_date}', '{location}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
+                DJ_ASSIGNED: ['{customer_name}', '{dj_name}', '{dj_phone}', '{event_date}', '{location}', '{event_type}', '{signature}', '{owner_phone}'],
+                DJ_BOOKING_CONFIRM: ['{dj_name}', '{customer_name}', '{event_date}', '{location}', '{event_type}', '{signature}', '{owner_phone}'],
+                DJ_BOOKING_FORM: ['{contact_name}', '{event_date}', '{event_type}', '{form_link}', '{signature}', '{owner_phone}'],
+                EVENT_REMINDER: ['{customer_name}', '{event_date}', '{location}', '{dj_name}', '{dj_phone}', '{signature}', '{owner_phone}'],
+                THANK_YOU: ['{customer_name}', '{signature}', '{owner_phone}'],
               };
-              const placeholders = placeholderMap[template.template_key] || [];
+              const placeholders = placeholderMap[template.template_key] || ['{signature}', '{owner_phone}'];
+              const sortedTemplates = [...templates].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+              const moveTemplate = async (direction) => {
+                const currentIdx = sortedTemplates.findIndex(t => t.id === template.id);
+                const swapIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
+                if (swapIdx < 0 || swapIdx >= sortedTemplates.length) return;
+                const currentOrder = template.sort_order || 0;
+                const swapOrder = sortedTemplates[swapIdx].sort_order || 0;
+                await Promise.all([
+                  base44.entities.MessageTemplate.update(template.id, { sort_order: swapOrder }),
+                  base44.entities.MessageTemplate.update(sortedTemplates[swapIdx].id, { sort_order: currentOrder }),
+                ]);
+                loadData();
+              };
+
               return (
                 <Card key={template.id}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Checkbox checked={selectedTemplates.has(template.id)} onCheckedChange={() => toggleTemplateSelect(template.id)} />
+                        <div className="flex flex-col gap-0.5">
+                          <button onClick={() => moveTemplate('up')} className="p-0.5 text-gray-400 hover:text-gray-700"><ChevronUp className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => moveTemplate('down')} className="p-0.5 text-gray-400 hover:text-gray-700"><ChevronDown className="w-3.5 h-3.5" /></button>
+                        </div>
                         <span>{template.template_name}</span>
                       </div>
                       <div className="flex items-center gap-2">

@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
+    const signature = settings.signature_text || 'קבוצת סקיצה';
+    const logoUrl = settings.logo_url_for_messages || '';
 
     // ── DEAL_CLOSED: Update contact_type to customer ──
     if (contact.status === 'DEAL_CLOSED' && old_data.status !== 'DEAL_CLOSED') {
@@ -60,13 +62,14 @@ Deno.serve(async (req) => {
       const template = templateList[0];
       const eventDateFormatted = contact.event_date ? new Date(contact.event_date).toLocaleDateString('he-IL') : '';
       const messageText = template.template_text
-        .replace('{contact_name}', contact.contact_name || '')
-        .replace('{event_date}', eventDateFormatted)
-        .replace('{event_type}', contact.event_type || '')
-        .replace('{form_link}', formLink)
-        .replace('{owner_name}', settings.owner_name || '')
-        .replace('{owner_phone}', settings.owner_phone || '')
-        .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
+        .replace(/{contact_name}/g, contact.contact_name || '')
+        .replace(/{event_date}/g, eventDateFormatted)
+        .replace(/{event_type}/g, contact.event_type || '')
+        .replace(/{form_link}/g, formLink)
+        .replace(/{owner_name}/g, signature)
+        .replace(/{owner_phone}/g, settings.owner_phone || '')
+        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+        .replace(/{signature}/g, signature);
 
       console.log(`[onContactStatusChange] 📝 Message prepared (${messageText.length} chars)`);
 
@@ -89,7 +92,6 @@ Deno.serve(async (req) => {
             metadata: { template_key: 'DJ_BOOKING_FORM', simulated: true },
           });
         } else {
-          // Real WhatsApp send via GREEN API
           console.log('[onContactStatusChange] 📱 Sending via GREEN API');
           const GREEN_ID = Deno.env.get('GREEN_ID');
           const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
@@ -115,6 +117,21 @@ Deno.serve(async (req) => {
           const whatsappResult = await whatsappResponse.json();
           if (whatsappResponse.ok && whatsappResult.idMessage) {
             console.log(`[onContactStatusChange] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
+
+            // Send logo
+            if (logoUrl) {
+              try {
+                const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
+                await fetch(logoApiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
+                });
+              } catch (logoErr) {
+                console.error(`[onContactStatusChange] ⚠ Logo send failed: ${logoErr.message}`);
+              }
+            }
+
             await base44.asServiceRole.entities.ConversationMessage.create({
               contact_id: contact.id,
               channel: 'WHATSAPP',

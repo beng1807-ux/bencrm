@@ -34,6 +34,8 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Automations disabled' });
     }
     const settings = settingsList[0];
+    const signature = settings.signature_text || 'קבוצת סקיצה';
+    const logoUrl = settings.logo_url_for_messages || '';
     console.log(`[onNewContact] ✓ Settings loaded. WhatsApp mode: ${settings.whatsapp_send_mode}`);
 
     // בדיקת כפילויות
@@ -70,15 +72,16 @@ Deno.serve(async (req) => {
         const template = templateList[0];
         const eventDateFormatted = contact.event_date ? new Date(contact.event_date).toLocaleDateString('he-IL') : '';
         const messageText = template.template_text
-          .replace('[שם]', contact.contact_name || '')
-          .replace('[תאריך]', eventDateFormatted)
-          .replace('[טלפון בן גבאי]', settings.owner_phone || '')
-          .replace('{contact_name}', contact.contact_name || '')
-          .replace('{event_date}', eventDateFormatted)
-          .replace('{event_type}', contact.event_type || '')
-          .replace('{owner_name}', settings.owner_name || '')
-          .replace('{owner_phone}', settings.owner_phone || '')
-          .replace('{owner_whatsapp_phone}', settings.owner_whatsapp_phone || settings.owner_phone || '');
+          .replace(/\[שם\]/g, contact.contact_name || '')
+          .replace(/\[תאריך\]/g, eventDateFormatted)
+          .replace(/\[טלפון בן גבאי\]/g, settings.owner_phone || '')
+          .replace(/{contact_name}/g, contact.contact_name || '')
+          .replace(/{event_date}/g, eventDateFormatted)
+          .replace(/{event_type}/g, contact.event_type || '')
+          .replace(/{owner_name}/g, signature)
+          .replace(/{owner_phone}/g, settings.owner_phone || '')
+          .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+          .replace(/{signature}/g, signature);
 
         console.log(`[onNewContact] 📝 Message prepared (${messageText.length} chars)`);
 
@@ -153,6 +156,20 @@ Deno.serve(async (req) => {
                 console.log(`[onNewContact] 📎 PDF attachment sent: ${pdfResult.idMessage || 'unknown'}`);
               } catch (pdfErr) {
                 console.error(`[onNewContact] ⚠ PDF send failed: ${pdfErr.message}`);
+              }
+            }
+
+            // Send logo if configured
+            if (logoUrl) {
+              try {
+                const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
+                await fetch(logoApiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
+                });
+              } catch (logoErr) {
+                console.error(`[onNewContact] ⚠ Logo send failed: ${logoErr.message}`);
               }
             }
 
