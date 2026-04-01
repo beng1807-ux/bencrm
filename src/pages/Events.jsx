@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Calendar, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -36,6 +36,12 @@ const isEventDjLead = (event, contacts) => {
   return contact?.is_dj_lead === true;
 };
 
+const isEventSkitzaPackage = (event, contacts) => {
+  if (!event.contact_id) return false;
+  const contact = contacts.find(c => c.id === event.contact_id);
+  return contact?.skitza_package_selected === true;
+};
+
 export default function Events() {
   const [events, setEvents] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -58,8 +64,12 @@ export default function Events() {
   const [appSettings, setAppSettings] = useState({});
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [pendingPaymentStatus, setPendingPaymentStatus] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
 
   // Handle URL params for deep linking
   useEffect(() => {
@@ -328,29 +338,32 @@ export default function Events() {
               const dj = djs.find(d => d.id === event.dj_id);
               const isCancelled = event.event_status === 'CANCELLED';
               const hasDjSkitza = isEventDjLead(event, contacts);
+              const hasSkitzaPackage = isEventSkitzaPackage(event, contacts);
+              const isAdmin = currentUser?.role === 'admin';
               return (
                 <div key={event.id}
                   onClick={() => openEdit(event)}
                   className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''} ${selected.has(event.id) ? 'border-primary/40 bg-primary/5' : ''}`}>
-                  <div className="absolute top-6 left-6 flex items-center gap-2">
-                    {hasDjSkitza && <span className="text-[10px] font-black px-3 py-1 rounded-lg bg-violet-100 text-violet-700 flex items-center gap-1"><Music className="w-3 h-3" />DJ סקיצה</span>}
-                    <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${getStatusColor(event.event_status)}`}>
-                      {STATUS_LABELS[event.event_status]}
-                    </span>
-                  </div>
                   <div className="absolute top-6 right-6" onClick={e => e.stopPropagation()}>
                     <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id)} />
                   </div>
-                  <div className="mb-6 pr-8">
+                  <div className="mb-3 pr-8">
                     <h4 className={`text-xl font-black text-slate-900 ${isCancelled ? 'line-through' : ''}`}>{event.event_type}</h4>
                     <p className="text-sm font-bold text-slate-400">{customerName} {event.location ? `• ${event.location}` : ''}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-lg ${getStatusColor(event.event_status)}`}>
+                      {STATUS_LABELS[event.event_status]}
+                    </span>
+                    {hasDjSkitza && <span className="text-[10px] font-black px-3 py-1 rounded-lg bg-violet-100 text-violet-700 flex items-center gap-1"><Music className="w-3 h-3" />DJ סקיצה</span>}
+                    {hasSkitzaPackage && <span className="text-[10px] font-black px-3 py-1 rounded-lg bg-orange-100 text-orange-600 flex items-center gap-1"><Sparkles className="w-3 h-3" />חבילת סקיצה</span>}
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-500">
                       <Calendar className="w-5 h-5" />
                       <span className="text-sm font-bold">{new Date(event.event_date).toLocaleDateString('he-IL')}</span>
                     </div>
-                    {event.price_total > 0 && (
+                    {isAdmin && event.price_total > 0 && (
                       <div className="flex items-center gap-2 text-slate-900 font-black">
                         <span>₪{event.price_total?.toLocaleString()}</span>
                       </div>
@@ -398,6 +411,8 @@ export default function Events() {
                   const dj = djs.find(d => d.id === event.dj_id);
                   const isCancelled = event.event_status === 'CANCELLED';
                   const hasDjSkitza = isEventDjLead(event, contacts);
+                  const hasSkitzaPackage = isEventSkitzaPackage(event, contacts);
+                  const isAdmin = currentUser?.role === 'admin';
                   const eventDate = new Date(event.event_date);
                   const dayName = eventDate.toLocaleDateString('he-IL', { weekday: 'long' });
                   
@@ -439,11 +454,12 @@ export default function Events() {
                       <td className="px-6 py-6 text-sm font-bold text-slate-600">
                         <span className="flex items-center gap-1.5">
                           {hasDjSkitza && <span className="w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center flex-shrink-0" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
+                          {hasSkitzaPackage && <span className="w-5 h-5 rounded-full bg-orange-100 inline-flex items-center justify-center flex-shrink-0" title="חבילת סקיצה"><Sparkles className="w-3 h-3 text-orange-500" /></span>}
                           {hasDjSkitza ? (dj?.name || <span className="italic text-slate-400">טרם שובץ</span>) : <span className="italic text-slate-400">ללא DJ סקיצה</span>}
                         </span>
                       </td>
                       <td className="px-6 py-6">
-                        <span className="text-base font-black text-slate-900">₪{event.price_total?.toLocaleString()}</span>
+                        {isAdmin ? <span className="text-base font-black text-slate-900">₪{event.price_total?.toLocaleString()}</span> : <span className="text-slate-400">—</span>}
                       </td>
                       <td className="px-6 py-6">
                         <span className={`text-[10px] font-black px-3 py-1 rounded-full ${getStatusColor(event.event_status)}`}>
