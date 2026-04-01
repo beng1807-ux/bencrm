@@ -45,20 +45,30 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Event already exists', event_id: existingEvents[0].id });
     }
 
-    // Update contact to customer type
+    // Determine if DJ-only event (third party paid, no Skitza package)
+    const isDjOnly = contact.is_dj_lead && !contact.skitza_package_selected;
+    const isThirdPartyPaid = isDjOnly;
+
+    // Update contact to customer type + set dj_only_event flag
     await base44.asServiceRole.entities.Contact.update(contact.id, {
       contact_type: 'customer',
       total_events: (contact.total_events || 0) + 1,
+      dj_only_event: isDjOnly,
     });
-    console.log(`[dealClosedHandler] Contact upgraded to customer: ${contact.id}`);
+    console.log(`[dealClosedHandler] Contact upgraded to customer: ${contact.id} (DJ only: ${isDjOnly})`);
 
-    // Get default package
-    const packages = await base44.asServiceRole.entities.Package.filter({ item_type: 'PACKAGE', active: true });
-    const defaultPackage = packages[0];
+    // Get default package (skip pricing for DJ-only events)
+    let defaultPackage = null;
+    let priceTotal = 0;
+    let depositAmount = 0;
 
-    const depositPercent = settings.default_deposit_percent || 30;
-    const priceTotal = defaultPackage?.price || 0;
-    const depositAmount = priceTotal * (depositPercent / 100);
+    if (!isDjOnly) {
+      const packages = await base44.asServiceRole.entities.Package.filter({ item_type: 'PACKAGE', active: true });
+      defaultPackage = packages[0];
+      const depositPercent = settings.default_deposit_percent || 30;
+      priceTotal = defaultPackage?.price || 0;
+      depositAmount = priceTotal * (depositPercent / 100);
+    }
 
     // Create event
     const newEvent = await base44.asServiceRole.entities.Event.create({
@@ -69,10 +79,11 @@ Deno.serve(async (req) => {
       addon_ids: [],
       price_total: priceTotal,
       deposit_amount: depositAmount,
-      payment_status: 'PENDING',
-      balance_amount: priceTotal,
-      contract_status: 'DRAFT',
+      payment_status: isDjOnly ? 'PAID_FULL' : 'PENDING',
+      balance_amount: isDjOnly ? 0 : priceTotal,
+      contract_status: isDjOnly ? 'SIGNED' : 'DRAFT',
       event_status: 'PENDING',
+      is_third_party_paid: isThirdPartyPaid,
     });
     console.log(`[dealClosedHandler] Event created: ${newEvent.id}`);
 

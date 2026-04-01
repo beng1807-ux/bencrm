@@ -119,6 +119,16 @@
       "default": false,
       "description": "\u05d4\u05d0\u05dd \u05d1\u05d7\u05e8 DJ \u05e9\u05dc \u05e1\u05e7\u05d9\u05e6\u05d4"
     },
+    "dj_only_event": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05de\u05d3\u05d5\u05d1\u05e8 \u05d1\u05d0\u05d9\u05e8\u05d5\u05e2 DJ \u05d1\u05dc\u05d1\u05d3 (\u05dc\u05dc\u05d0 \u05d7\u05d1\u05d9\u05dc\u05ea \u05e1\u05e7\u05d9\u05e6\u05d4) - \u05ea\u05e9\u05dc\u05d5\u05dd \u05e6\u05d3 \u05e9\u05dc\u05d9\u05e9\u05d9"
+    },
+    "skitza_package_selected": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d1\u05d7\u05e8 \u05d2\u05dd \u05d7\u05d1\u05d9\u05dc\u05ea \u05e1\u05e7\u05d9\u05e6\u05d4 (\u05d1\u05e0\u05d5\u05e1\u05e3 \u05dc-DJ \u05d0\u05d5 \u05d1\u05dc\u05e2\u05d3\u05d9\u05d5)"
+    },
     "status": {
       "type": "string",
       "enum": [

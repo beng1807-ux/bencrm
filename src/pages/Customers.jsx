@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake, ChevronDown, Users, Music } from 'lucide-react';
+import { Plus, Search, Calendar, Phone, Trash2, Filter, LayoutGrid, Table, Pencil, Handshake, ChevronDown, Users, Music, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -82,6 +82,15 @@ function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, select
 }
 
 // ── KanbanCard ───────────────────────────────────────────────────
+const SOURCE_LABELS = {
+  'BASE44_FORM': 'טופס הזמנה',
+  'EVENT_SQUARE_IMPORT': 'אירוע בריבוע',
+  'PHONE': 'טלפון',
+  'EMAIL': 'אימייל',
+  'REFERRAL': 'המלצה',
+  'OTHER': 'אחר',
+};
+
 function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSelect, onCloseDeal }) {
   const isDone = colKey === 'EVENT_DONE';
   const typeInfo = EVENT_TYPE_ICONS[lead.event_type] || { emoji: '📌', label: lead.event_type };
@@ -120,6 +129,11 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span>{lead.event_date ? new Date(lead.event_date).toLocaleDateString('he-IL') : '—'}</span>
         </div>
+        {lead.source && (
+          <div className="text-xs text-gray-400 mt-0.5">
+            מקור: {SOURCE_LABELS[lead.source] || lead.source}
+          </div>
+        )}
       </div>
       {LEAD_COLS.some(c => c.key === lead.status) && (
         <button
@@ -581,6 +595,8 @@ export default function Customers() {
                     <div><Label className="text-xs text-gray-400">סוג אירוע</Label><p className="font-bold">{selectedLead.event_type}</p></div>
                     {selectedLead.celebrant_name && <div><Label className="text-xs text-gray-400">שם החוגג/ת</Label><p className="font-bold">{selectedLead.celebrant_name}</p></div>}
                     {selectedLead.guests_count && <div><Label className="text-xs text-gray-400">מוזמנים</Label><p className="font-bold">{selectedLead.guests_count}</p></div>}
+                    <div><Label className="text-xs text-gray-400">מקור</Label><p className="font-bold">{SOURCE_LABELS[selectedLead.source] || selectedLead.source || '—'}</p></div>
+                    <div><Label className="text-xs text-gray-400">תאריך יצירה</Label><p className="font-bold">{selectedLead.created_date ? new Date(selectedLead.created_date).toLocaleDateString('he-IL') : '—'}</p></div>
                   </div>
 
                   <Collapsible>
@@ -710,6 +726,22 @@ export default function Customers() {
               }`}>
                 <Music className={`w-4 h-4 ${editData.is_dj_lead ? 'text-green-600' : 'text-gray-400'}`} />
                 DJ סקיצה {editData.is_dj_lead ? '✓' : ''}
+              </label>
+            </div>
+            <div className={`col-span-2 flex items-center gap-3 py-3 px-4 rounded-lg border-2 transition-all duration-200 ${
+              editData.skitza_package_selected ? 'bg-orange-100 border-orange-500' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <Checkbox
+                id="skitza-pkg-checkbox"
+                checked={editData.skitza_package_selected === true}
+                onCheckedChange={v => setEditData(prev => ({...prev, skitza_package_selected: !!v}))}
+                className={editData.skitza_package_selected ? 'border-orange-600 data-[state=checked]:bg-orange-600' : ''}
+              />
+              <label htmlFor="skitza-pkg-checkbox" className={`flex items-center gap-1.5 text-sm font-bold cursor-pointer select-none ${
+                editData.skitza_package_selected ? 'text-orange-800' : 'text-gray-500'
+              }`}>
+                <Sparkles className={`w-4 h-4 ${editData.skitza_package_selected ? 'text-orange-600' : 'text-gray-400'}`} />
+                חבילת סקיצה {editData.skitza_package_selected ? '✓' : ''}
               </label>
             </div>
             <div className="col-span-2">

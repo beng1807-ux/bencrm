@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
 
     for (const event of events) {
       if (event.payment_status === 'PAID_FULL') continue;
+      // Skip third-party paid events (DJ-only via אולמות הבריאה)
+      if (event.is_third_party_paid) continue;
 
       const eventDate = new Date(event.event_date);
       const daysUntilEvent = Math.round((eventDate - today) / (1000 * 60 * 60 * 24));

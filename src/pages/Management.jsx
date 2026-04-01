@@ -273,6 +273,34 @@ export default function Management() {
               </div>
 
               <div className="border-t pt-6">
+                <h3 className="font-semibold mb-4">PDF להודעת פתיחה</h3>
+                <p className="text-xs text-gray-400 mb-3">קובץ PDF שיצורף אוטומטית להודעת הפתיחה שנשלחת לליד חדש בוואטסאפ</p>
+                <div className="flex items-center gap-4">
+                  {settings.new_lead_pdf_url && (
+                    <a href={settings.new_lead_pdf_url} target="_blank" rel="noopener noreferrer" className="text-sm text-orange-600 hover:underline flex items-center gap-1">
+                      <FileText className="w-4 h-4" />צפה ב-PDF הנוכחי
+                    </a>
+                  )}
+                  <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors">
+                    <Upload size={16} />
+                    {settings.new_lead_pdf_url ? 'החלף PDF' : 'העלה PDF'}
+                    <input type="file" accept=".pdf" className="hidden" onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      try {
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setSettings(prev => ({ ...prev, new_lead_pdf_url: file_url }));
+                        toast.success('PDF הועלה בהצלחה');
+                      } catch { toast.error('שגיאה בהעלאה'); }
+                    }} />
+                  </label>
+                  {settings.new_lead_pdf_url && (
+                    <button onClick={() => setSettings(prev => ({ ...prev, new_lead_pdf_url: '' }))} className="text-xs text-red-500 hover:underline">הסר PDF</button>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">WhatsApp</h3>
                 <div className="space-y-4">
                   <div>

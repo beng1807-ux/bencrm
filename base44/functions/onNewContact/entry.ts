@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
           }
           console.log(`[onNewContact] 📞 Normalized phone: ${phoneNumber}`);
 
+          // Send text message
           const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
           const whatsappResponse = await fetch(greenApiUrl, {
             method: 'POST',
@@ -133,11 +134,33 @@ Deno.serve(async (req) => {
 
           if (whatsappResponse.ok && whatsappResult.idMessage) {
             console.log(`[onNewContact] ✅ WhatsApp sent successfully: ${whatsappResult.idMessage}`);
+
+            // Send PDF attachment if configured
+            if (settings.new_lead_pdf_url) {
+              try {
+                const pdfApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
+                const pdfResponse = await fetch(pdfApiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    chatId: `${phoneNumber}@c.us`,
+                    urlFile: settings.new_lead_pdf_url,
+                    fileName: 'skitza-info.pdf',
+                    caption: '',
+                  }),
+                });
+                const pdfResult = await pdfResponse.json();
+                console.log(`[onNewContact] 📎 PDF attachment sent: ${pdfResult.idMessage || 'unknown'}`);
+              } catch (pdfErr) {
+                console.error(`[onNewContact] ⚠ PDF send failed: ${pdfErr.message}`);
+              }
+            }
+
             await base44.asServiceRole.entities.ConversationMessage.create({
               contact_id: contact.id,
               channel: 'WHATSAPP',
               sender: 'OWNER',
-              message_text: messageText,
+              message_text: messageText + (settings.new_lead_pdf_url ? '\n📎 PDF מצורף' : ''),
               timestamp: new Date().toISOString(),
             });
 
@@ -145,8 +168,8 @@ Deno.serve(async (req) => {
               entity_name: 'Contact',
               entity_id: contact.id,
               action: 'SEND_MESSAGE',
-              diff_summary: 'הודעת NEW_LEAD נשלחה בוואטסאפ',
-              metadata: { template_key: 'NEW_LEAD', whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
+              diff_summary: 'הודעת NEW_LEAD נשלחה בוואטסאפ' + (settings.new_lead_pdf_url ? ' + PDF' : ''),
+              metadata: { template_key: 'NEW_LEAD', whatsapp_id: whatsappResult.idMessage, phone: phoneNumber, pdf_attached: !!settings.new_lead_pdf_url },
             });
           } else {
             throw new Error(`WhatsApp send failed: ${JSON.stringify(whatsappResult)}`);

@@ -1,0 +1,176 @@
+{
+  "type": "object",
+  "properties": {
+    "app_name": {
+      "type": "string",
+      "default": "\u05e1\u05e7\u05d9\u05e6\u05d4"
+    },
+    "owner_name": {
+      "type": "string",
+      "default": "\u05d1\u05df \u05d2\u05d1\u05d0\u05d9"
+    },
+    "owner_phone": {
+      "type": "string"
+    },
+    "owner_whatsapp_phone": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string",
+      "format": "email",
+      "default": "beng1807@gmail.com",
+      "description": "\u05de\u05d9\u05d9\u05dc \u05d1\u05e2\u05dc \u05d4\u05e2\u05e1\u05e7 \u05dc\u05e7\u05d1\u05dc\u05ea \u05d4\u05ea\u05e8\u05d0\u05d5\u05ea"
+    },
+    "brand_primary_color": {
+      "type": "string",
+      "default": "#e94f1c"
+    },
+    "brand_bg_color": {
+      "type": "string",
+      "default": "#F3F4F6"
+    },
+    "brand_heading_color": {
+      "type": "string",
+      "default": "#1E293B"
+    },
+    "app_font": {
+      "type": "string",
+      "enum": [
+        "Rubik",
+        "Assistant"
+      ],
+      "default": "Assistant"
+    },
+    "send_hour": {
+      "type": "number",
+      "default": 10
+    },
+    "send_minute": {
+      "type": "number",
+      "default": 0
+    },
+    "payment_reminder_1_days_before": {
+      "type": "number",
+      "default": 14
+    },
+    "payment_reminder_2_days_before": {
+      "type": "number",
+      "default": 7
+    },
+    "event_reminder_days_before": {
+      "type": "number",
+      "default": 1
+    },
+    "thank_you_days_after": {
+      "type": "number",
+      "default": 1
+    },
+    "quote_followup_hours": {
+      "type": "number",
+      "default": 24
+    },
+    "dj_missing_days_before": {
+      "type": "number",
+      "default": 7
+    },
+    "whatsapp_send_mode": {
+      "type": "string",
+      "enum": [
+        "\u05dc\u05d5\u05d2 \u05d1\u05dc\u05d1\u05d3",
+        "\u05e9\u05dc\u05d9\u05d7\u05d4 \u05d0\u05de\u05d9\u05ea\u05d9\u05ea"
+      ],
+      "default": "\u05dc\u05d5\u05d2 \u05d1\u05dc\u05d1\u05d3"
+    },
+    "whatsapp_retry_minutes": {
+      "type": "number",
+      "default": 5
+    },
+    "whatsapp_retry_max_attempts": {
+      "type": "number",
+      "default": 2
+    },
+    "quote_pdf_logo": {
+      "type": "string"
+    },
+    "quote_terms_text": {
+      "type": "string"
+    },
+    "quote_validity_days": {
+      "type": "number",
+      "default": 7
+    },
+    "default_deposit_percent": {
+      "type": "number",
+      "default": 30
+    },
+    "enable_deposit_auto_calc": {
+      "type": "boolean",
+      "default": true
+    },
+    "automations_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "new_lead_pdf_url": {
+      "type": "string",
+      "description": "\u05e7\u05d5\u05d1\u05e5 PDF \u05e9\u05d9\u05e6\u05d5\u05e8\u05e3 \u05dc\u05d4\u05d5\u05d3\u05e2\u05ea \u05e4\u05ea\u05d9\u05d7\u05d4 \u05dc\u05dc\u05d9\u05d3 \u05d7\u05d3\u05e9"
+    },
+    "dashboard_greeting": {
+      "type": "string",
+      "default": "\u05d4\u05d9\u05d9 {name}, \u05de\u05d4 \u05e7\u05d5\u05e8\u05d4 \u05d4\u05d9\u05d5\u05dd?"
+    },
+    "dashboard_subtitle": {
+      "type": "string",
+      "default": "\u05d4\u05e0\u05d4 \u05e1\u05e7\u05d9\u05e8\u05d4 \u05e9\u05dc \u05de\u05d4 \u05e9\u05e7\u05d5\u05e8\u05d4 \u05d1\u05e1\u05d8\u05d5\u05d3\u05d9\u05d5 \u05e9\u05dc\u05da \u05db\u05e8\u05d2\u05e2."
+    },
+    "dashboard_stat_new_leads": {
+      "type": "string",
+      "default": "\u05dc\u05d9\u05d3\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd"
+    },
+    "dashboard_stat_upcoming_events": {
+      "type": "string",
+      "default": "\u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd \u05e7\u05e8\u05d5\u05d1\u05d9\u05dd"
+    },
+    "dashboard_stat_monthly_revenue": {
+      "type": "string",
+      "default": "\u05d4\u05db\u05e0\u05e1\u05d4 \u05d7\u05d5\u05d3\u05e9\u05d9\u05ea"
+    },
+    "dashboard_chart_title": {
+      "type": "string",
+      "default": "\u05e4\u05d9\u05dc\u05d5\u05d7 \u05dc\u05d9\u05d3\u05d9\u05dd \u05e9\u05d1\u05d5\u05e2\u05d9"
+    },
+    "dashboard_activity_title": {
+      "type": "string",
+      "default": "\u05e4\u05e2\u05d9\u05dc\u05d5\u05ea \u05d0\u05d7\u05e8\u05d5\u05e0\u05d4"
+    }
+  },
+  "required": [],
+  "name": "AppSettings",
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
