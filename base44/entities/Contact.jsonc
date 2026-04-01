@@ -155,6 +155,7 @@
         "PHONE",
         "EMAIL",
         "REFERRAL",
+        "MANUAL",
         "OTHER"
       ],
       "default": "BASE44_FORM",

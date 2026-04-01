@@ -88,6 +88,7 @@ const SOURCE_LABELS = {
   'PHONE': 'טלפון',
   'EMAIL': 'אימייל',
   'REFERRAL': 'המלצה',
+  'MANUAL': 'הוספה ידנית',
   'OTHER': 'אחר',
 };
 
@@ -106,8 +107,9 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => { e.stopPropagation(); onSelect(lead.id); }} className="flex-shrink-0" />
-          {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
-          <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug truncate">
+           {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
+           {lead.skitza_package_selected && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center" title="חבילת סקיצה"><Sparkles className="w-3 h-3 text-orange-500" /></span>}
+           <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug truncate">
             {lead.contact_name}
             {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
           </h4>
@@ -185,6 +187,7 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
                 <td className="px-4 py-3 font-bold text-[#181311]">
                    <span className="flex items-center gap-1.5">
                      {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
+                     {lead.skitza_package_selected && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 inline-flex items-center justify-center" title="חבילת סקיצה"><Sparkles className="w-3 h-3 text-orange-500" /></span>}
                      {lead.contact_name}
                      {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
                    </span>
@@ -377,7 +380,7 @@ export default function Customers() {
       return;
     }
     try {
-      await base44.entities.Contact.create({ ...newLead, status: 'NEW', contact_type: 'lead' });
+      await base44.entities.Contact.create({ ...newLead, status: 'NEW', contact_type: 'lead', source: 'MANUAL' });
       await loadLeads();
       toast.success('נוצר בהצלחה');
       setCreateOpen(false);
