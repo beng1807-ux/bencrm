@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       // Get booking form link
       const bfSettings = await base44.asServiceRole.entities.BookingFormSettings.list();
       const appId = Deno.env.get('BASE44_APP_ID') || '';
-      const formLink = bfSettings[0]?.form_link || `https://app.base44.com/apps/${appId}/BookingForm`;
+      const formLink = bfSettings[0]?.form_link || `https://preview-sandbox--${appId}.base44.app/BookingForm`;
       console.log(`[onContactStatusChange] 🔗 Form link: ${formLink}`);
 
       const template = templateList[0];
