@@ -4,16 +4,25 @@ Deno.serve(async (req) => {
   console.log('[onDJAssigned] ▶ Triggered');
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data: eventData, old_data } = await req.json();
+    const payload = await req.json();
+    const { event: triggerEvent, data: eventData, old_data } = payload;
 
-    // בדיקה שה-DJ השתנה
+    // Get the real event ID from the automation trigger
+    const eventId = triggerEvent?.entity_id || eventData?.id;
+    if (!eventId) {
+      console.error('[onDJAssigned] ✖ No event ID found in payload');
+      return Response.json({ error: 'No event ID' }, { status: 400 });
+    }
+    console.log(`[onDJAssigned] Event ID: ${eventId}`);
+
+    // Check if DJ actually changed
     if (!eventData.dj_id || eventData.dj_id === old_data?.dj_id) {
       console.log('[onDJAssigned] ℹ No DJ change - skipping');
       return Response.json({ message: 'No DJ change' });
     }
-    console.log(`[onDJAssigned] ✓ DJ changed to: ${eventData.dj_id}`);
+    console.log(`[onDJAssigned] ✓ DJ changed from ${old_data?.dj_id || 'none'} to ${eventData.dj_id}`);
 
-    // בדיקת הגדרות
+    // Load settings
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
       return Response.json({ message: 'Automations disabled' });
@@ -22,79 +31,102 @@ Deno.serve(async (req) => {
     const signature = settings.signature_text || 'קבוצת סקיצה';
     const logoUrl = settings.logo_url_for_messages || '';
 
-    // טעינת נתונים
-    let dj, contact;
+    // Load DJ
+    let dj;
     try {
-      [dj, contact] = await Promise.all([
-        base44.asServiceRole.entities.DJ.get(eventData.dj_id),
-        base44.asServiceRole.entities.Contact.get(eventData.contact_id).catch(() => null),
-      ]);
-    } catch (fetchErr) {
-      console.error(`[onDJAssigned] ✖ Failed to fetch DJ/Contact: ${fetchErr.message}`);
-      return Response.json({ error: fetchErr.message }, { status: 500 });
+      dj = await base44.asServiceRole.entities.DJ.get(eventData.dj_id);
+    } catch (err) {
+      console.error(`[onDJAssigned] ✖ Failed to fetch DJ ${eventData.dj_id}: ${err.message}`);
+      return Response.json({ error: 'DJ not found' }, { status: 404 });
     }
+    console.log(`[onDJAssigned] ✓ DJ: ${dj.name} (${dj.phone})`);
 
-    if (!dj) {
-      return Response.json({ message: 'DJ not found' });
+    // Load contact
+    let contact = null;
+    if (eventData.contact_id) {
+      try {
+        contact = await base44.asServiceRole.entities.Contact.get(eventData.contact_id);
+        console.log(`[onDJAssigned] ✓ Contact: ${contact.contact_name} (${contact.phone})`);
+      } catch (err) {
+        console.error(`[onDJAssigned] ✖ Failed to fetch Contact ${eventData.contact_id}: ${err.message}`);
+      }
     }
-    console.log(`[onDJAssigned] ✓ DJ: ${dj.name}, Contact: ${contact?.contact_name || 'unknown'}`);
 
     const eventDateFormatted = new Date(eventData.event_date).toLocaleDateString('he-IL');
 
-    // ── 1. הודעה ללקוח (DJ_ASSIGNED) ──
-    const customerTemplateList = await base44.asServiceRole.entities.MessageTemplate.filter({
-      template_key: 'DJ_ASSIGNED',
-      active: true,
-    });
+    // Build deep link to event
+    const appId = Deno.env.get('BASE44_APP_ID') || '';
+    const eventLink = `https://preview-sandbox--${appId}.base44.app/Events?eventId=${eventId}`;
 
-    if (customerTemplateList.length > 0 && contact) {
-      const template = customerTemplateList[0];
-      const messageText = template.template_text
-        .replace(/{customer_name}/g, contact.contact_name || '')
-        .replace(/{contact_name}/g, contact.contact_name || '')
-        .replace(/{dj_name}/g, dj.name || '')
-        .replace(/{dj_phone}/g, dj.phone || '')
-        .replace(/{event_date}/g, eventDateFormatted)
-        .replace(/{location}/g, eventData.location || 'לא צוין')
-        .replace(/{event_type}/g, eventData.event_type || '')
-        .replace(/{owner_name}/g, signature)
-        .replace(/{owner_phone}/g, settings.owner_phone || '')
-        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
-        .replace(/{signature}/g, signature);
-
-      await sendWhatsAppMessage(base44, settings, contact.phone, messageText, logoUrl, {
-        contact_id: contact.id,
-        event_id: eventData.id,
+    // ── 1. Send message to CUSTOMER (DJ_ASSIGNED template) ──
+    if (contact && contact.phone) {
+      const customerTemplateList = await base44.asServiceRole.entities.MessageTemplate.filter({
         template_key: 'DJ_ASSIGNED',
-        log_summary: `הודעת שיבוץ DJ נשלחה ללקוח ${contact.contact_name}`,
+        active: true,
       });
+
+      if (customerTemplateList.length > 0) {
+        const template = customerTemplateList[0];
+        const messageText = template.template_text
+          .replace(/{customer_name}/g, contact.contact_name || '')
+          .replace(/{contact_name}/g, contact.contact_name || '')
+          .replace(/{dj_name}/g, dj.name || '')
+          .replace(/{dj_phone}/g, dj.phone || '')
+          .replace(/{event_date}/g, eventDateFormatted)
+          .replace(/{location}/g, eventData.location || 'לא צוין')
+          .replace(/{event_type}/g, eventData.event_type || '')
+          .replace(/{owner_name}/g, signature)
+          .replace(/{owner_phone}/g, settings.owner_phone || '')
+          .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+          .replace(/{signature}/g, signature);
+
+        console.log(`[onDJAssigned] 📱 Sending DJ_ASSIGNED to CUSTOMER: ${contact.phone}`);
+        await sendWhatsAppMessage(base44, settings, contact.phone, messageText, logoUrl, {
+          contact_id: contact.id,
+          event_id: eventId,
+          template_key: 'DJ_ASSIGNED',
+          log_summary: `הודעת שיבוץ DJ נשלחה ללקוח ${contact.contact_name}`,
+        });
+      } else {
+        console.warn('[onDJAssigned] ⚠ No active DJ_ASSIGNED template found');
+      }
+    } else {
+      console.warn('[onDJAssigned] ⚠ No contact or no phone - skipping customer message');
     }
 
-    // ── 2. הודעה ל-DJ (DJ_BOOKING_CONFIRM) ──
-    const djTemplateList = await base44.asServiceRole.entities.MessageTemplate.filter({
-      template_key: 'DJ_BOOKING_CONFIRM',
-      active: true,
-    });
-
-    if (djTemplateList.length > 0) {
-      const template = djTemplateList[0];
-      const messageText = template.template_text
-        .replace(/{dj_name}/g, dj.name || '')
-        .replace(/{customer_name}/g, contact?.contact_name || '')
-        .replace(/{contact_name}/g, contact?.contact_name || '')
-        .replace(/{event_date}/g, eventDateFormatted)
-        .replace(/{location}/g, eventData.location || 'לא צוין')
-        .replace(/{event_type}/g, eventData.event_type || '')
-        .replace(/{owner_name}/g, signature)
-        .replace(/{owner_phone}/g, settings.owner_phone || '')
-        .replace(/{signature}/g, signature);
-
-      await sendWhatsAppMessage(base44, settings, dj.phone, messageText, logoUrl, {
-        contact_id: contact?.id || eventData.contact_id,
-        event_id: eventData.id,
+    // ── 2. Send message to DJ (DJ_BOOKING_CONFIRM template) ──
+    if (dj && dj.phone) {
+      const djTemplateList = await base44.asServiceRole.entities.MessageTemplate.filter({
         template_key: 'DJ_BOOKING_CONFIRM',
-        log_summary: `הודעת שיבוץ נשלחה ל-DJ ${dj.name}`,
+        active: true,
       });
+
+      if (djTemplateList.length > 0) {
+        const template = djTemplateList[0];
+        const messageText = template.template_text
+          .replace(/{dj_name}/g, dj.name || '')
+          .replace(/{customer_name}/g, contact?.contact_name || '')
+          .replace(/{contact_name}/g, contact?.contact_name || '')
+          .replace(/{event_date}/g, eventDateFormatted)
+          .replace(/{location}/g, eventData.location || 'לא צוין')
+          .replace(/{event_type}/g, eventData.event_type || '')
+          .replace(/{event_link}/g, eventLink)
+          .replace(/{owner_name}/g, signature)
+          .replace(/{owner_phone}/g, settings.owner_phone || '')
+          .replace(/{signature}/g, signature);
+
+        console.log(`[onDJAssigned] 📱 Sending DJ_BOOKING_CONFIRM to DJ: ${dj.phone}`);
+        await sendWhatsAppMessage(base44, settings, dj.phone, messageText, logoUrl, {
+          contact_id: contact?.id || '',
+          event_id: eventId,
+          template_key: 'DJ_BOOKING_CONFIRM',
+          log_summary: `הודעת שיבוץ נשלחה ל-DJ ${dj.name}`,
+        });
+      } else {
+        console.warn('[onDJAssigned] ⚠ No active DJ_BOOKING_CONFIRM template found');
+      }
+    } else {
+      console.warn('[onDJAssigned] ⚠ No DJ phone - skipping DJ message');
     }
 
     console.log('[onDJAssigned] ✅ Done');
@@ -108,20 +140,25 @@ Deno.serve(async (req) => {
 async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl, meta) {
   try {
     if (settings.whatsapp_send_mode === 'לוג בלבד') {
-      await base44.asServiceRole.entities.ConversationMessage.create({
-        contact_id: meta.contact_id,
-        event_id: meta.event_id,
+      console.log(`[onDJAssigned] ℹ Log-only: ${meta.template_key} → ${phone}`);
+      
+      const msgData = {
+        event_id: meta.event_id || undefined,
         channel: 'SYSTEM',
         sender: 'SYSTEM',
         message_text: messageText,
         timestamp: new Date().toISOString(),
-      });
+      };
+      // Only add contact_id if it exists
+      if (meta.contact_id) msgData.contact_id = meta.contact_id;
+      
+      await base44.asServiceRole.entities.ConversationMessage.create(msgData);
       await base44.asServiceRole.entities.AuditLog.create({
         entity_name: 'Event',
         entity_id: meta.event_id,
         action: 'SEND_MESSAGE',
         diff_summary: meta.log_summary + ' (לוג)',
-        metadata: { template_key: meta.template_key, simulated: true },
+        metadata: { template_key: meta.template_key, simulated: true, phone },
       });
     } else {
       const GREEN_ID = Deno.env.get('GREEN_ID');
@@ -133,7 +170,8 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
       if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
       if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
 
-      // שליחת הודעת טקסט
+      console.log(`[onDJAssigned] 📤 Sending ${meta.template_key} to ${phoneNumber}`);
+
       const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
       const res = await fetch(greenApiUrl, {
         method: 'POST',
@@ -145,9 +183,9 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
       if (!res.ok || !result.idMessage) {
         throw new Error(`WhatsApp send failed: ${JSON.stringify(result)}`);
       }
-      console.log(`[onDJAssigned] ✅ WhatsApp sent (${meta.template_key}): ${result.idMessage}`);
+      console.log(`[onDJAssigned] ✅ WhatsApp sent (${meta.template_key}) to ${phoneNumber}: ${result.idMessage}`);
 
-      // שליחת לוגו אחרי ההודעה
+      // Send logo
       if (logoUrl) {
         try {
           const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
@@ -161,14 +199,16 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
         }
       }
 
-      await base44.asServiceRole.entities.ConversationMessage.create({
-        contact_id: meta.contact_id,
-        event_id: meta.event_id,
+      const msgData = {
+        event_id: meta.event_id || undefined,
         channel: 'WHATSAPP',
         sender: 'OWNER',
         message_text: messageText,
         timestamp: new Date().toISOString(),
-      });
+      };
+      if (meta.contact_id) msgData.contact_id = meta.contact_id;
+      
+      await base44.asServiceRole.entities.ConversationMessage.create(msgData);
       await base44.asServiceRole.entities.AuditLog.create({
         entity_name: 'Event',
         entity_id: meta.event_id,
@@ -184,7 +224,7 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
       entity_id: meta.event_id,
       action: 'SEND_FAILED',
       diff_summary: `כשל: ${meta.template_key} - ${error.message}`,
-      metadata: { template_key: meta.template_key, error_message: error.message },
+      metadata: { template_key: meta.template_key, error_message: error.message, phone },
     });
   }
 }

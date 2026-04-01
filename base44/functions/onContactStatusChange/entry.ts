@@ -37,8 +37,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── DJ_SKITZA: Send DJ booking form link ──
-    if (contact.status === 'DJ_SKITZA') {
+    // ── DJ_SKITZA: Send DJ booking form link (only if coming from a different status) ──
+    if (contact.status === 'DJ_SKITZA' && old_data.status !== 'DJ_SKITZA') {
+      // Check if DJ_BOOKING_FORM was already sent to this contact
+      const existingMessages = await base44.asServiceRole.entities.AuditLog.filter({
+        entity_id: contact.id,
+        action: 'SEND_MESSAGE',
+      });
+      const alreadySent = existingMessages.some(m => m.metadata?.template_key === 'DJ_BOOKING_FORM');
+      if (alreadySent) {
+        console.log('[onContactStatusChange] ℹ DJ_BOOKING_FORM already sent - skipping');
+        return Response.json({ message: 'DJ_BOOKING_FORM already sent' });
+      }
       console.log('[onContactStatusChange] 🎵 DJ_SKITZA status - sending DJ booking form');
 
       // Mark contact as DJ lead
