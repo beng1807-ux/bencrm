@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 const PRIMARY = '#e94f1c';
 
 const LEAD_COLS = [
-  { key: 'NEW',           label: 'חדש',          dot: 'bg-blue-500' },
+  { key: 'NEW',           label: 'ליד חדש',      dot: 'bg-blue-500' },
   { key: 'FORM_FILLED',   label: 'מילא טופס',    dot: 'bg-cyan-500' },
   { key: 'DJ_SKITZA',     label: 'DJ סקיצה',     dot: 'bg-violet-500' },
   { key: 'FIRST_CONTACT', label: 'נוצר קשר',     dot: 'bg-amber-500' },
@@ -28,7 +28,6 @@ const LEAD_COLS = [
 const CUSTOMER_COLS = [
   { key: 'DEAL_CLOSED',     label: 'נסגרה עסקה',     dot: 'bg-orange-500' },
   { key: 'WAITING_PAYMENT', label: 'ממתין לתשלום',   dot: 'bg-yellow-500' },
-  { key: 'DEPOSIT_PAID',    label: 'שולמה מקדמה',    dot: 'bg-emerald-500' },
   { key: 'PAID_FULL',       label: 'שולם במלואו',    dot: 'bg-green-600' },
   { key: 'EVENT_DONE',      label: 'האירוע בוצע',    dot: 'bg-gray-400' },
 ];
