@@ -44,10 +44,12 @@ const EVENT_TYPE_ICONS = {
   'יום הולדת':  { emoji: '🎂',  label: 'יום הולדת' },
   'אירוע פרטי': { emoji: '🎉',  label: 'אירוע פרטי' },
   'אירוע חברה': { emoji: '💼',  label: 'אירוע חברה' },
+  'חינה':       { emoji: '🎊',  label: 'חינה' },
+  'ברית מילה':  { emoji: '📌',  label: 'ברית מילה' },
   'אחר':        { emoji: '📌',  label: 'אחר' },
 };
 
-const EVENT_TYPES = ['חתונה','בר מצווה','בת מצווה','יום הולדת','אירוע פרטי','אירוע חברה','אחר'];
+const EVENT_TYPES = ['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','חינה','ברית מילה','אחר'];
 
 // ── KanbanColumn ────────────────────────────────────────────────
 function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect, onCloseDeal }) {
@@ -700,8 +702,13 @@ export default function Customers() {
             <div>
               <Label>סוג אירוע</Label>
               <Select value={editData.event_type || ''} onValueChange={v => setEditData({...editData, event_type: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{EVENT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                <SelectTrigger><SelectValue placeholder="בחר סוג אירוע" /></SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {editData.event_type && !EVENT_TYPES.includes(editData.event_type) && (
+                    <SelectItem key={editData.event_type} value={editData.event_type}>{editData.event_type}</SelectItem>
+                  )}
+                </SelectContent>
               </Select>
             </div>
             <div>
