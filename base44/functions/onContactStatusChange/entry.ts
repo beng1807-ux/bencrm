@@ -57,7 +57,9 @@ Deno.serve(async (req) => {
 
       // Get booking form link
       const bfSettings = await base44.asServiceRole.entities.BookingFormSettings.list();
-      const formLink = bfSettings[0]?.form_link || '';
+      const appId = Deno.env.get('BASE44_APP_ID') || '';
+      const formLink = bfSettings[0]?.form_link || `https://app.base44.com/apps/${appId}/BookingForm`;
+      console.log(`[onContactStatusChange] 🔗 Form link: ${formLink}`);
 
       const template = templateList[0];
       const eventDateFormatted = contact.event_date ? new Date(contact.event_date).toLocaleDateString('he-IL') : '';
