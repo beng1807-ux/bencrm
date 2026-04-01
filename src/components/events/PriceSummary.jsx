@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function PriceSummary({ packages, packageId, addonIds = [], depositPercent = 30, data, onChange }) {
+export default function PriceSummary({ packages, packageId, addonIds = [], depositPercent = 30, data, onChange, isAdmin = false }) {
   const [manualDeposit, setManualDeposit] = useState(false);
   const [manualBalance, setManualBalance] = useState(false);
 
@@ -32,19 +32,12 @@ export default function PriceSummary({ packages, packageId, addonIds = [], depos
     if (Object.keys(updates).length > 0) onChange(updates);
   }, [calculatedTotal, depositPercent, manualDeposit, manualBalance, data.deposit_amount]);
 
+  // Only show price summary to admin
+  if (!isAdmin) return null;
+
   return (
     <div className="col-span-2 bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-500">חבילה</span>
-        <span className="text-sm font-bold text-slate-700">₪{pkgPrice.toLocaleString()}</span>
-      </div>
-      {addonsTotal > 0 && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-500">תוספות ({(addonIds || []).length})</span>
-          <span className="text-sm font-bold text-slate-700">₪{addonsTotal.toLocaleString()}</span>
-        </div>
-      )}
-      <div className="border-t border-slate-300 pt-3 flex items-center justify-between">
+      <div className="border-b border-slate-300 pb-3 flex items-center justify-between">
         <span className="text-base font-black text-slate-900">סה״כ</span>
         <span className="text-lg font-black text-orange-600">₪{calculatedTotal.toLocaleString()}</span>
       </div>

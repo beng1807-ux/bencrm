@@ -36,7 +36,7 @@ export default function AddonSelector({ packages, selectedAddonIds = [], onChang
               <span className="text-sm font-bold text-slate-700">{addon.item_name}</span>
               {addon.description && <p className="text-xs text-slate-400 truncate">{addon.description}</p>}
             </div>
-            <span className="text-sm font-black text-slate-900 flex-shrink-0">₪{addon.price?.toLocaleString()}</span>
+            {/* מחירים פרטניים מוסתרים מכולם */}
           </label>
         ))}
       </div>

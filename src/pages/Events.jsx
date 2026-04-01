@@ -510,7 +510,7 @@ export default function Events() {
                 <React.Fragment key="package_id">
                   <div><Label>{fl.package_id || 'חבילה'}</Label><Select value={editData.package_id || ''} onValueChange={v => setEditData({...editData, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>
                   <AddonSelector packages={packages} selectedAddonIds={editData.addon_ids || []} onChange={ids => setEditData({...editData, addon_ids: ids})} />
-                  <PriceSummary packages={packages} packageId={editData.package_id} addonIds={editData.addon_ids} depositPercent={depositPercent} data={editData} onChange={updates => setEditData(prev => ({...prev, ...updates}))} />
+                  <PriceSummary packages={packages} packageId={editData.package_id} addonIds={editData.addon_ids} depositPercent={depositPercent} data={editData} onChange={updates => setEditData(prev => ({...prev, ...updates}))} isAdmin={currentUser?.role === 'admin'} />
                 </React.Fragment>
               ),
               event_date: () => <div key="event_date"><Label>{fl.event_date || 'תאריך'}</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>,
@@ -608,7 +608,7 @@ export default function Events() {
                 <React.Fragment key="package_id">
                   <div><Label>{fl.package_id || 'חבילה'} *</Label><Select value={newEvent.package_id || ''} onValueChange={v => setNewEvent({...newEvent, package_id: v})}><SelectTrigger><SelectValue placeholder="בחר חבילה" /></SelectTrigger><SelectContent>{packages.filter(p => p.item_type === 'PACKAGE').map(p => <SelectItem key={p.id} value={p.id}>{p.item_name} - ₪{p.price}</SelectItem>)}</SelectContent></Select></div>
                   <AddonSelector packages={packages} selectedAddonIds={newEvent.addon_ids || []} onChange={ids => setNewEvent({...newEvent, addon_ids: ids})} />
-                  <PriceSummary packages={packages} packageId={newEvent.package_id} addonIds={newEvent.addon_ids} depositPercent={depositPercent} data={newEvent} onChange={updates => setNewEvent(prev => ({...prev, ...updates}))} />
+                  <PriceSummary packages={packages} packageId={newEvent.package_id} addonIds={newEvent.addon_ids} depositPercent={depositPercent} data={newEvent} onChange={updates => setNewEvent(prev => ({...prev, ...updates}))} isAdmin={currentUser?.role === 'admin'} />
                 </React.Fragment>
               ),
               location: () => <div className="col-span-2" key="location"><Label>{fl.location || 'מיקום'}</Label><Input value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} /></div>,
