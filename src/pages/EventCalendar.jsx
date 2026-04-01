@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
-  Layers, LayoutGrid, MapPin, Music, FileText, CreditCard, User, Ban
+  Layers, LayoutGrid, MapPin, Music, CreditCard, User, Ban
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -19,8 +19,8 @@ import DJBlockTooltip from '../components/calendar/DJBlockTooltip';
 
 const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 
-const CONTRACT_LABELS = { SIGNED: 'חתום', DRAFT: 'טיוטה', SENT: 'נשלח', DECLINED: 'סורב' };
-const PAYMENT_LABELS = { PENDING: 'ממתין', DEPOSIT_PAID: 'מקדמה שולמה', PAID_FULL: 'שולם במלואו' };
+const PAYMENT_LABELS = { PENDING: 'ממתין', PAID_FULL: 'שולם במלואו' };
+const EVENT_STATUS_LABELS = { PENDING: 'ממתין', CONFIRMED: 'מאושר', IN_PROGRESS: 'בתהליך', COMPLETED: 'הושלם', CANCELLED: 'בוטל' };
 
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
@@ -29,7 +29,7 @@ export default function EventCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('month');
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ contractStatus: 'ALL', djId: 'ALL', eventType: 'ALL' });
+  const [filters, setFilters] = useState({ eventStatus: 'ALL', djId: 'ALL', eventType: 'ALL' });
 
   // Tooltip state
   const [hoveredEvent, setHoveredEvent] = useState(null);
@@ -61,7 +61,7 @@ export default function EventCalendar() {
 
   // Filter events
   const filteredEvents = events.filter(e => {
-    if (filters.contractStatus !== 'ALL' && e.contract_status !== filters.contractStatus) return false;
+    if (filters.eventStatus !== 'ALL' && e.event_status !== filters.eventStatus) return false;
     if (filters.djId !== 'ALL' && e.dj_id !== filters.djId) return false;
     if (filters.eventType !== 'ALL' && e.event_type !== filters.eventType) return false;
     return true;
@@ -166,8 +166,8 @@ export default function EventCalendar() {
     const d = new Date(e.event_date);
     return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
   });
-  const signedCount = currentMonthEvents.filter(e => e.contract_status === 'SIGNED').length;
-  const pendingCount = currentMonthEvents.filter(e => e.contract_status === 'DRAFT' || e.contract_status === 'SENT').length;
+  const confirmedCount = currentMonthEvents.filter(e => e.event_status === 'CONFIRMED').length;
+  const pendingCount = currentMonthEvents.filter(e => e.event_status === 'PENDING').length;
 
   if (loading) {
     return (
@@ -195,7 +195,7 @@ export default function EventCalendar() {
         <div className="relative z-10">
           <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>יומן אירועים</h2>
           <p className="text-slate-500 font-medium max-w-md">
-            {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {signedCount} חתומים • {pendingCount} ממתינים
+            {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {confirmedCount} מאושרים • {pendingCount} ממתינים
           </p>
         </div>
         <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
@@ -338,8 +338,8 @@ export default function EventCalendar() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">סטטוס חוזה</p>
-                  <p className="text-sm font-black text-slate-700">{CONTRACT_LABELS[selectedEvent.contract_status] || selectedEvent.contract_status}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">סטטוס אירוע</p>
+                  <p className="text-sm font-black text-slate-700">{EVENT_STATUS_LABELS[selectedEvent.event_status] || selectedEvent.event_status}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">תשלום</p>
@@ -362,7 +362,7 @@ export default function EventCalendar() {
               )}
 
               <Link
-                to={createPageUrl('Events')}
+                to={createPageUrl(`Events?eventId=${selectedEvent.id}`)}
                 className="block w-full text-center text-white font-bold py-3 rounded-xl transition-colors text-sm"
                 style={{ backgroundColor: '#ec5b13' }}
               >

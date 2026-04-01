@@ -1,8 +1,7 @@
 import React from 'react';
-import { Calendar, MapPin, Music, FileText, CreditCard, User } from 'lucide-react';
+import { Calendar, MapPin, Music, CreditCard, User } from 'lucide-react';
 
-const CONTRACT_LABELS = { SIGNED: 'חתום', DRAFT: 'טיוטה', SENT: 'נשלח', DECLINED: 'סורב' };
-const PAYMENT_LABELS = { PENDING: 'ממתין', DEPOSIT_PAID: 'מקדמה שולמה', PAID_FULL: 'שולם במלואו' };
+const PAYMENT_LABELS = { PENDING: 'ממתין', PAID_FULL: 'שולם במלואו' };
 
 export default function EventTooltip({ event, customer, dj, position }) {
   if (!event) return null;
@@ -16,7 +15,6 @@ export default function EventTooltip({ event, customer, dj, position }) {
         transform: 'translate(-50%, -110%)'
       }}
     >
-      {/* Decorative top line */}
       <div className="absolute top-0 left-4 right-4 h-1 rounded-b-full bg-gradient-to-l from-teal-400 to-teal-600" />
       
       <div className="space-y-3">
@@ -49,10 +47,6 @@ export default function EventTooltip({ event, customer, dj, position }) {
             </div>
           )}
           <div className="flex items-center gap-2">
-            <FileText className="w-3.5 h-3.5 text-teal-500" />
-            <span className="text-xs font-semibold text-slate-600">חוזה: {CONTRACT_LABELS[event.contract_status] || event.contract_status}</span>
-          </div>
-          <div className="flex items-center gap-2">
             <CreditCard className="w-3.5 h-3.5 text-teal-500" />
             <span className="text-xs font-semibold text-slate-600">
               {PAYMENT_LABELS[event.payment_status] || event.payment_status}
@@ -62,7 +56,6 @@ export default function EventTooltip({ event, customer, dj, position }) {
         </div>
       </div>
 
-      {/* Arrow */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
         <div className="w-3 h-3 bg-white border-b border-r border-slate-100 transform rotate-45 -translate-y-1.5" />
       </div>

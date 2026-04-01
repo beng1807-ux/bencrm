@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, TrendingUp, FileText, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Calendar, User, MapPin, Plus, Pencil, Trash2, Music, Search, Filter, Download, LayoutGrid, List, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -19,12 +19,10 @@ import PaymentMethodModal from '../components/events/PaymentMethodModal';
 const PRIMARY = '#ec5b13';
 
 const STATUS_LABELS = { PENDING: 'ממתין', CONFIRMED: 'מאושר', IN_PROGRESS: 'בתהליך', COMPLETED: 'הושלם', CANCELLED: 'בוטל' };
-const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', DEPOSIT_PAID: 'שולמה מקדמה', PAID_FULL: 'שולם במלואו' };
+const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', PAID_FULL: 'שולם במלואו' };
 
 const getStatusColor = (s) => ({ PENDING:'bg-orange-50 text-orange-500', CONFIRMED:'bg-emerald-50 text-emerald-500', IN_PROGRESS:'bg-amber-50 text-amber-500', COMPLETED:'bg-green-50 text-green-500', CANCELLED:'bg-red-50 text-red-500' }[s] || 'bg-slate-50 text-slate-500');
-const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID:'bg-amber-50 text-amber-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
-
-const CUSTOMER_STATUSES = ['DEAL_CLOSED','WAITING_PAYMENT','DEPOSIT_PAID','PAID_FULL','EVENT_DONE'];
+const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
 
 const getContactName = (contactId, contacts) => {
   const contact = contacts.find(c => c.id === contactId);
@@ -178,7 +176,7 @@ export default function Events() {
     const total = calculatePrice(newEvent.package_id, newEvent.addon_ids);
     const dep = newEvent.deposit_amount ?? Math.round(total * (depositPercent / 100));
     const bal = newEvent.balance_amount ?? (total - dep);
-    await base44.entities.Event.create({ ...newEvent, price_total: total, deposit_amount: dep, balance_amount: bal, payment_status: 'PENDING', contract_status: 'DRAFT', event_status: 'PENDING' });
+    await base44.entities.Event.create({ ...newEvent, price_total: total, payment_status: 'PENDING', event_status: 'PENDING' });
     if (newEvent.contact_id && newEvent.event_date) {
       await syncDateToSource(newEvent.contact_id, newEvent.event_date);
     }
@@ -207,9 +205,7 @@ export default function Events() {
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
-  const totalRevenue = thisMonth.reduce((sum, e) => sum + (e.price_total || 0), 0);
   const confirmedCount = events.filter(e => e.event_status === 'CONFIRMED').length;
-  const pendingContracts = events.filter(e => e.contract_status === 'SENT' || e.contract_status === 'DRAFT').length;
 
   const filteredEvents = events.filter(e => {
     const matchType = filterType === 'ALL' || e.event_type === filterType;
@@ -257,12 +253,9 @@ export default function Events() {
 
       {/* Summary Cards */}
       {(() => {
-        const visibleStats = eventSettings.visible_stats || ['events_this_month', 'open_contracts', 'monthly_revenue', 'new_leads'];
+        const visibleStats = eventSettings.visible_stats || ['events_this_month'];
         const statCards = [
-          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+12%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events?thisMonth=true') },
-          { key: 'open_contracts', label: eventSettings.stat_open_contracts_label || 'חוזים פתוחים', value: pendingContracts, icon: <FileText className="w-6 h-6" />, iconBg: 'bg-amber-500/10 text-amber-500', badge: 'בהמתנה', badgeColor: 'text-amber-500 bg-amber-500/10', href: createPageUrl('Events') },
-          { key: 'monthly_revenue', label: eventSettings.stat_monthly_revenue_label || 'הכנסות החודש', value: `₪${totalRevenue.toLocaleString()}`, icon: <TrendingUp className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: '+18%', badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events') },
-          { key: 'new_leads', label: eventSettings.stat_new_leads_label || 'לידים חדשים', value: 28, icon: <User className="w-6 h-6" />, iconBg: 'bg-slate-500/10 text-slate-500', badge: 'חדש', badgeColor: 'text-slate-500 bg-slate-500/10', href: createPageUrl('Customers?status=NEW') },
+          { key: 'events_this_month', label: eventSettings.stat_events_this_month_label || 'אירועים החודש', value: thisMonth.length, icon: <Calendar className="w-6 h-6" />, iconBg: 'bg-primary/10 text-primary', badge: `${confirmedCount} מאושרים`, badgeColor: 'text-emerald-500 bg-emerald-500/10', href: createPageUrl('Events?thisMonth=true') },
         ].filter(s => visibleStats.includes(s.key));
         const cols = statCards.length <= 2 ? 'lg:grid-cols-2' : statCards.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
         return statCards.length > 0 ? (
@@ -357,10 +350,11 @@ export default function Events() {
                       <Calendar className="w-5 h-5" />
                       <span className="text-sm font-bold">{new Date(event.event_date).toLocaleDateString('he-IL')}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-900 font-black">
-                      <TrendingUp className="w-5 h-5" />
-                      <span>₪{event.price_total?.toLocaleString()}</span>
-                    </div>
+                    {event.price_total > 0 && (
+                      <div className="flex items-center gap-2 text-slate-900 font-black">
+                        <span>₪{event.price_total?.toLocaleString()}</span>
+                      </div>
+                    )}
                     {dj && (
                       <div className="flex items-center gap-2 text-slate-500">
                         <Music className="w-5 h-5" />
@@ -547,7 +541,7 @@ export default function Events() {
                   </div>
                 );
               },
-              last_payment_method: () => <div key="last_payment_method"><Label>{fl.last_payment_method || 'אמצעי תשלום'}</Label><Select value={editData.last_payment_method || ''} onValueChange={v => setEditData({...editData, last_payment_method: v})}><SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger><SelectContent>{['העברה','אשראי','מזומן','ביט'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>,
+              last_payment_method: () => <div key="last_payment_method"><Label>{fl.last_payment_method || 'אמצעי תשלום'}</Label><Select value={editData.last_payment_method || ''} onValueChange={v => setEditData({...editData, last_payment_method: v})}><SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger><SelectContent>{['העברה','מזומן','ביט','פייבוקס','צ׳ק'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>,
               notes: () => <div className="col-span-2" key="notes"><Label>{fl.notes || 'הערות'}</Label><Textarea value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})} /></div>,
             };
             return (
@@ -570,7 +564,7 @@ export default function Events() {
           {(() => {
             const visFields = eventSettings.create_visible_fields || ['customer_id','event_date','event_type','package_id','location'];
             const fl = eventSettings.field_labels || {};
-            const customerContacts = contacts.filter(c => c.contact_type === 'customer' || ['DEAL_CLOSED','DEPOSIT_PAID','PAID_FULL','WAITING_PAYMENT'].includes(c.status));
+            const customerContacts = contacts.filter(c => c.contact_type === 'customer' || ['DEAL_CLOSED','PAID_FULL','WAITING_PAYMENT'].includes(c.status));
             const allOptions = customerContacts.map(c => ({ id: c.id, name: c.contact_name }));
             const createFieldMap = {
               customer_id: () => (

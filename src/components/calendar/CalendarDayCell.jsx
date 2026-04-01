@@ -1,13 +1,14 @@
 import React from 'react';
 import { Music, Ban, User } from 'lucide-react';
 
-const getContractColor = (contractStatus) => {
-  switch (contractStatus) {
-    case 'SIGNED': return { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-700', dot: 'bg-emerald-500' };
-    case 'DRAFT':
-    case 'SENT': return { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-700', dot: 'bg-amber-500' };
-    case 'DECLINED': return { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-500', dot: 'bg-slate-400' };
-    default: return { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-500', dot: 'bg-slate-400' };
+const getEventStatusColor = (eventStatus) => {
+  switch (eventStatus) {
+    case 'CONFIRMED': return { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-700', dot: 'bg-emerald-500' };
+    case 'IN_PROGRESS': return { bg: 'bg-blue-50', border: 'border-blue-400', text: 'text-blue-700', dot: 'bg-blue-500' };
+    case 'COMPLETED': return { bg: 'bg-teal-50', border: 'border-teal-400', text: 'text-teal-700', dot: 'bg-teal-500' };
+    case 'CANCELLED': return { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-500', dot: 'bg-slate-400' };
+    case 'PENDING':
+    default: return { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-700', dot: 'bg-amber-500' };
   }
 };
 
@@ -37,7 +38,6 @@ export default function CalendarDayCell({
           : 'border-transparent bg-slate-50/50'
     } ${(isFriday || isSaturday) && isCurrentMonth ? 'bg-slate-50/70' : ''}`}>
       
-      {/* Day number */}
       <div className="flex items-center justify-between mb-1">
         <span className={`text-sm font-bold leading-none ${
           isToday 
@@ -53,10 +53,9 @@ export default function CalendarDayCell({
         )}
       </div>
 
-      {/* Events */}
       <div className="flex-1 space-y-1 overflow-hidden">
         {events.slice(0, 3).map(event => {
-          const colors = getContractColor(event.contract_status);
+          const colors = getEventStatusColor(event.event_status);
           const contactName = getContactName(event.contact_id);
           const dj = djs?.find(d => d.id === event.dj_id);
           const contact = contacts?.find(c => c.id === event.contact_id);
@@ -97,7 +96,6 @@ export default function CalendarDayCell({
           </div>
         )}
 
-        {/* DJ Blocks */}
         {blockedDJs.length > 0 && (
           <div
             className="bg-violet-50 border border-violet-200 border-r-2 border-r-violet-500 rounded-lg px-2 py-1 cursor-pointer hover:shadow-sm hover:scale-[1.02] transition-all"

@@ -1,10 +1,12 @@
 import React from 'react';
 
 const legendItems = [
-  { color: 'bg-emerald-500', label: 'חוזה חתום', border: 'border-emerald-500' },
-  { color: 'bg-amber-500', label: 'טיוטה / נשלח', border: 'border-amber-500' },
-  { color: 'bg-slate-300', label: 'סורב / בוטל', border: 'border-slate-300' },
-  { color: 'bg-violet-500', label: 'חסימת DJ', border: 'border-violet-500' },
+  { color: 'bg-emerald-500', label: 'מאושר' },
+  { color: 'bg-amber-500', label: 'ממתין' },
+  { color: 'bg-blue-500', label: 'בתהליך' },
+  { color: 'bg-teal-500', label: 'הושלם' },
+  { color: 'bg-slate-300', label: 'בוטל' },
+  { color: 'bg-violet-500', label: 'חסימת DJ' },
 ];
 
 export default function CalendarLegend() {
