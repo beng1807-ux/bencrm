@@ -1,13 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
-  console.log('[onDJAssigned] ▶ Triggered');
+  console.log('[onDJAssigned] ▶ Triggered v3 - fresh deploy');
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
     const { event: triggerEvent, data: eventData, old_data } = payload;
 
-    // Get the real event ID from the automation trigger
     const eventId = triggerEvent?.entity_id || eventData?.id;
     if (!eventId) {
       console.error('[onDJAssigned] ✖ No event ID found in payload');
@@ -15,14 +14,12 @@ Deno.serve(async (req) => {
     }
     console.log(`[onDJAssigned] Event ID: ${eventId}`);
 
-    // Check if DJ actually changed
     if (!eventData.dj_id || eventData.dj_id === old_data?.dj_id) {
       console.log('[onDJAssigned] ℹ No DJ change - skipping');
       return Response.json({ message: 'No DJ change' });
     }
     console.log(`[onDJAssigned] ✓ DJ changed from ${old_data?.dj_id || 'none'} to ${eventData.dj_id}`);
 
-    // Load settings
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     if (!settingsList[0]?.automations_enabled) {
       return Response.json({ message: 'Automations disabled' });
@@ -31,7 +28,6 @@ Deno.serve(async (req) => {
     const signature = settings.signature_text || 'קבוצת סקיצה';
     const logoUrl = settings.logo_url_for_messages || '';
 
-    // Load DJ
     let dj;
     try {
       dj = await base44.asServiceRole.entities.DJ.get(eventData.dj_id);
@@ -41,7 +37,6 @@ Deno.serve(async (req) => {
     }
     console.log(`[onDJAssigned] ✓ DJ: ${dj.name} (${dj.phone})`);
 
-    // Load contact
     let contact = null;
     if (eventData.contact_id) {
       try {
@@ -53,8 +48,6 @@ Deno.serve(async (req) => {
     }
 
     const eventDateFormatted = new Date(eventData.event_date).toLocaleDateString('he-IL');
-
-    // Build deep link to event
     const appId = Deno.env.get('BASE44_APP_ID') || '';
     const eventLink = `https://preview-sandbox--${appId}.base44.app/Events?eventId=${eventId}`;
 
@@ -149,7 +142,6 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
         message_text: messageText,
         timestamp: new Date().toISOString(),
       };
-      // Only add contact_id if it exists
       if (meta.contact_id) msgData.contact_id = meta.contact_id;
       
       await base44.asServiceRole.entities.ConversationMessage.create(msgData);
@@ -185,7 +177,6 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
       }
       console.log(`[onDJAssigned] ✅ WhatsApp sent (${meta.template_key}) to ${phoneNumber}: ${result.idMessage}`);
 
-      // Send logo
       if (logoUrl) {
         try {
           const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
