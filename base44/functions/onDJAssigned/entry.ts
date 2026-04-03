@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
       console.error('[onDJAssigned] ✖ No event ID found in payload');
       return Response.json({ error: 'No event ID' }, { status: 400 });
     }
-    console.log(`[onDJAssigned] Event ID: ${eventId}`);
+    console.log(`[onDJAssigned] Event ID: ${eventId} | v4 clean`);
 
     if (!eventData.dj_id || eventData.dj_id === old_data?.dj_id) {
       console.log('[onDJAssigned] ℹ No DJ change - skipping');
@@ -142,9 +142,12 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
         message_text: messageText,
         timestamp: new Date().toISOString(),
       };
-      if (meta.contact_id) msgData.contact_id = meta.contact_id;
-      
-      await base44.asServiceRole.entities.ConversationMessage.create(msgData);
+      if (meta.contact_id) {
+        msgData.contact_id = meta.contact_id;
+        await base44.asServiceRole.entities.ConversationMessage.create(msgData);
+      } else {
+        console.log(`[onDJAssigned] ℹ Skipping ConversationMessage (no contact_id) for ${meta.template_key}`);
+      }
       await base44.asServiceRole.entities.AuditLog.create({
         entity_name: 'Event',
         entity_id: meta.event_id,
@@ -197,9 +200,12 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
         message_text: messageText,
         timestamp: new Date().toISOString(),
       };
-      if (meta.contact_id) msgData.contact_id = meta.contact_id;
-      
-      await base44.asServiceRole.entities.ConversationMessage.create(msgData);
+      if (meta.contact_id) {
+        msgData.contact_id = meta.contact_id;
+        await base44.asServiceRole.entities.ConversationMessage.create(msgData);
+      } else {
+        console.log(`[onDJAssigned] ℹ Skipping ConversationMessage (no contact_id) for ${meta.template_key}`);
+      }
       await base44.asServiceRole.entities.AuditLog.create({
         entity_name: 'Event',
         entity_id: meta.event_id,
@@ -214,8 +220,8 @@ async function sendWhatsAppMessage(base44, settings, phone, messageText, logoUrl
       entity_name: 'Event',
       entity_id: meta.event_id,
       action: 'SEND_FAILED',
-      diff_summary: `כשל: ${meta.template_key} - ${error.message}`,
-      metadata: { template_key: meta.template_key, error_message: error.message, phone },
+      diff_summary: `כשל v4: ${meta.template_key} - ${error.message}`,
+      metadata: { template_key: meta.template_key, error_message: error.message, phone, version: 'v4' },
     });
   }
 }
