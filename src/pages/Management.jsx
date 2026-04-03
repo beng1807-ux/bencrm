@@ -382,19 +382,19 @@ export default function Management() {
                 <h3 className="font-semibold mb-4">תזכורות תשלום</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>תזכורת 1 (ימים לפני)</Label>
+                    <Label>תזכורת 1 (ימים אחרי ביצוע האירוע)</Label>
                     <Input
                       type="number"
-                      value={settings.payment_reminder_1_days_before || 14}
-                      onChange={e => setSettings({...settings, payment_reminder_1_days_before: Number(e.target.value)})}
+                      value={settings.payment_reminder_1_days_after_event || 1}
+                      onChange={e => setSettings({...settings, payment_reminder_1_days_after_event: Number(e.target.value)})}
                     />
                   </div>
                   <div>
-                    <Label>תזכורת 2 (ימים לפני)</Label>
+                    <Label>תזכורת 2 (ימים אחרי תזכורת 1)</Label>
                     <Input
                       type="number"
-                      value={settings.payment_reminder_2_days_before || 7}
-                      onChange={e => setSettings({...settings, payment_reminder_2_days_before: Number(e.target.value)})}
+                      value={settings.payment_reminder_2_days_after_first || 2}
+                      onChange={e => setSettings({...settings, payment_reminder_2_days_after_first: Number(e.target.value)})}
                     />
                   </div>
                 </div>
