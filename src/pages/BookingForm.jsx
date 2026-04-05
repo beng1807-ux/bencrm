@@ -7,7 +7,7 @@ import BookingSuccess from '../components/booking/BookingSuccess';
 
 const BRAND_ORANGE = '#e94f1c';
 
-const pillClass = "w-full p-3 px-6 rounded-full text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c] box-border max-w-full";
+const pillClass = "w-full p-3 px-6 rounded-full text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c] box-border max-w-full overflow-hidden";
 const pillStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' };
 const pillFocusStyle = { background: 'rgba(255,255,255,0.1)', borderColor: BRAND_ORANGE };
 
@@ -66,7 +66,7 @@ function DynamicField({ field, value, onChange, error }) {
               if (field.type === 'tel') val = val.replace(/[^0-9\-\s]/g, '');
               onChange(val);
             }}
-            className={field.type === 'date' ? '[color-scheme:dark] min-h-[48px]' : ''}
+            className={field.type === 'date' ? '[color-scheme:dark] min-h-[48px] pill-date' : ''}
           />
           {error && <p className="text-red-400 text-xs mr-4">{error}</p>}
         </div>
@@ -243,6 +243,20 @@ export default function BookingForm() {
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif', backgroundColor: '#0a0a0a' }}>
+      <style>{`
+        input[type="date"].pill-date {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          min-width: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        input[type="date"].pill-date::-webkit-date-and-time-value {
+          text-align: center;
+        }
+      `}</style>
       {/* Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         {bgType === 'video' ? (
