@@ -184,14 +184,16 @@ export default function Events() {
 
       // Smart toasts based on what changed
       if (djChanged) {
-        toast.info(`שולח הודעות שיבוץ ל-${contactName} ול-DJ ${djName || ''}...`, { duration: 3000 });
-        // Directly call onDJAssigned — don't rely solely on automation
+        toast.info(`שולח הודעות שיבוץ ל-${contactName} ול-DJ ${djName || ''}...`, { duration: 4000 });
         try {
           const djRes = await base44.functions.invoke('onDJAssigned', { event_id: editData.id, dj_id: editData.dj_id });
           if (djRes.data?.success) {
-            toast.success(`✅ הודעות שיבוץ נשלחו ל-${djRes.data.contact_name || contactName} ול-DJ ${djRes.data.dj_name || djName || ''}`, { duration: 5000 });
+            const parts = [];
+            if (djRes.data.customer_sent) parts.push(djRes.data.contact_name || contactName);
+            if (djRes.data.dj_sent) parts.push(`DJ ${djRes.data.dj_name || djName || ''}`);
+            toast.success(`✅ הודעות שיבוץ נשלחו ל-${parts.join(' ול-')}`, { duration: 5000 });
           } else {
-            toast.success('האירוע עודכן', { duration: 3000 });
+            toast.success('האירוע עודכן');
           }
         } catch (djErr) {
           toast.error(`שגיאה בשליחת הודעות שיבוץ: ${djErr.message || 'שגיאה'}`, { duration: 5000 });

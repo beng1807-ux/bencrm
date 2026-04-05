@@ -103,12 +103,17 @@ export default function Dashboard() {
   };
 
   const relativeTime = (d) => {
-    const diff = Date.now() - new Date(d);
+    const diff = Date.now() - new Date(d).getTime();
+    if (diff < 0) return 'עכשיו';
     const m = Math.floor(diff / 60000);
-    if (m < 60) return `לפני ${m || 1} דקות`;
+    if (m < 1) return 'עכשיו';
+    if (m < 60) return `לפני ${m} דקות`;
     const h = Math.floor(m / 60);
+    if (h === 1) return 'לפני שעה';
     if (h < 24) return `לפני ${h} שעות`;
-    return `לפני ${Math.floor(h / 24)} ימים`;
+    const days = Math.floor(h / 24);
+    if (days === 1) return 'לפני יום';
+    return `לפני ${days} ימים`;
   };
 
   const [isDJ, setIsDJ] = useState(null); // null = loading, true/false = resolved
