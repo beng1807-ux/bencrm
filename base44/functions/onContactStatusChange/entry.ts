@@ -115,9 +115,7 @@ Deno.serve(async (req) => {
             throw new Error('אין מספר טלפון באיש קשר');
           }
 
-          let phoneNumber = contact.phone.replace(/[\s\-\(\)\.\+]/g, '');
-          if (phoneNumber.startsWith('972')) { /* already international */ }
-          else if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
+          let phoneNumber = formatPhone(contact.phone);
 
           const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
           const whatsappResponse = await fetch(greenApiUrl, {
@@ -182,3 +180,10 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function formatPhone(phone) {
+  let num = phone.replace(/[\s\-\(\)\.\+]/g, '');
+  if (num.startsWith('972')) { /* already international */ }
+  else if (num.startsWith('0')) num = '972' + num.substring(1);
+  return num;
+}

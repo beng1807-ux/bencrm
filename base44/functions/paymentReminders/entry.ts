@@ -94,9 +94,7 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
       if (!GREEN_ID || !GREEN_TOKEN) throw new Error('GREEN API לא מוגדר');
       if (!contact.phone) throw new Error('אין מספר טלפון');
 
-      let phoneNumber = contact.phone.replace(/[\s\-\(\)\.]/g, '');
-      if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
-      if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
+      let phoneNumber = formatPhone(contact.phone);
 
       const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
       const whatsappResponse = await fetch(greenApiUrl, {
@@ -156,4 +154,11 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
       metadata: { template_key: templateKey, error_message: error.message },
     });
   }
+}
+
+function formatPhone(phone) {
+  let num = phone.replace(/[\s\-\(\)\.\+]/g, '');
+  if (num.startsWith('972')) { /* already international */ }
+  else if (num.startsWith('0')) num = '972' + num.substring(1);
+  return num;
 }

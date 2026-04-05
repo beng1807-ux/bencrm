@@ -78,13 +78,11 @@ async function sendEventReminder(base44, event, contacts, djs, settings, signatu
     .replace(/{signature}/g, signature);
 
   try {
-    if (settings.whatsapp_send_mode === 'שליחה אמיתית') {
+    if (settings.whatsapp_send_mode !== 'לוג בלבד') {
       const GREEN_ID = Deno.env.get('GREEN_ID');
       const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
       if (GREEN_ID && GREEN_TOKEN && contact.phone) {
-        let phoneNumber = contact.phone.replace(/[\s\-\(\)\.]/g, '');
-        if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
-        if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
+        let phoneNumber = formatPhone(contact.phone);
 
         const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
         const res = await fetch(greenApiUrl, {
@@ -174,13 +172,11 @@ async function sendThankYou(base44, event, contacts, settings, signature, logoUr
     .replace(/{signature}/g, signature);
 
   try {
-    if (settings.whatsapp_send_mode === 'שליחה אמיתית') {
+    if (settings.whatsapp_send_mode !== 'לוג בלבד') {
       const GREEN_ID = Deno.env.get('GREEN_ID');
       const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
       if (GREEN_ID && GREEN_TOKEN && contact.phone) {
-        let phoneNumber = contact.phone.replace(/[\s\-\(\)\.]/g, '');
-        if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
-        if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
+        let phoneNumber = formatPhone(contact.phone);
 
         const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
         const res = await fetch(greenApiUrl, {
@@ -249,4 +245,11 @@ async function sendThankYou(base44, event, contacts, settings, signature, logoUr
       metadata: { template_key: 'THANK_YOU', error_message: error.message },
     });
   }
+}
+
+function formatPhone(phone) {
+  let num = phone.replace(/[\s\-\(\)\.\+]/g, '');
+  if (num.startsWith('972')) { /* already international */ }
+  else if (num.startsWith('0')) num = '972' + num.substring(1);
+  return num;
 }

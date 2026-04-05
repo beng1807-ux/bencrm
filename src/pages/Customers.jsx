@@ -379,10 +379,30 @@ export default function Customers() {
 
   const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
   const saveEdit = async () => {
-    await base44.entities.Contact.update(editData.id, editData);
-    await loadLeads();
-    setEditOpen(false);
-    toast.success('עודכן בהצלחה');
+    const oldLead = leads.find(l => l.id === editData.id);
+    const name = editData.contact_name || '';
+    try {
+      await base44.entities.Contact.update(editData.id, editData);
+
+      if (editData.status === 'DEAL_CLOSED' && oldLead?.status !== 'DEAL_CLOSED') {
+        toast.info(`יוצר אירוע עבור ${name}...`);
+        const response = await base44.functions.invoke('dealClosedHandler', { contact_id: editData.id });
+        if (response.data?.success) {
+          toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
+        } else {
+          toast.success('הסטטוס עודכן');
+        }
+      } else if (editData.status === 'DJ_SKITZA' && oldLead?.status !== 'DJ_SKITZA') {
+        toast.success(`עודכן — הודעת טופס DJ בדרך ל-${name}...`);
+      } else {
+        toast.success('עודכן בהצלחה');
+      }
+
+      await loadLeads();
+      setEditOpen(false);
+    } catch (err) {
+      toast.error(`שגיאה בעדכון: ${err.message || 'שגיאה לא ידועה'}`);
+    }
   };
 
   const createLead = async () => {
