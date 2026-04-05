@@ -25,11 +25,12 @@
     "status": {
       "type": "string",
       "enum": [
-        "OPEN",
+        "PENDING",
+        "CALLED",
         "DONE"
       ],
-      "default": "OPEN",
-      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1"
+      "default": "PENDING",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1: \u05de\u05de\u05ea\u05d9\u05df / \u05e9\u05d9\u05d7\u05d4 / \u05d4\u05d5\u05e9\u05dc\u05dd"
     },
     "priority": {
       "type": "string",
@@ -40,6 +41,10 @@
       ],
       "default": "NORMAL",
       "description": "\u05e2\u05d3\u05d9\u05e4\u05d5\u05ea"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
     }
   },
   "required": [

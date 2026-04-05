@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
             title: `איש קשר כפול - ${contact.contact_name}`,
             related_contact_id: contact.id,
             priority: 'HIGH',
-            status: 'OPEN',
+            status: 'PENDING',
           });
         }
       } catch (dupErr) {
@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
         title: `מעקב איש קשר חדש - ${contact.contact_name}`,
         related_contact_id: contact.id,
         priority: 'NORMAL',
-        status: 'OPEN',
+        status: 'PENDING',
       });
       console.log('[onNewContact] ✓ Follow-up task created');
     } catch (taskErr) {
