@@ -66,7 +66,7 @@ function DynamicField({ field, value, onChange, error }) {
               if (field.type === 'tel') val = val.replace(/[^0-9\-\s]/g, '');
               onChange(val);
             }}
-            className={field.type === 'date' ? '[color-scheme:dark]' : ''}
+            className={field.type === 'date' ? '[color-scheme:dark] min-h-[48px]' : ''}
           />
           {error && <p className="text-red-400 text-xs mr-4">{error}</p>}
         </div>
@@ -310,16 +310,16 @@ export default function BookingForm() {
         {/* Admin-only: Form link */}
         {isAdmin && (
           <div className="w-full max-w-3xl rounded-xl p-4 mb-8" style={{ background: 'rgba(233,79,28,0.1)', border: '1px solid rgba(233,79,28,0.3)' }}>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-300">
-                <Link className="w-4 h-4" style={{ color: BRAND_ORANGE }} />
+                <Link className="w-4 h-4 flex-shrink-0" style={{ color: BRAND_ORANGE }} />
                 <span className="font-semibold">קישור לטופס (מנהל בלבד):</span>
               </div>
               <div className="flex items-center gap-2">
-                <code className="text-xs text-gray-400 bg-black/30 px-3 py-1 rounded-lg max-w-[300px] truncate" dir="ltr">{formLink}</code>
+                <code className="text-xs text-gray-400 bg-black/30 px-3 py-1.5 rounded-lg flex-1 min-w-0 truncate block" dir="ltr">{formLink}</code>
                 <button
                   onClick={() => { navigator.clipboard.writeText(formLink); toast.success('הקישור הועתק!'); }}
-                  className="flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex-shrink-0"
                   style={{ backgroundColor: BRAND_ORANGE, color: 'white' }}
                 >
                   <Copy className="w-3 h-3" />העתק

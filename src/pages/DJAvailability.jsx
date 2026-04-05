@@ -19,26 +19,31 @@ function DJRow({ dj, events, onManageDates }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex flex-col md:flex-row md:items-center justify-between p-4 gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
             <User className="w-5 h-5 text-orange-600" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="font-bold text-gray-900 truncate">{dj.name}</h3>
-            <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+            <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5 flex-wrap">
               <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{dj.phone}</span>
-              {dj.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{dj.email}</span>}
+              {dj.email && <span className="flex items-center gap-1 truncate"><Mail className="w-3 h-3 flex-shrink-0" /><span className="truncate">{dj.email}</span></span>}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 flex-wrap justify-end">
-          <Badge className={`${dj.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} hidden md:inline-flex`}>
-            {dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
-          </Badge>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 justify-between md:justify-end">
+          <div className="flex items-center gap-2">
+            <Badge className={`${dj.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} md:hidden`}>
+              {dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
+            </Badge>
+            <Badge className={`${dj.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} hidden md:inline-flex`}>
+              {dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
+            </Badge>
+          </div>
           <div className="text-center hidden md:block">
             <span className="text-lg font-black text-gray-900">{assignedDates.length}</span>
             <p className="text-[10px] text-gray-400 leading-tight">אירועים</p>
@@ -47,10 +52,12 @@ function DJRow({ dj, events, onManageDates }) {
             <span className="text-lg font-black" style={{ color: futureDates.length > 0 ? PRIMARY : '#9CA3AF' }}>{futureDates.length}</span>
             <p className="text-[10px] text-gray-400 leading-tight">חסומים</p>
           </div>
-          <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); onManageDates(dj); }} className="text-xs">
-            <Calendar className="w-3.5 h-3.5 ml-1" />נהל
-          </Button>
-          {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); onManageDates(dj); }} className="text-xs">
+              <Calendar className="w-3.5 h-3.5 ml-1" />נהל
+            </Button>
+            {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          </div>
         </div>
       </div>
 
@@ -167,20 +174,20 @@ export default function DJAvailability() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary"><User className="w-6 h-6" /></div>
+      <div className="grid grid-cols-2 gap-4 md:gap-6">
+        <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary"><User className="w-5 h-5 md:w-6 md:h-6" /></div>
           </div>
-          <p className="text-slate-500 text-sm font-medium">סה״כ תקליטנים</p>
-          <h3 className="text-3xl font-extrabold mt-1">{djs.length}</h3>
+          <p className="text-slate-500 text-xs md:text-sm font-medium">סה״כ תקליטנים</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold mt-1">{djs.length}</h3>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><User className="w-6 h-6" /></div>
+        <div className="bg-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><User className="w-5 h-5 md:w-6 md:h-6" /></div>
           </div>
-          <p className="text-slate-500 text-sm font-medium">פעילים</p>
-          <h3 className="text-3xl font-extrabold mt-1">{djs.filter(d => d.status === 'ACTIVE').length}</h3>
+          <p className="text-slate-500 text-xs md:text-sm font-medium">פעילים</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold mt-1">{djs.filter(d => d.status === 'ACTIVE').length}</h3>
         </div>
       </div>
 
