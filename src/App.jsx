@@ -73,9 +73,9 @@ function App() {
         <Router>
           <NavigationTracker />
           <AuthenticatedApp />
+          <Toaster />
+          <SonnerToaster position="top-center" dir="rtl" richColors />
         </Router>
-        <Toaster />
-        <SonnerToaster position="top-center" dir="rtl" richColors />
       </QueryClientProvider>
     </AuthProvider>
   )
