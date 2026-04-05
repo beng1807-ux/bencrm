@@ -7,7 +7,7 @@ import BookingSuccess from '../components/booking/BookingSuccess';
 
 const BRAND_ORANGE = '#e94f1c';
 
-const pillClass = "w-full p-3 px-6 rounded-full text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c]";
+const pillClass = "w-full p-3 px-6 rounded-full text-white placeholder-white/40 transition-all duration-300 outline-none focus:ring-2 focus:ring-[#e94f1c] box-border max-w-full";
 const pillStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)' };
 const pillFocusStyle = { background: 'rgba(255,255,255,0.1)', borderColor: BRAND_ORANGE };
 
