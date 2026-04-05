@@ -42,12 +42,9 @@ export default function MyShows() {
           setMyEvents(events);
         }
       } else {
-        // חיפוש DJ לפי user_id (ID או אימייל)
-        let djList = await base44.entities.DJ.filter({ user_id: user.id });
-        if (djList.length === 0 && user.email) {
-          djList = await base44.entities.DJ.filter({ user_id: user.email });
-        }
-        if (djList.length === 0 && user.email) {
+        // חיפוש DJ לפי אימייל
+        let djList = [];
+        if (user.email) {
           djList = await base44.entities.DJ.filter({ email: user.email });
         }
         // DJ users also need contacts data
@@ -172,12 +169,14 @@ export default function MyShows() {
                           </div>
                         )}
                         {contact && (
-                          <ContactTooltip contact={contact}>
-                            <div className="flex items-center gap-2 cursor-default" onClick={e => e.preventDefault()}>
-                              <Users className="w-4 h-4" />
-                              <span className="underline decoration-dotted">{contact.contact_name}</span>
-                            </div>
-                          </ContactTooltip>
+                          <div onClick={e => e.stopPropagation()}>
+                            <ContactTooltip contact={contact}>
+                              <div className="flex items-center gap-2 cursor-default">
+                                <Users className="w-4 h-4" />
+                                <span className="underline decoration-dotted">{contact.contact_name}</span>
+                              </div>
+                            </ContactTooltip>
+                          </div>
                         )}
                       </div>
                       {event.notes && (
@@ -222,11 +221,13 @@ export default function MyShows() {
                         {new Date(event.event_date).toLocaleDateString('he-IL')}
                       </p>
                       {contact && (
-                        <ContactTooltip contact={contact}>
-                          <span className="text-sm text-gray-600 underline decoration-dotted cursor-default" onClick={e => e.preventDefault()}>
-                            {contact.contact_name}
-                          </span>
-                        </ContactTooltip>
+                        <div onClick={e => e.stopPropagation()}>
+                          <ContactTooltip contact={contact}>
+                            <span className="text-sm text-gray-600 underline decoration-dotted cursor-default">
+                              {contact.contact_name}
+                            </span>
+                          </ContactTooltip>
+                        </div>
                       )}
                     </CardContent>
                   </Card>

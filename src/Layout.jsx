@@ -48,12 +48,9 @@ export default function Layout({ children, currentPageName }) {
         }
 
         if (currentUser.role !== 'admin') {
-          // חיפוש DJ לפי user_id (ID או אימייל)
-          let djList = await base44.entities.DJ.filter({ user_id: currentUser.id });
-          if (djList.length === 0 && currentUser.email) {
-            djList = await base44.entities.DJ.filter({ user_id: currentUser.email });
-          }
-          if (djList.length === 0 && currentUser.email) {
+          // חיפוש DJ לפי אימייל
+          let djList = [];
+          if (currentUser.email) {
             djList = await base44.entities.DJ.filter({ email: currentUser.email });
           }
           if (djList.length > 0) setDjProfile(djList[0]);
