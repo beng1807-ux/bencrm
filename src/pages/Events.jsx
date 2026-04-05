@@ -575,9 +575,12 @@ export default function Events() {
                 return (
                   <div key="dj_id" className="col-span-2">
                     <Label>{fl.dj_id || 'DJ'} <span className="text-xs text-violet-600 font-bold mr-1">🎵 DJ סקיצה</span></Label>
-                    <Select value={editData.dj_id || ''} onValueChange={v => setEditData({...editData, dj_id: v})}>
+                    <Select value={editData.dj_id || '__none__'} onValueChange={v => setEditData({...editData, dj_id: v === '__none__' ? '' : v})}>
                       <SelectTrigger><SelectValue placeholder="בחר DJ" /></SelectTrigger>
-                      <SelectContent>{djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>
+                        <SelectItem value="__none__">ללא</SelectItem>
+                        {djs.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
                     </Select>
                     {selectedDj && eventDate && (
                       isUnavailable ? (
