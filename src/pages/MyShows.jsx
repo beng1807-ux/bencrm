@@ -3,8 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Users, Phone } from 'lucide-react';
+import { Calendar, MapPin, Users, Phone, Mail, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function MyShows() {
   const [myEvents, setMyEvents] = useState([]);
@@ -47,6 +49,10 @@ export default function MyShows() {
         if (djList.length === 0 && user.email) {
           djList = await base44.entities.DJ.filter({ email: user.email });
         }
+        // DJ users also need contacts data
+        const contactsData = await base44.entities.Contact.list();
+        setContacts(contactsData);
+
         if (djList.length > 0) {
           const dj = djList[0];
           setDjProfile(dj);
@@ -132,52 +138,63 @@ export default function MyShows() {
           {upcomingEvents.map(event => {
             const contact = contacts.find(c => c.id === event.contact_id);
             return (
-              <Card key={event.id}>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-semibold">{event.event_type}</h3>
-                      <Badge className={getStatusColor(event.event_status)}>
-                        {event.event_status}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(event.event_date).toLocaleDateString('he-IL', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </div>
-                      {event.location && (
+              <Link key={event.id} to={createPageUrl(`Events?eventId=${event.id}`)}>
+                <Card className="hover:shadow-md transition-all cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          {event.location}
+                          <h3 className="text-lg font-semibold">{event.event_type}</h3>
+                          <ExternalLink className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <Badge className={getStatusColor(event.event_status)}>
+                          {event.event_status}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(event.event_date).toLocaleDateString('he-IL', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </div>
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            {event.location}
+                          </div>
+                        )}
+                        {contact && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4" />
+                              {contact.contact_name}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4" />
+                              <a href={`tel:${contact.phone}`} onClick={e => e.stopPropagation()} className="hover:underline">{contact.phone}</a>
+                            </div>
+                            {contact.email && (
+                              <div className="flex items-center gap-2">
+                                <Mail className="w-4 h-4" />
+                                <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="hover:underline">{contact.email}</a>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      {event.notes && (
+                        <div className="pt-3 border-t">
+                          <p className="text-sm text-gray-600">{event.notes}</p>
                         </div>
                       )}
-                      {contact && (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            {contact.contact_name}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            {contact.phone}
-                          </div>
-                        </>
-                      )}
                     </div>
-                    {event.notes && (
-                      <div className="pt-3 border-t">
-                        <p className="text-sm text-gray-600">{event.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
           {upcomingEvents.length === 0 && (
@@ -197,17 +214,25 @@ export default function MyShows() {
             {pastEvents.map(event => {
               const contact = contacts.find(c => c.id === event.contact_id);
               return (
-                <Card key={event.id} className="opacity-75">
-                  <CardContent className="pt-4">
-                    <p className="font-medium">{event.event_type}</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(event.event_date).toLocaleDateString('he-IL')}
-                    </p>
-                    {contact && (
-                      <p className="text-sm text-gray-600">{contact.contact_name}</p>
-                    )}
-                  </CardContent>
-                </Card>
+                <Link key={event.id} to={createPageUrl(`Events?eventId=${event.id}`)}>
+                  <Card className="opacity-75 hover:opacity-100 hover:shadow-md transition-all cursor-pointer">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{event.event_type}</p>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {new Date(event.event_date).toLocaleDateString('he-IL')}
+                      </p>
+                      {contact && (
+                        <>
+                          <p className="text-sm text-gray-600">{contact.contact_name}</p>
+                          <p className="text-sm text-gray-500">{contact.phone}</p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>
