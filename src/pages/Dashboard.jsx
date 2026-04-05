@@ -16,7 +16,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!nextEvent) return;
