@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const PRIMARY = '#e94f1c';
 
@@ -16,19 +16,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
+  const location = useLocation();
+
   useEffect(() => {
     loadData();
+  }, [location.key]);
+
+  useEffect(() => {
     const interval = setInterval(loadData, 30000);
-    // Refresh when tab/window gets focus (e.g. navigating back)
-    const onFocus = () => loadData();
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') loadData();
-    });
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
