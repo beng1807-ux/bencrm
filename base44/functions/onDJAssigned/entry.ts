@@ -175,6 +175,32 @@ function formatPhone(phone) {
   return num;
 }
 
+async function resolveWhatsAppChatId(phone) {
+  const GREEN_ID = Deno.env.get('GREEN_ID');
+  const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
+  const phoneNumber = formatPhone(phone);
+  
+  try {
+    const res = await fetch(
+      `https://api.green-api.com/waInstance${GREEN_ID}/checkWhatsapp/${GREEN_TOKEN}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: parseInt(phoneNumber) }),
+      }
+    );
+    const data = await res.json();
+    if (data.existsWhatsapp && data.chatId) {
+      console.log(`[onDJAssigned] 📋 Resolved ${phoneNumber} → ${data.chatId}`);
+      return data.chatId;
+    }
+  } catch (e) {
+    console.warn(`[onDJAssigned] ⚠ chatId resolve failed for ${phoneNumber}: ${e.message}`);
+  }
+  // Fallback to standard format
+  return `${phoneNumber}@c.us`;
+}
+
 async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) {
   try {
     const isLogOnly = settings.whatsapp_send_mode === 'לוג בלבד';
@@ -186,14 +212,15 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
       if (!phone) throw new Error('No phone number');
 
       const phoneNumber = formatPhone(phone);
-      console.log(`[onDJAssigned] 📤 ${meta.templateKey} → ${phoneNumber}`);
+      const chatId = await resolveWhatsAppChatId(phone);
+      console.log(`[onDJAssigned] 📤 ${meta.templateKey} → ${chatId}`);
 
       const res = await fetch(
         `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, message: messageText }),
+          body: JSON.stringify({ chatId, message: messageText }),
         }
       );
       const result = await res.json();
@@ -210,7 +237,7 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
+              body: JSON.stringify({ chatId, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
             }
           );
         } catch (e) {
