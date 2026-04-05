@@ -98,7 +98,7 @@ export default function Dashboard() {
   const maxW = Math.max(...weeklyLeads, 1);
 
   const activityStyle = (action) => {
-    const m = { CREATE: { bg: 'bg-emerald-100', txt: 'text-emerald-600', icon: '👤' }, UPDATE: { bg: 'bg-blue-100', txt: 'text-blue-600', icon: '✏️' }, DELETE: { bg: 'bg-red-100', txt: 'text-red-600', icon: '🗑️' }, SEND_MESSAGE: { bg: 'bg-orange-100', txt: 'text-orange-600', icon: '💬' } };
+    const m = { CREATE: { bg: 'bg-emerald-100', txt: 'text-emerald-600', icon: '👤' }, UPDATE: { bg: 'bg-blue-100', txt: 'text-blue-600', icon: '✏️' }, DELETE: { bg: 'bg-red-100', txt: 'text-red-600', icon: '🗑️' }, SEND_MESSAGE: { bg: 'bg-orange-100', txt: 'text-orange-600', icon: '💬' }, SEND_FAILED: { bg: 'bg-red-100', txt: 'text-red-600', icon: '❌' } };
     return m[action] || { bg: 'bg-gray-100', txt: 'text-gray-600', icon: '•' };
   };
 
