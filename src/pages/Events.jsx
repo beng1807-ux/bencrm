@@ -169,29 +169,42 @@ export default function Events() {
       // Detect what changed for smart toasts
       const originalEvent = events.find(e => e.id === editData.id);
       const djChanged = originalEvent && editData.dj_id && editData.dj_id !== originalEvent.dj_id;
+      const djAssigned = editData.dj_id; // DJ is set (even if same as before)
       const paymentChanged = originalEvent && editData.payment_status && editData.payment_status !== originalEvent.payment_status;
       const statusChanged = originalEvent && editData.event_status && editData.event_status !== originalEvent.event_status;
 
       const contactName = getContactName(editData.contact_id, contacts);
-      const djName = djChanged ? djs.find(d => d.id === editData.dj_id)?.name : null;
+      const djName = editData.dj_id ? djs.find(d => d.id === editData.dj_id)?.name : null;
 
       await base44.entities.Event.update(editData.id, editData);
       if (editData.contact_id && editData.event_date) {
-        await syncDateToSource(editData.contact_id, editData.event_date);
+        syncDateToSource(editData.contact_id, editData.event_date);
       }
-      await loadData();
       setEditOpen(false);
 
       // Smart toasts based on what changed
       if (djChanged) {
-        toast.success(`האירוע עודכן — הודעת שיבוץ בדרך ל-${contactName} ול-DJ ${djName || ''}`);
+        toast.info(`שולח הודעות שיבוץ ל-${contactName} ול-DJ ${djName || ''}...`, { duration: 3000 });
+        // Directly call onDJAssigned — don't rely solely on automation
+        try {
+          const djRes = await base44.functions.invoke('onDJAssigned', { event_id: editData.id, dj_id: editData.dj_id });
+          if (djRes.data?.success) {
+            toast.success(`✅ הודעות שיבוץ נשלחו ל-${djRes.data.contact_name || contactName} ול-DJ ${djRes.data.dj_name || djName || ''}`, { duration: 5000 });
+          } else {
+            toast.success('האירוע עודכן', { duration: 3000 });
+          }
+        } catch (djErr) {
+          toast.error(`שגיאה בשליחת הודעות שיבוץ: ${djErr.message || 'שגיאה'}`, { duration: 5000 });
+        }
       } else if (paymentChanged && editData.payment_status === 'PAID_FULL') {
-        toast.success(`האירוע עודכן — אישור תשלום בדרך ל-${contactName}`);
+        toast.success(`✅ האירוע עודכן — אישור תשלום בדרך ל-${contactName}`, { duration: 5000 });
       } else if (statusChanged && editData.event_status === 'COMPLETED') {
-        toast.success(`האירוע עודכן — הודעת תודה בדרך ל-${contactName}`);
+        toast.success(`✅ האירוע עודכן — הודעת תודה בדרך ל-${contactName}`, { duration: 5000 });
       } else {
         toast.success('האירוע עודכן');
       }
+
+      loadData(); // don't await — let toast show immediately
     } catch (err) {
       toast.error(`שגיאה בעדכון האירוע: ${err.message || 'שגיאה לא ידועה'}`);
     }

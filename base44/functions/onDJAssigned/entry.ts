@@ -1,35 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
-  console.log('[onDJAssigned] ▶ v6 - fetch event from DB');
+  console.log('[onDJAssigned] ▶ v7 - dual mode (automation + direct call)');
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
-    const { event: triggerEvent, data: eventData, old_data } = payload;
 
-    // ── Validate event ID ──
-    const eventId = triggerEvent?.entity_id;
-    if (!eventId) {
-      console.error('[onDJAssigned] ✖ No entity_id in trigger event');
-      return Response.json({ error: 'No event ID' }, { status: 400 });
+    // ── Support two call modes ──
+    // 1. Automation: { event: { entity_id }, data: { dj_id }, old_data: { dj_id } }
+    // 2. Direct call from frontend: { event_id, dj_id }
+    let eventId, newDjId;
+    const isDirectCall = !!payload.event_id;
+
+    if (isDirectCall) {
+      // Direct call from frontend
+      eventId = payload.event_id;
+      newDjId = payload.dj_id;
+      console.log(`[onDJAssigned] 📞 Direct call: event=${eventId}, dj=${newDjId}`);
+    } else {
+      // Automation trigger
+      const { event: triggerEvent, data: eventData, old_data } = payload;
+      eventId = triggerEvent?.entity_id;
+      newDjId = eventData?.dj_id;
+      const oldDjId = old_data?.dj_id;
+
+      if (!eventId) {
+        console.error('[onDJAssigned] ✖ No entity_id in trigger event');
+        return Response.json({ error: 'No event ID' }, { status: 400 });
+      }
+
+      if (!newDjId || newDjId === oldDjId) {
+        console.log(`[onDJAssigned] ℹ No DJ change (${oldDjId} → ${newDjId}) - skipping`);
+        return Response.json({ message: 'No DJ change' });
+      }
+      console.log(`[onDJAssigned] 🔄 Automation: DJ changed ${oldDjId || 'none'} → ${newDjId}`);
     }
 
-    // ── Validate DJ actually changed ──
-    const newDjId = eventData?.dj_id;
-    const oldDjId = old_data?.dj_id;
-    if (!newDjId || newDjId === oldDjId) {
-      console.log(`[onDJAssigned] ℹ No DJ change (${oldDjId} → ${newDjId}) - skipping`);
-      return Response.json({ message: 'No DJ change' });
+    if (!eventId || !newDjId) {
+      return Response.json({ error: 'Missing event_id or dj_id' }, { status: 400 });
     }
-    console.log(`[onDJAssigned] DJ changed: ${oldDjId || 'none'} → ${newDjId}`);
 
-    // ── CRITICAL: Fetch fresh event from DB (don't trust automation payload) ──
+    // ── Fetch fresh event from DB ──
     let freshEvent;
     try {
       freshEvent = await base44.asServiceRole.entities.Event.get(eventId);
-      console.log(`[onDJAssigned] ✓ Fresh event fetched: ${freshEvent.id}, contact_id: ${freshEvent.contact_id}, dj_id: ${freshEvent.dj_id}`);
+      console.log(`[onDJAssigned] ✓ Event: ${freshEvent.id}, contact_id: ${freshEvent.contact_id}, dj_id: ${freshEvent.dj_id}`);
     } catch (err) {
-      console.error(`[onDJAssigned] ✖ Failed to fetch event ${eventId}: ${err.message}`);
+      console.error(`[onDJAssigned] ✖ Event ${eventId} not found: ${err.message}`);
       return Response.json({ error: 'Event not found' }, { status: 404 });
     }
 
@@ -53,7 +70,7 @@ Deno.serve(async (req) => {
     }
     console.log(`[onDJAssigned] DJ: ${dj.name} (${dj.phone})`);
 
-    // ── Fetch Contact from freshEvent.contact_id ──
+    // ── Fetch Contact ──
     const contactId = freshEvent.contact_id;
     let contact = null;
     if (contactId) {
@@ -64,15 +81,18 @@ Deno.serve(async (req) => {
         console.error(`[onDJAssigned] ✖ Contact ${contactId} not found: ${err.message}`);
       }
     } else {
-      console.warn('[onDJAssigned] ⚠ No contact_id on event - customer message will be skipped');
+      console.warn('[onDJAssigned] ⚠ No contact_id on event');
     }
 
-    // ── Prepare shared variables (all from freshEvent) ──
+    // ── Prepare shared variables ──
     const eventDateFormatted = freshEvent.event_date
       ? new Date(freshEvent.event_date).toLocaleDateString('he-IL')
       : '';
     const appId = Deno.env.get('BASE44_APP_ID') || '';
     const eventLink = `https://preview-sandbox--${appId}.base44.app/Events?eventId=${eventId}`;
+
+    let customerSent = false;
+    let djSent = false;
 
     // ── 1. Send to CUSTOMER (DJ_ASSIGNED) ──
     if (contact && contact.phone) {
@@ -83,18 +103,17 @@ Deno.serve(async (req) => {
         const msg = replacePlaceholders(templates[0].template_text, {
           contact, dj, freshEvent, eventDateFormatted, settings, signature, eventLink,
         });
-        console.log(`[onDJAssigned] 📱 Sending DJ_ASSIGNED → customer ${contact.phone}`);
+        console.log(`[onDJAssigned] 📱 DJ_ASSIGNED → customer ${contact.phone}`);
         await sendMessage(base44, settings, contact.phone, msg, logoUrl, {
           contactId: contact.id,
           eventId,
           templateKey: 'DJ_ASSIGNED',
           summary: `הודעת שיבוץ DJ נשלחה ללקוח ${contact.contact_name}`,
         });
+        customerSent = true;
       } else {
         console.warn('[onDJAssigned] ⚠ No active DJ_ASSIGNED template');
       }
-    } else {
-      console.warn('[onDJAssigned] ⚠ No contact/phone - skipping customer message');
     }
 
     // ── 2. Send to DJ (DJ_BOOKING_CONFIRM) ──
@@ -106,29 +125,33 @@ Deno.serve(async (req) => {
         const msg = replacePlaceholders(templates[0].template_text, {
           contact, dj, freshEvent, eventDateFormatted, settings, signature, eventLink,
         });
-        console.log(`[onDJAssigned] 📱 Sending DJ_BOOKING_CONFIRM → DJ ${dj.phone}`);
+        console.log(`[onDJAssigned] 📱 DJ_BOOKING_CONFIRM → DJ ${dj.phone}`);
         await sendMessage(base44, settings, dj.phone, msg, logoUrl, {
           contactId: contact?.id || null,
           eventId,
           templateKey: 'DJ_BOOKING_CONFIRM',
           summary: `הודעת שיבוץ נשלחה ל-DJ ${dj.name}`,
         });
+        djSent = true;
       } else {
         console.warn('[onDJAssigned] ⚠ No active DJ_BOOKING_CONFIRM template');
       }
-    } else {
-      console.warn('[onDJAssigned] ⚠ No DJ phone - skipping');
     }
 
-    console.log('[onDJAssigned] ✅ Done');
-    return Response.json({ success: true });
+    console.log(`[onDJAssigned] ✅ Done (customer: ${customerSent}, dj: ${djSent})`);
+    return Response.json({ 
+      success: true, 
+      customer_sent: customerSent, 
+      dj_sent: djSent,
+      dj_name: dj.name,
+      contact_name: contact?.contact_name || null,
+    });
   } catch (error) {
     console.error('[onDJAssigned] ❌ Unhandled:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
 
-// ── Replace template placeholders (uses freshEvent) ──
 function replacePlaceholders(text, ctx) {
   return text
     .replace(/{customer_name}/g, ctx.contact?.contact_name || '')
@@ -145,7 +168,6 @@ function replacePlaceholders(text, ctx) {
     .replace(/{signature}/g, ctx.signature || '');
 }
 
-// ── Format phone number to international format (unified) ──
 function formatPhone(phone) {
   let num = phone.replace(/[\s\-\(\)\.\+]/g, '');
   if (num.startsWith('972')) { /* already international */ }
@@ -153,7 +175,6 @@ function formatPhone(phone) {
   return num;
 }
 
-// ── Send WhatsApp message or log it ──
 async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) {
   try {
     const isLogOnly = settings.whatsapp_send_mode === 'לוג בלבד';
@@ -244,8 +265,8 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
       entity_name: 'Event',
       entity_id: meta.eventId,
       action: 'SEND_FAILED',
-      diff_summary: `כשל v6: ${meta.templateKey} - ${error.message}`,
-      metadata: { template_key: meta.templateKey, error_message: error.message, phone, version: 'v6' },
+      diff_summary: `כשל: ${meta.templateKey} - ${error.message}`,
+      metadata: { template_key: meta.templateKey, error_message: error.message, phone },
     });
   }
 }
