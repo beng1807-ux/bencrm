@@ -35,19 +35,19 @@ function DJRow({ dj, events, onManageDates }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <Badge className={dj.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}>
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 flex-wrap justify-end">
+          <Badge className={`${dj.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} hidden md:inline-flex`}>
             {dj.status === 'ACTIVE' ? 'פעיל' : 'לא פעיל'}
           </Badge>
-          <div className="text-center">
+          <div className="text-center hidden md:block">
             <span className="text-lg font-black text-gray-900">{assignedDates.length}</span>
-            <p className="text-[10px] text-gray-400 leading-tight">אירועים קרובים</p>
+            <p className="text-[10px] text-gray-400 leading-tight">אירועים</p>
           </div>
-          <div className="text-center">
+          <div className="text-center hidden md:block">
             <span className="text-lg font-black" style={{ color: futureDates.length > 0 ? PRIMARY : '#9CA3AF' }}>{futureDates.length}</span>
-            <p className="text-[10px] text-gray-400 leading-tight">תאריכים חסומים</p>
+            <p className="text-[10px] text-gray-400 leading-tight">חסומים</p>
           </div>
-          <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); onManageDates(dj); }}>
+          <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); onManageDates(dj); }} className="text-xs">
             <Calendar className="w-3.5 h-3.5 ml-1" />נהל
           </Button>
           {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -158,9 +158,9 @@ export default function DJAvailability() {
   return (
     <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>זמינות תקליטנים</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>זמינות תקליטנים</h2>
           <p className="text-slate-500 font-medium max-w-md">צפייה וניהול תאריכים חסומים לכל תקליטן</p>
         </div>
         <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />

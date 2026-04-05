@@ -190,21 +190,21 @@ export default function BookingFormSettingsTab() {
               {bfSettings.form_bg_type === 'video' ? <Video className="w-4 h-4" /> : <Image className="w-4 h-4" />}
               רקע טופס (תמונה או וידאו)
             </h4>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
               {bfSettings.form_bg_url && (
                 bfSettings.form_bg_type === 'video' ? (
-                  <video src={bfSettings.form_bg_url} className="h-20 w-32 object-cover rounded border" muted autoPlay loop />
+                  <video src={bfSettings.form_bg_url} className="h-16 w-24 md:h-20 md:w-32 object-cover rounded border" muted autoPlay loop />
                 ) : (
-                  <img src={bfSettings.form_bg_url} alt="רקע" className="h-20 w-32 object-cover rounded border" />
+                  <img src={bfSettings.form_bg_url} alt="רקע" className="h-16 w-24 md:h-20 md:w-32 object-cover rounded border" />
                 )
               )}
-              <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+              <label className="cursor-pointer flex items-center gap-2 px-3 md:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs md:text-sm font-medium">
                 <Upload size={16} />
-                {uploading.form ? 'מעלה...' : 'העלה תמונה/וידאו'}
+                {uploading.form ? 'מעלה...' : 'העלה'}
                 <input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleMediaUpload(e, 'form')} disabled={uploading.form} />
               </label>
               <Select value={bfSettings.form_bg_type || 'image'} onValueChange={v => setBfSettings(prev => ({ ...prev, form_bg_type: v }))}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-24 md:w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="image">תמונה</SelectItem>
                   <SelectItem value="video">וידאו</SelectItem>
@@ -253,21 +253,21 @@ export default function BookingFormSettingsTab() {
               {bfSettings.success_bg_type === 'video' ? <Video className="w-4 h-4" /> : <Image className="w-4 h-4" />}
               רקע דף אישור (תמונה או וידאו)
             </h4>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
               {bfSettings.success_bg_url && (
                 bfSettings.success_bg_type === 'video' ? (
-                  <video src={bfSettings.success_bg_url} className="h-20 w-32 object-cover rounded border" muted autoPlay loop />
+                  <video src={bfSettings.success_bg_url} className="h-16 w-24 md:h-20 md:w-32 object-cover rounded border" muted autoPlay loop />
                 ) : (
-                  <img src={bfSettings.success_bg_url} alt="רקע" className="h-20 w-32 object-cover rounded border" />
+                  <img src={bfSettings.success_bg_url} alt="רקע" className="h-16 w-24 md:h-20 md:w-32 object-cover rounded border" />
                 )
               )}
-              <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+              <label className="cursor-pointer flex items-center gap-2 px-3 md:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs md:text-sm font-medium">
                 <Upload size={16} />
-                {uploading.success ? 'מעלה...' : 'העלה תמונה/וידאו'}
+                {uploading.success ? 'מעלה...' : 'העלה'}
                 <input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleMediaUpload(e, 'success')} disabled={uploading.success} />
               </label>
               <Select value={bfSettings.success_bg_type || 'image'} onValueChange={v => setBfSettings(prev => ({ ...prev, success_bg_type: v }))}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-24 md:w-32"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="image">תמונה</SelectItem>
                   <SelectItem value="video">וידאו</SelectItem>
@@ -313,7 +313,7 @@ export default function BookingFormSettingsTab() {
               {/* Expanded */}
               {expandedField === index && (
                 <div className="p-4 space-y-4 border-t">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>מפתח (שם פנימי)</Label>
                       <Input value={field.key} onChange={e => updateField(index, 'key', e.target.value)} dir="ltr" className="font-mono text-sm" />
@@ -354,18 +354,18 @@ export default function BookingFormSettingsTab() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-6">
+                  <div className="flex flex-wrap items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-2">
                       <Switch checked={field.required || false} onCheckedChange={v => updateField(index, 'required', v)} />
-                      <Label>שדה חובה</Label>
+                      <Label className="text-sm">חובה</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch checked={field.visible !== false} onCheckedChange={v => updateField(index, 'visible', v)} />
-                      <Label>גלוי</Label>
+                      <Label className="text-sm">גלוי</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch checked={field.half_width !== false} onCheckedChange={v => updateField(index, 'half_width', v)} />
-                      <Label>חצי רוחב</Label>
+                      <Label className="text-sm">חצי רוחב</Label>
                     </div>
                   </div>
                 </div>

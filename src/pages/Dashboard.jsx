@@ -180,19 +180,19 @@ export default function Dashboard() {
   return (
     <div className="space-y-8" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{greetingText}</h2>
-          <p className="text-slate-500 font-medium max-w-md">{subtitleText}</p>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{greetingText}</h2>
+          <p className="text-slate-500 font-medium max-w-md text-sm md:text-base">{subtitleText}</p>
         </div>
         <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       </div>
 
       {/* Bento Grid */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="grid grid-cols-12 gap-4 md:gap-5">
 
         {/* --- Stats col (4) --- */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+        <div className="col-span-12 lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
           {[
             { label: labelNewLeads, value: stats.newLeads, sub: `סה"כ ${stats.totalLeads} לידים`, href: createPageUrl('Customers?status=NEW'), icon: (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke={PRIMARY} strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
@@ -221,12 +221,12 @@ export default function Dashboard() {
         <div className="col-span-12 lg:col-span-8">
           <div className="bg-white h-full rounded-xl overflow-hidden border shadow-sm relative" style={{ borderColor: `${PRIMARY}15`, background: `linear-gradient(135deg, ${PRIMARY}08 0%, white 55%)` }}>
             {nextEvent ? (
-              <Link to={createPageUrl(`Events?eventId=${nextEvent.id}`)} className="block h-full p-8 flex flex-col justify-between min-h-[280px] hover:opacity-90 transition-opacity">
+              <Link to={createPageUrl(`Events?eventId=${nextEvent.id}`)} className="block h-full p-5 md:p-8 flex flex-col justify-between min-h-[220px] md:min-h-[280px] hover:opacity-90 transition-opacity">
                 <div>
                   <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}>
                     אירוע הבא
                   </span>
-                  <h3 className="text-3xl font-black mt-4 text-[#181311]">
+                  <h3 className="text-xl md:text-3xl font-black mt-4 text-[#181311]">
                     {nextEvent.event_type}{nextEventCustomer ? ` — ${nextEventCustomer.name}` : ''}
                   </h3>
                   <div className="flex flex-wrap gap-4 mt-4 text-[#886c63]">
@@ -255,7 +255,7 @@ export default function Dashboard() {
                 </div>
               </Link>
             ) : (
-              <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center p-8">
+              <div className="h-full min-h-[220px] md:min-h-[280px] flex flex-col items-center justify-center text-center p-5 md:p-8">
                 <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4" style={{ backgroundColor: `${PRIMARY}15`, color: PRIMARY }}>אירוע הבא</span>
                 <p className="text-[#886c63] font-medium">אין אירועים קרובים</p>
               </div>

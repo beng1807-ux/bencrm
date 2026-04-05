@@ -255,13 +255,13 @@ export default function Events() {
   return (
     <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif', color: eventSettings.events_font_color || '#0f172a' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: eventSettings.events_font_color || '#0f172a' }}>{eventSettings.events_title || 'חגיגה של הצלחה! 🎉'}</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: eventSettings.events_font_color || '#0f172a' }}>{eventSettings.events_title || 'חגיגה של הצלחה! 🎉'}</h2>
           <p className="text-slate-500 font-medium max-w-md">{eventSettings.events_subtitle || 'החודש הזה אנחנו שוברים שיאים. האירועים שלכם הופכים לרגעים בלתי נשכחים.'}</p>
         </div>
-        <div className="flex items-center gap-8 relative z-10">
-          <div className="relative flex items-center justify-center w-28 h-28">
+        <div className="flex items-center gap-4 md:gap-8 relative z-10">
+          <div className="relative flex items-center justify-center w-20 h-20 md:w-28 md:h-28">
             <svg className="w-full h-full transform -rotate-90">
               <circle className="text-slate-200" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeWidth="8" />
               <circle className="text-primary" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeDasharray="301.59" strokeDashoffset={301.59 * (1 - confirmedCount / (confirmedCount + 8))} strokeLinecap="round" strokeWidth="10" />
@@ -308,36 +308,36 @@ export default function Events() {
       {/* Main Container */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         {/* Toolbar */}
-        <div className="p-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-6 flex-wrap">
+        <div className="p-4 md:p-6 border-b border-slate-200 space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex bg-slate-100 p-1 rounded-xl">
               <button onClick={() => setViewMode('table')}
-                className={`px-6 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
-                <List className="w-4 h-4" />תצוגת רשימה
+                className={`px-3 md:px-6 py-2 rounded-lg text-xs md:text-sm font-black flex items-center gap-1 md:gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <List className="w-4 h-4" /><span className="hidden md:inline">תצוגת</span> רשימה
               </button>
               <button onClick={() => setViewMode('cards')}
-                className={`px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
-                <LayoutGrid className="w-4 h-4" />תצוגת כרטיסים
+                className={`px-3 md:px-6 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1 md:gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                <LayoutGrid className="w-4 h-4" /><span className="hidden md:inline">תצוגת</span> כרטיסים
               </button>
             </div>
-            <div className="h-6 w-px bg-slate-200" />
-            <div className="flex items-center gap-4">
-              <button onClick={() => { setFilterType('ALL'); setFilterThisMonth(false); }} className={`text-sm font-black pb-1 ${filterType === 'ALL' && !filterThisMonth ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>כל האירועים</button>
-              {filterThisMonth && <button onClick={() => setFilterThisMonth(false)} className="text-sm font-black pb-1 text-primary border-b-2 border-primary flex items-center gap-1">החודש ✕</button>}
-              <button onClick={() => setFilterType('חתונה')} className={`text-sm font-bold pb-1 ${filterType === 'חתונה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>חתונות</button>
-              <button onClick={() => setFilterType('אירוע חברה')} className={`text-sm font-bold pb-1 ${filterType === 'אירוע חברה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>אירועי חברה</button>
-              <button onClick={() => setFilterType('יום הולדת')} className={`text-sm font-bold pb-1 ${filterType === 'יום הולדת' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>מסיבות</button>
+            <div className="h-6 w-px bg-slate-200 hidden md:block" />
+            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto">
+              <button onClick={() => { setFilterType('ALL'); setFilterThisMonth(false); }} className={`text-xs md:text-sm font-black pb-1 whitespace-nowrap ${filterType === 'ALL' && !filterThisMonth ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הכל</button>
+              {filterThisMonth && <button onClick={() => setFilterThisMonth(false)} className="text-xs md:text-sm font-black pb-1 text-primary border-b-2 border-primary flex items-center gap-1 whitespace-nowrap">החודש ✕</button>}
+              <button onClick={() => setFilterType('חתונה')} className={`text-xs md:text-sm font-bold pb-1 whitespace-nowrap ${filterType === 'חתונה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>חתונות</button>
+              <button onClick={() => setFilterType('אירוע חברה')} className={`text-xs md:text-sm font-bold pb-1 whitespace-nowrap ${filterType === 'אירוע חברה' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>חברה</button>
+              <button onClick={() => setFilterType('יום הולדת')} className={`text-xs md:text-sm font-bold pb-1 whitespace-nowrap ${filterType === 'יום הולדת' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>מסיבות</button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input className="pr-10 w-64 bg-slate-50 border-slate-200" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+              <Input className="pr-10 bg-slate-50 border-slate-200 w-full" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
               <Filter className="w-4 h-4" />סינון מתקדם
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
               <Download className="w-4 h-4" />ייצוא
             </Button>
             {selected.size > 0 && (
@@ -353,7 +353,7 @@ export default function Events() {
 
         {/* Cards View */}
         {viewMode === 'cards' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 p-4 md:p-6">
             {filteredEvents.map(event => {
               const customerName = getContactName(event.contact_id, contacts);
               const dj = djs.find(d => d.id === event.dj_id);

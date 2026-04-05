@@ -90,9 +90,9 @@ export default function DJs() {
   return (
     <div className="space-y-5" dir="rtl">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a', fontFamily: 'Assistant, sans-serif' }}>תקליטנים</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a', fontFamily: 'Assistant, sans-serif' }}>תקליטנים</h2>
           <p className="text-slate-500 font-medium max-w-md">ניהול צוות ה-DJ-ים שלך</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white relative z-10" style={{ backgroundColor: PRIMARY }}>

@@ -90,9 +90,9 @@ export default function MyShows() {
   return (
     <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{isAdmin ? 'הופעות תקליטנים' : 'לוח ההופעות שלי'}</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{isAdmin ? 'הופעות תקליטנים' : 'לוח ההופעות שלי'}</h2>
           <p className="text-slate-500 font-medium max-w-md">{djProfile?.name} - {upcomingEvents.length} אירועים קרובים</p>
         </div>
         {isAdmin && allDJs.length > 0 && (

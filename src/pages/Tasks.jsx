@@ -110,13 +110,13 @@ export default function Tasks() {
   return (
     <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>משימות</h2>
-          <p className="text-slate-500 font-medium max-w-md">ניהול המשימות שלך — תעדוף, מעקב וביצוע</p>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>משימות</h2>
+          <p className="text-slate-500 font-medium max-w-md text-sm md:text-base">ניהול המשימות שלך — תעדוף, מעקב וביצוע</p>
         </div>
-        <div className="flex items-center gap-8 relative z-10">
-          <div className="relative flex items-center justify-center w-28 h-28">
+        <div className="flex items-center gap-4 md:gap-8 relative z-10">
+          <div className="relative flex items-center justify-center w-20 h-20 md:w-28 md:h-28">
             <svg className="w-full h-full transform -rotate-90">
               <circle className="text-slate-200" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeWidth="8" />
               <circle className="text-primary" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" strokeDasharray="301.59" strokeDashoffset={301.59 * (1 - completionRate / 100)} strokeLinecap="round" strokeWidth="10" />
@@ -165,30 +165,30 @@ export default function Tasks() {
       {/* Main Container */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         {/* Toolbar */}
-        <div className="p-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-6 flex-wrap">
+        <div className="p-4 md:p-6 border-b border-slate-200 space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex bg-slate-100 p-1 rounded-xl">
               <button onClick={() => setViewMode('table')}
-                className={`px-6 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                className={`px-3 md:px-6 py-2 rounded-lg text-xs md:text-sm font-black flex items-center gap-1 md:gap-2 transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
                 <List className="w-4 h-4" />רשימה
               </button>
               <button onClick={() => setViewMode('cards')}
-                className={`px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+                className={`px-3 md:px-6 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1 md:gap-2 transition-all ${viewMode === 'cards' ? 'bg-white shadow-sm text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
                 <LayoutGrid className="w-4 h-4" />כרטיסים
               </button>
             </div>
-            <div className="h-6 w-px bg-slate-200" />
-            <div className="flex items-center gap-4">
-              <button onClick={() => setFilterStatus('ALL')} className={`text-sm font-black pb-1 ${filterStatus === 'ALL' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הכל</button>
-              <button onClick={() => setFilterStatus('PENDING')} className={`text-sm font-bold pb-1 ${filterStatus === 'PENDING' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>ממתין</button>
-              <button onClick={() => setFilterStatus('CALLED')} className={`text-sm font-bold pb-1 ${filterStatus === 'CALLED' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>שיחה</button>
-              <button onClick={() => setFilterStatus('DONE')} className={`text-sm font-bold pb-1 ${filterStatus === 'DONE' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הושלם</button>
+            <div className="h-6 w-px bg-slate-200 hidden md:block" />
+            <div className="flex items-center gap-2 md:gap-4">
+              <button onClick={() => setFilterStatus('ALL')} className={`text-xs md:text-sm font-black pb-1 ${filterStatus === 'ALL' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הכל</button>
+              <button onClick={() => setFilterStatus('PENDING')} className={`text-xs md:text-sm font-bold pb-1 ${filterStatus === 'PENDING' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>ממתין</button>
+              <button onClick={() => setFilterStatus('CALLED')} className={`text-xs md:text-sm font-bold pb-1 ${filterStatus === 'CALLED' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>שיחה</button>
+              <button onClick={() => setFilterStatus('DONE')} className={`text-xs md:text-sm font-bold pb-1 ${filterStatus === 'DONE' ? 'text-primary border-b-2 border-primary' : 'text-slate-400 hover:text-slate-600'}`}>הושלם</button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input className="pr-10 w-64 bg-slate-50 border-slate-200" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+              <Input className="pr-10 bg-slate-50 border-slate-200 w-full" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             {selected.size > 0 && (
               <Button variant="destructive" size="sm" onClick={deleteSelected} className="flex items-center gap-2 font-bold">

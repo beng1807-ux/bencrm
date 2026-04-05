@@ -449,9 +449,9 @@ export default function Customers() {
     <div className="space-y-5" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10 flex items-center justify-between">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{customerSettings.customers_title || 'לקוחות'}</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>{customerSettings.customers_title || 'לקוחות'}</h2>
           <p className="text-slate-500 font-medium max-w-md">{customerSettings.customers_subtitle || 'מסלול מלא — מליד ועד אירוע בוצע'}</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="shadow-lg font-bold px-5 text-white relative z-10" style={{ backgroundColor: PRIMARY }}>
@@ -462,7 +462,7 @@ export default function Customers() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-4 md:gap-6">
         <Link to={createPageUrl('Customers?status=NEW')} onClick={() => setPhaseFilter('lead')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500"><Users className="w-6 h-6" /></div>
@@ -489,10 +489,10 @@ export default function Customers() {
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative">
+      <div className="flex flex-wrap gap-2 md:gap-3 items-center">
+        <div className="relative flex-1 min-w-[150px] max-w-xs">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input className="pr-9 w-52 bg-white text-sm" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <Input className="pr-9 bg-white text-sm w-full" placeholder="חיפוש..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         </div>
 
         <Select value={filterEventType} onValueChange={setFilterEventType}>

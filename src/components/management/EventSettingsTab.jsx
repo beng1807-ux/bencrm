@@ -87,7 +87,7 @@ export default function EventSettingsTab({ eventSettings, setEventSettings }) {
       <Card>
         <CardHeader><CardTitle>כותרות וצבע פונט</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>כותרת דף האירועים</Label>
               <Input value={es.events_title || 'אירועים'} onChange={e => setEventSettings({ ...es, events_title: e.target.value })} dir="rtl" />

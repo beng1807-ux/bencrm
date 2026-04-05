@@ -191,9 +191,9 @@ export default function EventCalendar() {
   return (
     <div className="space-y-8" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-8 rounded-3xl border border-primary/10">
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-5 md:p-8 rounded-3xl border border-primary/10">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black mb-2" style={{ color: '#0f172a' }}>יומן אירועים</h2>
+          <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#0f172a' }}>יומן אירועים</h2>
           <p className="text-slate-500 font-medium max-w-md">
             {currentMonthEvents.length} אירועים ב{monthNames[currentDate.getMonth()]} • {confirmedCount} מאושרים • {pendingCount} ממתינים
           </p>
@@ -251,7 +251,7 @@ export default function EventCalendar() {
       </div>
 
       {/* Calendar */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-2 md:p-5 overflow-x-auto">
         {viewMode === 'month' ? (
           <MonthView
             currentDate={currentDate}

@@ -189,31 +189,32 @@ export default function Management() {
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Settings className="w-8 h-8" />
-          פאנל ניהול
-        </h1>
-        <p className="text-gray-600">ניהול הגדרות, תבניות ומחירון</p>
+    <div className="space-y-6" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-l from-primary/5 to-transparent p-6 md:p-8 rounded-3xl border border-primary/10">
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-3xl font-black mb-1" style={{ color: '#0f172a' }}>הגדרות המערכת</h2>
+          <p className="text-slate-500 font-medium text-sm md:text-base">ניהול הגדרות, תבניות ומחירון</p>
+        </div>
+        <div className="absolute left-0 top-0 w-72 h-72 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-11">
-          <TabsTrigger value="crm_guide" className="flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5" />מדריך CRM
+        <TabsList className="flex w-full overflow-x-auto gap-1 p-1 h-auto flex-nowrap justify-start">
+          <TabsTrigger value="crm_guide" className="flex items-center gap-1 whitespace-nowrap text-xs md:text-sm px-3 py-2">
+            <BookOpen className="w-3.5 h-3.5 hidden md:block" />מדריך CRM
           </TabsTrigger>
-          <TabsTrigger value="settings">הגדרות כלליות</TabsTrigger>
-          <TabsTrigger value="templates">תבניות הודעות</TabsTrigger>
-          <TabsTrigger value="packages">מחירון</TabsTrigger>
-          <TabsTrigger value="events_settings">אירועים</TabsTrigger>
-          <TabsTrigger value="booking_form">טופס הזמנה</TabsTrigger>
-          <TabsTrigger value="branding">מיתוג</TabsTrigger>
-          <TabsTrigger value="customers">לקוחות</TabsTrigger>
-          <TabsTrigger value="dashboard_texts">טקסטים דשבורד</TabsTrigger>
-          <TabsTrigger value="nav">סרגל ניווט</TabsTrigger>
-          <TabsTrigger value="whatsapp_agent" className="flex items-center gap-1">
-            <MessageCircle className="w-3.5 h-3.5" />סוכן ווצאפ
+          <TabsTrigger value="settings" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">הגדרות כלליות</TabsTrigger>
+          <TabsTrigger value="templates" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">תבניות הודעות</TabsTrigger>
+          <TabsTrigger value="packages" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">מחירון</TabsTrigger>
+          <TabsTrigger value="events_settings" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">אירועים</TabsTrigger>
+          <TabsTrigger value="booking_form" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">טופס הזמנה</TabsTrigger>
+          <TabsTrigger value="branding" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">מיתוג</TabsTrigger>
+          <TabsTrigger value="customers" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">לקוחות</TabsTrigger>
+          <TabsTrigger value="dashboard_texts" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">דשבורד</TabsTrigger>
+          <TabsTrigger value="nav" className="whitespace-nowrap text-xs md:text-sm px-3 py-2">סרגל ניווט</TabsTrigger>
+          <TabsTrigger value="whatsapp_agent" className="flex items-center gap-1 whitespace-nowrap text-xs md:text-sm px-3 py-2">
+            <MessageCircle className="w-3.5 h-3.5 hidden md:block" />סוכן ווצאפ
           </TabsTrigger>
         </TabsList>
 
@@ -226,7 +227,7 @@ export default function Management() {
               <div className="border-b pb-6 mb-6">
                 <h3 className="font-semibold mb-4">פרטי העסק</h3>
                 <p className="text-xs text-gray-400 mb-4">פרטים אלו משמשים בהודעות האוטומטיות ובמערכת</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>מייל בעל העסק</Label>
                     <Input
@@ -298,7 +299,7 @@ export default function Management() {
               <div>
                 <Label className="mb-1">שעת שליחת הודעות אוטומטיות</Label>
                 <p className="text-xs text-gray-400 mb-3">באיזו שעה ביום תישלחנה הודעות מתוזמנות (תזכורות תשלום, תזכורת אירוע, תודה)</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>שעה</Label>
                     <Input
@@ -380,7 +381,7 @@ export default function Management() {
 
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">תזכורות תשלום</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>תזכורת 1 (ימים אחרי ביצוע האירוע)</Label>
                     <Input
@@ -402,7 +403,7 @@ export default function Management() {
 
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">תזכורות אירועים</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>תזכורת אירוע (ימים לפני)</Label>
                     <Input
@@ -553,9 +554,9 @@ export default function Management() {
             {packages.map(pkg => (
               <Card key={pkg.id} className={selectedPackages.has(pkg.id) ? 'border-orange-300 bg-orange-50/30' : ''}>
                 <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <Checkbox checked={selectedPackages.has(pkg.id)} onCheckedChange={() => togglePackageSelect(pkg.id)} />
-                    <div className="grid grid-cols-4 gap-4 flex-1">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+                  <Checkbox checked={selectedPackages.has(pkg.id)} onCheckedChange={() => togglePackageSelect(pkg.id)} />
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 flex-1 w-full">
                       <Input
                         value={pkg.item_name}
                         onChange={e => {
@@ -622,7 +623,7 @@ export default function Management() {
               <CardTitle>מיתוג המערכת</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>שם האפליקציה</Label>
                   <Input
@@ -693,7 +694,7 @@ export default function Management() {
 
               <div className="border-b pb-6">
                 <h3 className="font-semibold mb-4">תוויות שדות בכרטיס</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>תווית שדה שם</Label>
                     <Input
@@ -747,7 +748,7 @@ export default function Management() {
 
               <div className="border-b pb-6">
                 <h3 className="font-semibold mb-4">סטטוסים</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>סטטוס פעיל</Label>
                     <Input
@@ -806,7 +807,7 @@ export default function Management() {
               {/* Nav texts */}
               <div className="border-t pt-4">
                 <p className="text-sm font-semibold text-gray-500 mb-3">טקסטי פריטי ניווט</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[
                     { key: 'nav_dashboard', label: 'לוח בקרה' },
                     { key: 'nav_leads', label: 'לידים' },
