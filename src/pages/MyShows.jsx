@@ -24,40 +24,14 @@ export default function MyShows() {
 
   const loadInitial = async () => {
     try {
-      const user = await base44.auth.me();
-      const admin = user.role === 'admin';
-      setIsAdmin(admin);
-
-      if (admin) {
-        const [djs, contactsData] = await Promise.all([
-          base44.entities.DJ.list(),
-          base44.entities.Contact.list(),
-        ]);
-        setAllDJs(djs);
-        setContacts(contactsData);
-        if (djs.length > 0) {
-          setSelectedDJId(djs[0].id);
-          setDjProfile(djs[0]);
-          const events = await base44.entities.Event.filter({ dj_id: djs[0].id }, '-event_date');
-          setMyEvents(events);
-        }
-      } else {
-        // חיפוש DJ לפי אימייל
-        let djList = [];
-        if (user.email) {
-          djList = await base44.entities.DJ.filter({ email: user.email });
-        }
-        // DJ users also need contacts data
-        const contactsData = await base44.entities.Contact.list();
-        setContacts(contactsData);
-
-        if (djList.length > 0) {
-          const dj = djList[0];
-          setDjProfile(dj);
-          const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
-          setMyEvents(events);
-        }
-      }
+      const response = await base44.functions.invoke('getDJShows', {});
+      const data = response.data;
+      setIsAdmin(data.isAdmin);
+      if (data.djProfile) setDjProfile(data.djProfile);
+      if (data.allDJs) setAllDJs(data.allDJs);
+      if (data.events) setMyEvents(data.events);
+      if (data.contacts) setContacts(data.contacts);
+      if (data.isAdmin && data.djProfile) setSelectedDJId(data.djProfile.id);
     } catch (error) {
       console.error('Error loading shows:', error);
       toast.error('שגיאה בטעינת הופעות');
@@ -71,8 +45,14 @@ export default function MyShows() {
     if (dj) {
       setSelectedDJId(djId);
       setDjProfile(dj);
-      const events = await base44.entities.Event.filter({ dj_id: dj.id }, '-event_date');
-      setMyEvents(events);
+      try {
+        const response = await base44.functions.invoke('getDJShows', { djId });
+        const data = response.data;
+        setMyEvents(data.events || []);
+        setContacts(data.contacts || []);
+      } catch (error) {
+        console.error('Error loading DJ events:', error);
+      }
     }
   };
 

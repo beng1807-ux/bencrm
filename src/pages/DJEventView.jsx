@@ -44,31 +44,13 @@ export default function DJEventView() {
       const eventId = params.get('eventId');
       if (!eventId) { setLoading(false); return; }
 
-      const user = await base44.auth.me();
-      const isAdmin = user.role === 'admin';
-
-      const events = await base44.entities.Event.filter({ id: eventId });
-      if (events.length === 0) { setLoading(false); return; }
-      const ev = events[0];
-
-      // Verify DJ has access to this event
-      if (!isAdmin) {
-        let djList = [];
-        if (user.email) {
-          djList = await base44.entities.DJ.filter({ email: user.email });
-        }
-        if (djList.length === 0 || djList[0].id !== ev.dj_id) {
-          setLoading(false);
-          return;
-        }
-      }
-
-      setAuthorized(true);
-      setEvent(ev);
-
-      if (ev.contact_id) {
-        const contactsList = await base44.entities.Contact.filter({ id: ev.contact_id });
-        if (contactsList.length > 0) setContact(contactsList[0]);
+      const response = await base44.functions.invoke('getDJEventDetails', { eventId });
+      const data = response.data;
+      
+      if (data.authorized) {
+        setAuthorized(true);
+        setEvent(data.event);
+        if (data.contact) setContact(data.contact);
       }
     } catch (error) {
       console.error('Error loading event:', error);
