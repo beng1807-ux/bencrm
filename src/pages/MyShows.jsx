@@ -7,6 +7,7 @@ import { Calendar, MapPin, Users, Phone, Mail, ExternalLink } from 'lucide-react
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ContactTooltip from '../components/shows/ContactTooltip';
 
 export default function MyShows() {
   const [myEvents, setMyEvents] = useState([]);
@@ -137,8 +138,11 @@ export default function MyShows() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {upcomingEvents.map(event => {
             const contact = contacts.find(c => c.id === event.contact_id);
+            const eventLink = isAdmin
+              ? createPageUrl(`Events?eventId=${event.id}`)
+              : createPageUrl(`DJEventView?eventId=${event.id}`);
             return (
-              <Link key={event.id} to={createPageUrl(`Events?eventId=${event.id}`)}>
+              <Link key={event.id} to={eventLink}>
                 <Card className="hover:shadow-md transition-all cursor-pointer">
                   <CardContent className="pt-6">
                     <div className="space-y-3">
@@ -168,22 +172,12 @@ export default function MyShows() {
                           </div>
                         )}
                         {contact && (
-                          <>
-                            <div className="flex items-center gap-2">
+                          <ContactTooltip contact={contact}>
+                            <div className="flex items-center gap-2 cursor-default" onClick={e => e.preventDefault()}>
                               <Users className="w-4 h-4" />
-                              {contact.contact_name}
+                              <span className="underline decoration-dotted">{contact.contact_name}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-4 h-4" />
-                              <a href={`tel:${contact.phone}`} onClick={e => e.stopPropagation()} className="hover:underline">{contact.phone}</a>
-                            </div>
-                            {contact.email && (
-                              <div className="flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
-                                <a href={`mailto:${contact.email}`} onClick={e => e.stopPropagation()} className="hover:underline">{contact.email}</a>
-                              </div>
-                            )}
-                          </>
+                          </ContactTooltip>
                         )}
                       </div>
                       {event.notes && (
@@ -213,8 +207,11 @@ export default function MyShows() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {pastEvents.map(event => {
               const contact = contacts.find(c => c.id === event.contact_id);
+              const eventLink = isAdmin
+                ? createPageUrl(`Events?eventId=${event.id}`)
+                : createPageUrl(`DJEventView?eventId=${event.id}`);
               return (
-                <Link key={event.id} to={createPageUrl(`Events?eventId=${event.id}`)}>
+                <Link key={event.id} to={eventLink}>
                   <Card className="opacity-75 hover:opacity-100 hover:shadow-md transition-all cursor-pointer">
                     <CardContent className="pt-4">
                       <div className="flex items-center gap-2">
@@ -225,10 +222,11 @@ export default function MyShows() {
                         {new Date(event.event_date).toLocaleDateString('he-IL')}
                       </p>
                       {contact && (
-                        <>
-                          <p className="text-sm text-gray-600">{contact.contact_name}</p>
-                          <p className="text-sm text-gray-500">{contact.phone}</p>
-                        </>
+                        <ContactTooltip contact={contact}>
+                          <span className="text-sm text-gray-600 underline decoration-dotted cursor-default" onClick={e => e.preventDefault()}>
+                            {contact.contact_name}
+                          </span>
+                        </ContactTooltip>
                       )}
                     </CardContent>
                   </Card>
