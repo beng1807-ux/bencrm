@@ -19,10 +19,10 @@ import PaymentMethodModal from '../components/events/PaymentMethodModal';
 const PRIMARY = '#ec5b13';
 
 const STATUS_LABELS = { PENDING: 'ממתין', CONFIRMED: 'מאושר', IN_PROGRESS: 'בתהליך', COMPLETED: 'הושלם', CANCELLED: 'בוטל' };
-const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', DEPOSIT_PAID: 'שולמה מקדמה', PAID_FULL: 'שולם במלואו' };
+const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', PAID_FULL: 'שולם במלואו' };
 
 const getStatusColor = (s) => ({ PENDING:'bg-orange-50 text-orange-500', CONFIRMED:'bg-emerald-50 text-emerald-500', IN_PROGRESS:'bg-amber-50 text-amber-500', COMPLETED:'bg-green-50 text-green-500', CANCELLED:'bg-red-50 text-red-500' }[s] || 'bg-slate-50 text-slate-500');
-const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID:'bg-amber-50 text-amber-600', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
+const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
 
 const getContactName = (contactId, contacts) => {
   const contact = contacts.find(c => c.id === contactId);
@@ -150,7 +150,7 @@ export default function Events() {
   };
 
   const handlePaymentStatusChange = (newStatus) => {
-    if (newStatus === 'DEPOSIT_PAID' || newStatus === 'PAID_FULL') {
+    if (newStatus === 'PAID_FULL') {
       setPendingPaymentStatus(newStatus);
       setPaymentModalOpen(true);
     } else {
