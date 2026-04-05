@@ -322,18 +322,18 @@ export default function Customers() {
         toast.info(`יוצר אירוע עבור ${name}...`);
         const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
         if (response.data?.success) {
-          toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
+          toast.success(`✅ עסקה נסגרה — אירוע נוצר עבור ${name}`, { duration: 5000 });
         } else {
           toast.success('הסטטוס עודכן');
         }
       } else if (newStatus === 'DJ_SKITZA') {
-        toast.success(`הסטטוס עודכן — הודעת טופס DJ בדרך ל-${name}...`);
+        toast.success(`הסטטוס עודכן — הודעת טופס DJ בדרך ל-${name}...`, { duration: 5000 });
       } else {
         toast.success('הסטטוס עודכן');
       }
       
-      await loadLeads();
       setSelectedLead(prev => ({ ...prev, status: newStatus }));
+      loadLeads(); // don't await — let toast show immediately
     } catch (err) {
       toast.error(`שגיאה בעדכון הסטטוס: ${err.message || 'שגיאה לא ידועה'}`);
     }
@@ -367,11 +367,11 @@ export default function Customers() {
       toast.info(`יוצר אירוע עבור ${name}...`);
       const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
       if (response.data?.success) {
-        toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
+        toast.success(`✅ עסקה נסגרה — אירוע נוצר עבור ${name}`, { duration: 5000 });
       } else {
         toast.success('סטטוס עודכן');
       }
-      await loadLeads();
+      loadLeads(); // don't await — toast should show immediately
     } catch (err) {
       toast.error(`שגיאה בסגירת עסקה: ${err.message || 'שגיאה לא ידועה'}`);
     }
@@ -388,18 +388,18 @@ export default function Customers() {
         toast.info(`יוצר אירוע עבור ${name}...`);
         const response = await base44.functions.invoke('dealClosedHandler', { contact_id: editData.id });
         if (response.data?.success) {
-          toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
+          toast.success(`✅ עסקה נסגרה — אירוע נוצר עבור ${name}`, { duration: 5000 });
         } else {
           toast.success('הסטטוס עודכן');
         }
       } else if (editData.status === 'DJ_SKITZA' && oldLead?.status !== 'DJ_SKITZA') {
-        toast.success(`עודכן — הודעת טופס DJ בדרך ל-${name}...`);
+        toast.success(`עודכן — הודעת טופס DJ בדרך ל-${name}...`, { duration: 5000 });
       } else {
         toast.success('עודכן בהצלחה');
       }
 
-      await loadLeads();
       setEditOpen(false);
+      loadLeads(); // don't await — let toast show immediately
     } catch (err) {
       toast.error(`שגיאה בעדכון: ${err.message || 'שגיאה לא ידועה'}`);
     }

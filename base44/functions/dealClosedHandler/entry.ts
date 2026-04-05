@@ -118,6 +118,22 @@ Deno.serve(async (req) => {
       console.log('[dealClosedHandler] Message logged');
     }
 
+    // Create AuditLog entry so it shows in Dashboard activity
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_name: 'Event',
+      entity_id: newEvent.id,
+      action: 'CREATE',
+      diff_summary: `עסקה נסגרה — אירוע חדש נוצר עבור ${contact.contact_name || ''}`,
+      metadata: {
+        contact_id: contact.id,
+        contact_name: contact.contact_name,
+        event_type: contact.event_type,
+        is_dj_only: isDjOnly,
+        price_total: priceTotal,
+      },
+    });
+    console.log('[dealClosedHandler] AuditLog created');
+
     return Response.json({ success: true, contact_id: contact.id, event_id: newEvent.id });
   } catch (error) {
     console.error('[dealClosedHandler] ERROR:', error.stack || error.message);
