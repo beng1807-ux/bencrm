@@ -116,7 +116,9 @@ export default function Dashboard() {
   };
 
   const relativeTime = (d) => {
-    const diff = Date.now() - new Date(d).getTime();
+    // Ensure UTC interpretation: append Z if no timezone indicator
+    const dateStr = typeof d === 'string' && !d.endsWith('Z') && !d.includes('+') ? d + 'Z' : d;
+    const diff = Date.now() - new Date(dateStr).getTime();
     if (diff < 0) return 'עכשיו';
     const m = Math.floor(diff / 60000);
     if (m < 1) return 'עכשיו';
