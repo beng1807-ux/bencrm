@@ -23,18 +23,29 @@ Deno.serve(async (req) => {
     for (const event of events) {
       if (event.payment_status === 'PAID_FULL') continue;
       if (event.is_third_party_paid) continue;
+      if (event.event_status === 'CANCELLED') continue;
 
-      const eventDate = new Date(event.event_date);
-      const daysUntilEvent = Math.round((eventDate - today) / (1000 * 60 * 60 * 24));
+      const eventDate = new Date(event.event_date + 'T00:00:00Z');
+      const daysSinceEvent = Math.round((today - eventDate) / (1000 * 60 * 60 * 24));
 
-      if (daysUntilEvent === settings.payment_reminder_1_days_before && !event.payment_reminder_1_sent_at) {
+      // תזכורת תשלום 1: X ימים אחרי האירוע
+      const reminder1Days = settings.payment_reminder_1_days_after_event ?? 1;
+      if (daysSinceEvent === reminder1Days && !event.payment_reminder_1_sent_at) {
+        console.log(`[paymentReminders] Sending reminder 1 for event ${event.id}, daysSinceEvent=${daysSinceEvent}`);
         await sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, 1);
         sentCount++;
       }
 
-      if (daysUntilEvent === settings.payment_reminder_2_days_before && !event.payment_reminder_2_sent_at) {
-        await sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, 2);
-        sentCount++;
+      // תזכורת תשלום 2: X ימים אחרי התזכורת הראשונה
+      const reminder2DaysAfterFirst = settings.payment_reminder_2_days_after_first ?? 2;
+      if (event.payment_reminder_1_sent_at && !event.payment_reminder_2_sent_at) {
+        const reminder1Date = new Date(event.payment_reminder_1_sent_at.split('T')[0] + 'T00:00:00Z');
+        const daysSinceReminder1 = Math.round((today - reminder1Date) / (1000 * 60 * 60 * 24));
+        if (daysSinceReminder1 >= reminder2DaysAfterFirst) {
+          console.log(`[paymentReminders] Sending reminder 2 for event ${event.id}, daysSinceReminder1=${daysSinceReminder1}`);
+          await sendPaymentReminder(base44, event, contacts, settings, signature, logoUrl, 2);
+          sentCount++;
+        }
       }
     }
 

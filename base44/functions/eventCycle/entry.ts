@@ -19,10 +19,14 @@ Deno.serve(async (req) => {
     let remindersCount = 0;
     let thanksCount = 0;
 
+    // Use calendar-day difference (ignoring time of day) to avoid off-by-one issues
+    const todayStr = now.toISOString().split('T')[0]; // e.g. "2026-04-05"
+    const todayMidnight = new Date(todayStr + 'T00:00:00Z');
+
     for (const event of events) {
-      const eventDate = new Date(event.event_date);
-      const daysUntilEvent = Math.floor((eventDate - now) / (1000 * 60 * 60 * 24));
-      const daysSinceEvent = Math.floor((now - eventDate) / (1000 * 60 * 60 * 24));
+      const eventMidnight = new Date(event.event_date + 'T00:00:00Z');
+      const daysUntilEvent = Math.round((eventMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+      const daysSinceEvent = Math.round((todayMidnight - eventMidnight) / (1000 * 60 * 60 * 24));
 
       // תזכורת אירוע
       if (daysUntilEvent === settings.event_reminder_days_before) {
@@ -34,8 +38,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      // הודעת תודה אחרי אירוע
-      if (daysSinceEvent === settings.thank_you_days_after && event.event_status !== 'COMPLETED') {
+      // הודעת תודה אחרי אירוע (default: 1 day after)
+      const thankYouDays = settings.thank_you_days_after ?? 1;
+      if (daysSinceEvent === thankYouDays && event.event_status !== 'COMPLETED') {
         await sendThankYou(base44, event, contacts, settings, signature, logoUrl);
         thanksCount++;
 
