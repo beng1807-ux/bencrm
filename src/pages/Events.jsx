@@ -19,10 +19,10 @@ import PaymentMethodModal from '../components/events/PaymentMethodModal';
 const PRIMARY = '#ec5b13';
 
 const STATUS_LABELS = { PENDING: 'ממתין', CONFIRMED: 'מאושר', IN_PROGRESS: 'בתהליך', COMPLETED: 'הושלם', CANCELLED: 'בוטל' };
-const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', PAID_FULL: 'שולם במלואו' };
+const PAYMENT_LABELS = { PENDING: 'ממתין לתשלום', DEPOSIT_PAID: 'שולמה מקדמה', PAID_FULL: 'שולם במלואו' };
 
 const getStatusColor = (s) => ({ PENDING:'bg-orange-50 text-orange-500', CONFIRMED:'bg-emerald-50 text-emerald-500', IN_PROGRESS:'bg-amber-50 text-amber-500', COMPLETED:'bg-green-50 text-green-500', CANCELLED:'bg-red-50 text-red-500' }[s] || 'bg-slate-50 text-slate-500');
-const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
+const getPaymentColor = (s) => ({ PENDING:'bg-red-50 text-red-500', DEPOSIT_PAID:'bg-amber-50 text-amber-600', PAID_FULL:'bg-emerald-50 text-emerald-500' }[s] || 'bg-slate-50 text-slate-500');
 
 const getContactName = (contactId, contacts) => {
   const contact = contacts.find(c => c.id === contactId);
@@ -165,13 +165,36 @@ export default function Events() {
   };
 
   const saveEdit = async () => {
-    await base44.entities.Event.update(editData.id, editData);
-    if (editData.contact_id && editData.event_date) {
-      await syncDateToSource(editData.contact_id, editData.event_date);
+    try {
+      // Detect what changed for smart toasts
+      const originalEvent = events.find(e => e.id === editData.id);
+      const djChanged = originalEvent && editData.dj_id && editData.dj_id !== originalEvent.dj_id;
+      const paymentChanged = originalEvent && editData.payment_status && editData.payment_status !== originalEvent.payment_status;
+      const statusChanged = originalEvent && editData.event_status && editData.event_status !== originalEvent.event_status;
+
+      const contactName = getContactName(editData.contact_id, contacts);
+      const djName = djChanged ? djs.find(d => d.id === editData.dj_id)?.name : null;
+
+      await base44.entities.Event.update(editData.id, editData);
+      if (editData.contact_id && editData.event_date) {
+        await syncDateToSource(editData.contact_id, editData.event_date);
+      }
+      await loadData();
+      setEditOpen(false);
+
+      // Smart toasts based on what changed
+      if (djChanged) {
+        toast.success(`האירוע עודכן — הודעת שיבוץ בדרך ל-${contactName} ול-DJ ${djName || ''}`);
+      } else if (paymentChanged && editData.payment_status === 'PAID_FULL') {
+        toast.success(`האירוע עודכן — אישור תשלום בדרך ל-${contactName}`);
+      } else if (statusChanged && editData.event_status === 'COMPLETED') {
+        toast.success(`האירוע עודכן — הודעת תודה בדרך ל-${contactName}`);
+      } else {
+        toast.success('האירוע עודכן');
+      }
+    } catch (err) {
+      toast.error(`שגיאה בעדכון האירוע: ${err.message || 'שגיאה לא ידועה'}`);
     }
-    await loadData();
-    setEditOpen(false);
-    toast.success('האירוע עודכן');
   };
 
   const syncDateToSource = async (contactId, newDate) => {

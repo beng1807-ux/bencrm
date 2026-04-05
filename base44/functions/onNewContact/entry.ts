@@ -116,10 +116,9 @@ Deno.serve(async (req) => {
             throw new Error('אין מספר טלפון באיש קשר');
           }
 
-          let phoneNumber = contact.phone.replace(/[^0-9]/g, '');
-          if (phoneNumber.startsWith('0')) {
-            phoneNumber = '972' + phoneNumber.substring(1);
-          }
+          let phoneNumber = contact.phone.replace(/[\s\-\(\)\.\+]/g, '');
+          if (phoneNumber.startsWith('972')) { /* already international */ }
+          else if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
           if (phoneNumber.length < 9 || phoneNumber.length > 15) {
             throw new Error(`מספר טלפון לא תקין: ${contact.phone}`);
           }

@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
-  console.log('[onDJAssigned] ▶ v5 - clean rewrite');
+  console.log('[onDJAssigned] ▶ v6 - fetch event from DB');
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
@@ -23,6 +23,16 @@ Deno.serve(async (req) => {
     }
     console.log(`[onDJAssigned] DJ changed: ${oldDjId || 'none'} → ${newDjId}`);
 
+    // ── CRITICAL: Fetch fresh event from DB (don't trust automation payload) ──
+    let freshEvent;
+    try {
+      freshEvent = await base44.asServiceRole.entities.Event.get(eventId);
+      console.log(`[onDJAssigned] ✓ Fresh event fetched: ${freshEvent.id}, contact_id: ${freshEvent.contact_id}, dj_id: ${freshEvent.dj_id}`);
+    } catch (err) {
+      console.error(`[onDJAssigned] ✖ Failed to fetch event ${eventId}: ${err.message}`);
+      return Response.json({ error: 'Event not found' }, { status: 404 });
+    }
+
     // ── Check automations enabled ──
     const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const settings = settingsList[0];
@@ -43,8 +53,8 @@ Deno.serve(async (req) => {
     }
     console.log(`[onDJAssigned] DJ: ${dj.name} (${dj.phone})`);
 
-    // ── Fetch Contact (optional) ──
-    const contactId = eventData?.contact_id;
+    // ── Fetch Contact from freshEvent.contact_id ──
+    const contactId = freshEvent.contact_id;
     let contact = null;
     if (contactId) {
       try {
@@ -53,11 +63,13 @@ Deno.serve(async (req) => {
       } catch (err) {
         console.error(`[onDJAssigned] ✖ Contact ${contactId} not found: ${err.message}`);
       }
+    } else {
+      console.warn('[onDJAssigned] ⚠ No contact_id on event - customer message will be skipped');
     }
 
-    // ── Prepare shared variables ──
-    const eventDateFormatted = eventData.event_date
-      ? new Date(eventData.event_date).toLocaleDateString('he-IL')
+    // ── Prepare shared variables (all from freshEvent) ──
+    const eventDateFormatted = freshEvent.event_date
+      ? new Date(freshEvent.event_date).toLocaleDateString('he-IL')
       : '';
     const appId = Deno.env.get('BASE44_APP_ID') || '';
     const eventLink = `https://preview-sandbox--${appId}.base44.app/Events?eventId=${eventId}`;
@@ -69,7 +81,7 @@ Deno.serve(async (req) => {
       });
       if (templates.length > 0) {
         const msg = replacePlaceholders(templates[0].template_text, {
-          contact, dj, eventData, eventDateFormatted, settings, signature, eventLink,
+          contact, dj, freshEvent, eventDateFormatted, settings, signature, eventLink,
         });
         console.log(`[onDJAssigned] 📱 Sending DJ_ASSIGNED → customer ${contact.phone}`);
         await sendMessage(base44, settings, contact.phone, msg, logoUrl, {
@@ -92,11 +104,11 @@ Deno.serve(async (req) => {
       });
       if (templates.length > 0) {
         const msg = replacePlaceholders(templates[0].template_text, {
-          contact, dj, eventData, eventDateFormatted, settings, signature, eventLink,
+          contact, dj, freshEvent, eventDateFormatted, settings, signature, eventLink,
         });
         console.log(`[onDJAssigned] 📱 Sending DJ_BOOKING_CONFIRM → DJ ${dj.phone}`);
         await sendMessage(base44, settings, dj.phone, msg, logoUrl, {
-          contactId: contact?.id || null, // null, not empty string
+          contactId: contact?.id || null,
           eventId,
           templateKey: 'DJ_BOOKING_CONFIRM',
           summary: `הודעת שיבוץ נשלחה ל-DJ ${dj.name}`,
@@ -116,7 +128,7 @@ Deno.serve(async (req) => {
   }
 });
 
-// ── Replace template placeholders ──
+// ── Replace template placeholders (uses freshEvent) ──
 function replacePlaceholders(text, ctx) {
   return text
     .replace(/{customer_name}/g, ctx.contact?.contact_name || '')
@@ -124,8 +136,8 @@ function replacePlaceholders(text, ctx) {
     .replace(/{dj_name}/g, ctx.dj?.name || '')
     .replace(/{dj_phone}/g, ctx.dj?.phone || '')
     .replace(/{event_date}/g, ctx.eventDateFormatted || '')
-    .replace(/{location}/g, ctx.eventData?.location || 'לא צוין')
-    .replace(/{event_type}/g, ctx.eventData?.event_type || '')
+    .replace(/{location}/g, ctx.freshEvent?.location || 'לא צוין')
+    .replace(/{event_type}/g, ctx.freshEvent?.event_type || '')
     .replace(/{event_link}/g, ctx.eventLink || '')
     .replace(/{owner_name}/g, ctx.signature || '')
     .replace(/{owner_phone}/g, ctx.settings?.owner_phone || '')
@@ -133,11 +145,11 @@ function replacePlaceholders(text, ctx) {
     .replace(/{signature}/g, ctx.signature || '');
 }
 
-// ── Format phone number to international format ──
+// ── Format phone number to international format (unified) ──
 function formatPhone(phone) {
-  let num = phone.replace(/[\s\-\(\)\.]/g, '');
-  if (num.startsWith('0')) num = '972' + num.substring(1);
-  if (num.startsWith('+')) num = num.substring(1);
+  let num = phone.replace(/[\s\-\(\)\.\+]/g, '');
+  if (num.startsWith('972')) { /* already international */ }
+  else if (num.startsWith('0')) num = '972' + num.substring(1);
   return num;
 }
 
@@ -147,7 +159,6 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
     const isLogOnly = settings.whatsapp_send_mode === 'לוג בלבד';
 
     if (!isLogOnly) {
-      // ── Actually send via WhatsApp ──
       const GREEN_ID = Deno.env.get('GREEN_ID');
       const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
       if (!GREEN_ID || !GREEN_TOKEN) throw new Error('GREEN API not configured');
@@ -171,7 +182,6 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
       }
       console.log(`[onDJAssigned] ✅ Sent ${meta.templateKey}: ${result.idMessage}`);
 
-      // Send logo (non-blocking, best-effort)
       if (logoUrl) {
         try {
           await fetch(
@@ -187,7 +197,6 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
         }
       }
 
-      // Log ConversationMessage (only if we have a real contact_id)
       if (meta.contactId) {
         await base44.asServiceRole.entities.ConversationMessage.create({
           contact_id: meta.contactId,
@@ -199,7 +208,6 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
         });
       }
 
-      // Audit log
       await base44.asServiceRole.entities.AuditLog.create({
         entity_name: 'Event',
         entity_id: meta.eventId,
@@ -209,7 +217,6 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
       });
 
     } else {
-      // ── Log-only mode ──
       console.log(`[onDJAssigned] ℹ Log-only: ${meta.templateKey} → ${phone}`);
 
       if (meta.contactId) {
@@ -237,8 +244,8 @@ async function sendMessage(base44, settings, phone, messageText, logoUrl, meta) 
       entity_name: 'Event',
       entity_id: meta.eventId,
       action: 'SEND_FAILED',
-      diff_summary: `כשל v5: ${meta.templateKey} - ${error.message}`,
-      metadata: { template_key: meta.templateKey, error_message: error.message, phone, version: 'v5' },
+      diff_summary: `כשל v6: ${meta.templateKey} - ${error.message}`,
+      metadata: { template_key: meta.templateKey, error_message: error.message, phone, version: 'v6' },
     });
   }
 }

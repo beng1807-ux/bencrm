@@ -122,10 +122,9 @@ Deno.serve(async (req) => {
             throw new Error('אין מספר טלפון לאיש קשר');
           }
 
-          let phoneNumber = contact.phone.replace(/[^0-9]/g, '');
-          if (phoneNumber.startsWith('0')) {
-            phoneNumber = '972' + phoneNumber.substring(1);
-          }
+          let phoneNumber = contact.phone.replace(/[\s\-\(\)\.\+]/g, '');
+          if (phoneNumber.startsWith('972')) { /* already international */ }
+          else if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
 
           console.log(`[onPaymentChange] 📞 Phone: ${phoneNumber}`);
 

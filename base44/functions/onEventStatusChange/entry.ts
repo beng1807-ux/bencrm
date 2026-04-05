@@ -74,9 +74,9 @@ Deno.serve(async (req) => {
         const GREEN_ID = Deno.env.get('GREEN_ID');
         const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
         if (GREEN_ID && GREEN_TOKEN && contact.phone) {
-          let phoneNumber = contact.phone.replace(/[\s\-\(\)\.]/g, '');
-          if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
-          if (phoneNumber.startsWith('+')) phoneNumber = phoneNumber.substring(1);
+          let phoneNumber = contact.phone.replace(/[\s\-\(\)\.\+]/g, '');
+          if (phoneNumber.startsWith('972')) { /* already international */ }
+          else if (phoneNumber.startsWith('0')) phoneNumber = '972' + phoneNumber.substring(1);
 
           const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
           const res = await fetch(greenApiUrl, {

@@ -307,6 +307,8 @@ export default function Customers() {
   };
 
   const updateStatus = async (leadId, newStatus) => {
+    const lead = leads.find(l => l.id === leadId) || selectedLead;
+    const name = lead?.contact_name || '';
     try {
       let extra = {};
       if (newStatus === 'CANCELLED') {
@@ -317,21 +319,23 @@ export default function Customers() {
       await base44.entities.Contact.update(leadId, { status: newStatus, ...extra });
       
       if (newStatus === 'DEAL_CLOSED') {
-        toast.info('יוצר אירוע...');
+        toast.info(`יוצר אירוע עבור ${name}...`);
         const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
         if (response.data?.success) {
-          toast.success('עסקה נסגרה — אירוע נוצר');
+          toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
         } else {
           toast.success('הסטטוס עודכן');
         }
+      } else if (newStatus === 'DJ_SKITZA') {
+        toast.success(`הסטטוס עודכן — הודעת טופס DJ בדרך ל-${name}...`);
       } else {
         toast.success('הסטטוס עודכן');
       }
       
       await loadLeads();
       setSelectedLead(prev => ({ ...prev, status: newStatus }));
-    } catch {
-      toast.error('שגיאה בעדכון הסטטוס');
+    } catch (err) {
+      toast.error(`שגיאה בעדכון הסטטוס: ${err.message || 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -356,15 +360,21 @@ export default function Customers() {
 
   const closeDeal = async (leadId) => {
     if (!confirm('לסגור עסקה?')) return;
-    await base44.entities.Contact.update(leadId, { status: 'DEAL_CLOSED' });
-    toast.info('יוצר אירוע...');
-    const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
-    if (response.data?.success) {
-      toast.success('עסקה נסגרה — אירוע נוצר');
-    } else {
-      toast.success('סטטוס עודכן');
+    const lead = leads.find(l => l.id === leadId);
+    const name = lead?.contact_name || '';
+    try {
+      await base44.entities.Contact.update(leadId, { status: 'DEAL_CLOSED' });
+      toast.info(`יוצר אירוע עבור ${name}...`);
+      const response = await base44.functions.invoke('dealClosedHandler', { contact_id: leadId });
+      if (response.data?.success) {
+        toast.success(`עסקה נסגרה — אירוע נוצר עבור ${name}`);
+      } else {
+        toast.success('סטטוס עודכן');
+      }
+      await loadLeads();
+    } catch (err) {
+      toast.error(`שגיאה בסגירת עסקה: ${err.message || 'שגיאה לא ידועה'}`);
     }
-    await loadLeads();
   };
 
   const openEdit = (lead) => { setEditData({...lead}); setEditOpen(true); };
