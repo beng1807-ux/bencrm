@@ -160,8 +160,8 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
     : leads;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc]">
-      <table className="w-full text-sm">
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e5dedc] overflow-x-auto">
+      <table className="w-full text-sm min-w-[700px]">
         <thead>
           <tr className="border-b border-[#e5dedc] text-[#886c63] text-xs font-bold bg-[#f8f6f6]">
             <th className="px-4 py-3"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={() => onSelectAll(filtered)} /></th>

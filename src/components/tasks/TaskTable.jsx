@@ -17,7 +17,7 @@ const PRIORITY_COLORS = { HIGH: 'bg-red-100 text-red-700', NORMAL: 'bg-blue-100 
 export default function TaskTable({ tasks, contacts, events, selected, onToggleSelect, onToggleAll, onToggleStatus, onEdit, onDelete }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-right border-collapse">
+      <table className="w-full text-right border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-slate-50/50 text-slate-500 text-sm font-bold uppercase tracking-wider">
             <th className="px-4 py-5 border-b border-slate-100">

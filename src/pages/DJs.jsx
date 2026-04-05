@@ -157,8 +157,8 @@ export default function DJs() {
 
       {/* Table View */}
       {viewMode === 'table' && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200 overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 text-xs font-bold">
                 <th className="px-4 py-3"><Checkbox checked={selected.size === djs.length && djs.length > 0} onCheckedChange={toggleAll} /></th>

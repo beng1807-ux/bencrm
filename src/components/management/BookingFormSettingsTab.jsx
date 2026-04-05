@@ -143,17 +143,17 @@ export default function BookingFormSettingsTab() {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Link className="w-5 h-5" />קישור ייעודי לטופס</CardTitle></CardHeader>
         <CardContent>
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+            <div className="flex-1 min-w-0">
               <Label>כתובת הקישור</Label>
               <Input
                 value={bfSettings.form_link || `${window.location.origin}/BookingForm`}
                 onChange={e => setBfSettings(prev => ({ ...prev, form_link: e.target.value }))}
                 dir="ltr"
-                className="font-mono text-sm"
+                className="font-mono text-xs md:text-sm"
               />
             </div>
-            <Button onClick={copyFormLink} variant="outline" className="flex items-center gap-2">
+            <Button onClick={copyFormLink} variant="outline" className="flex items-center gap-2 flex-shrink-0">
               <Copy className="w-4 h-4" />העתק קישור
             </Button>
           </div>

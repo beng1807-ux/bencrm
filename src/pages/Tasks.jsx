@@ -135,30 +135,30 @@ export default function Tasks() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div onClick={() => setFilterStatus('PENDING')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-500"><Clock className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-orange-500 bg-orange-500/10">ממתין</span>
+      <div className="grid grid-cols-3 gap-3 md:gap-6">
+        <div onClick={() => setFilterStatus('PENDING')} className="bg-white p-3 md:p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-500"><Clock className="w-4 h-4 md:w-6 md:h-6" /></div>
+            <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-orange-500 bg-orange-500/10">ממתין</span>
           </div>
-          <p className="text-slate-500 text-sm font-medium">ממתינות</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.pending}</h3>
+          <p className="text-slate-500 text-xs md:text-sm font-medium">ממתינות</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold mt-1">{stats.pending}</h3>
         </div>
-        <div onClick={() => setFilterStatus('CALLED')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500"><Phone className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-blue-500 bg-blue-500/10">שיחה</span>
+        <div onClick={() => setFilterStatus('CALLED')} className="bg-white p-3 md:p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-500"><Phone className="w-4 h-4 md:w-6 md:h-6" /></div>
+            <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-blue-500 bg-blue-500/10">שיחה</span>
           </div>
-          <p className="text-slate-500 text-sm font-medium">בוצעה שיחה</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.called}</h3>
+          <p className="text-slate-500 text-xs md:text-sm font-medium">בוצעה שיחה</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold mt-1">{stats.called}</h3>
         </div>
-        <div onClick={() => setFilterStatus('DONE')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><CheckCircle className="w-6 h-6" /></div>
-            <span className="text-xs font-bold px-2 py-1 rounded-full text-emerald-500 bg-emerald-500/10">הושלם</span>
+        <div onClick={() => setFilterStatus('DONE')} className="bg-white p-3 md:p-6 rounded-xl border border-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-500"><CheckCircle className="w-4 h-4 md:w-6 md:h-6" /></div>
+            <span className="text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-emerald-500 bg-emerald-500/10">הושלם</span>
           </div>
-          <p className="text-slate-500 text-sm font-medium">הושלמו</p>
-          <h3 className="text-3xl font-extrabold mt-1">{stats.done}</h3>
+          <p className="text-slate-500 text-xs md:text-sm font-medium">הושלמו</p>
+          <h3 className="text-2xl md:text-3xl font-extrabold mt-1">{stats.done}</h3>
         </div>
       </div>
 

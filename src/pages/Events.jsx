@@ -364,8 +364,8 @@ export default function Events() {
               return (
                 <div key={event.id}
                   onClick={() => openEdit(event)}
-                  className={`bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''} ${selected.has(event.id) ? 'border-primary/40 bg-primary/5' : ''}`}>
-                  <div className="absolute top-6 right-6" onClick={e => e.stopPropagation()}>
+                  className={`bg-white rounded-2xl md:rounded-[2rem] p-4 md:p-8 border border-slate-100 shadow-sm relative cursor-pointer hover:shadow-md transition-all ${isCancelled ? 'opacity-60' : ''} ${selected.has(event.id) ? 'border-primary/40 bg-primary/5' : ''}`}>
+                  <div className="absolute top-4 right-4 md:top-6 md:right-6" onClick={e => e.stopPropagation()}>
                     <Checkbox checked={selected.has(event.id)} onCheckedChange={() => toggleSelect(event.id)} />
                   </div>
                   <div className="mb-3 pr-8">
@@ -410,7 +410,7 @@ export default function Events() {
         {/* Table View */}
         {viewMode === 'table' && (
           <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
+            <table className="w-full text-right border-collapse min-w-[900px]">
               <thead>
                 <tr className="bg-slate-50/50 text-slate-500 text-sm font-bold uppercase tracking-wider">
                   <th className="px-4 py-5 border-b border-slate-100"><Checkbox checked={selected.size === filteredEvents.length && filteredEvents.length > 0} onCheckedChange={toggleAll} /></th>

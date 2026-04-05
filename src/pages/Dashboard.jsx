@@ -260,7 +260,7 @@ export default function Dashboard() {
                 <p className="text-[#886c63] font-medium">אין אירועים קרובים</p>
               </div>
             )}
-            <span className="absolute -bottom-6 -left-4 text-[140px] select-none pointer-events-none" style={{ color: `${PRIMARY}06`, lineHeight: 1 }}>📅</span>
+            <span className="absolute -bottom-6 -left-4 text-[140px] select-none pointer-events-none hidden md:block" style={{ color: `${PRIMARY}06`, lineHeight: 1 }}>📅</span>
           </div>
         </div>
 

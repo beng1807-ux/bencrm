@@ -39,18 +39,18 @@ export default function MonthView({
   const days = getDaysInMonth();
 
   return (
-    <div>
+    <div className="min-w-[700px]">
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
         {dayNames.map(day => (
           <div key={day} className="text-center py-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{day}</span>
+            <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">{day}</span>
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {days.map(({ date, currentMonth }, index) => {
           const dayEvents = currentMonth ? getEventsForDate(date) : [];
           const blockedDJs = currentMonth ? getBlockedDJsForDate(date) : [];
