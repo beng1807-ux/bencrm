@@ -441,7 +441,24 @@ export default function Management() {
                 <Button variant="outline" size="sm" onClick={() => setSelectedTemplates(new Set())}>בטל בחירה</Button>
               </div>
             )}
-            {[...templates].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map((template, idx) => {
+            {(() => {
+              const sortedTemplates = [...templates].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+              const moveTemplate = async (templateId, direction) => {
+                const currentIdx = sortedTemplates.findIndex(t => t.id === templateId);
+                const swapIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
+                if (swapIdx < 0 || swapIdx >= sortedTemplates.length) return;
+                const newOrder = sortedTemplates.map((t, i) => ({ id: t.id, sort_order: i }));
+                const tmpOrder = newOrder[currentIdx].sort_order;
+                newOrder[currentIdx].sort_order = newOrder[swapIdx].sort_order;
+                newOrder[swapIdx].sort_order = tmpOrder;
+                await Promise.all(
+                  newOrder.map(o => base44.entities.MessageTemplate.update(o.id, { sort_order: o.sort_order }))
+                );
+                loadData();
+              };
+
+              return sortedTemplates.map((template, idx) => {
               const placeholderMap = {
                 NEW_LEAD: ['{contact_name}', '{event_date}', '{event_type}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
                 QUOTE_SENT: ['{customer_name}', '{event_date}', '{price_total}', '{deposit_amount}', '{signature}', '{owner_phone}', '{owner_whatsapp_phone}'],
@@ -456,20 +473,6 @@ export default function Management() {
                 THANK_YOU: ['{customer_name}', '{signature}', '{owner_phone}'],
               };
               const placeholders = placeholderMap[template.template_key] || ['{signature}', '{owner_phone}'];
-              const sortedTemplates = [...templates].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-              const moveTemplate = async (direction) => {
-                const currentIdx = sortedTemplates.findIndex(t => t.id === template.id);
-                const swapIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
-                if (swapIdx < 0 || swapIdx >= sortedTemplates.length) return;
-                const currentOrder = template.sort_order || 0;
-                const swapOrder = sortedTemplates[swapIdx].sort_order || 0;
-                await Promise.all([
-                  base44.entities.MessageTemplate.update(template.id, { sort_order: swapOrder }),
-                  base44.entities.MessageTemplate.update(sortedTemplates[swapIdx].id, { sort_order: currentOrder }),
-                ]);
-                loadData();
-              };
 
               return (
                 <Card key={template.id}>
@@ -478,8 +481,8 @@ export default function Management() {
                       <div className="flex items-center gap-3">
                         <Checkbox checked={selectedTemplates.has(template.id)} onCheckedChange={() => toggleTemplateSelect(template.id)} />
                         <div className="flex flex-col gap-0.5">
-                          <button onClick={() => moveTemplate('up')} className="p-0.5 text-gray-400 hover:text-gray-700"><ChevronUp className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => moveTemplate('down')} className="p-0.5 text-gray-400 hover:text-gray-700"><ChevronDown className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => moveTemplate(template.id, 'up')} disabled={idx === 0} className={`p-0.5 transition-colors ${idx === 0 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-gray-700'}`}><ChevronUp className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => moveTemplate(template.id, 'down')} disabled={idx === sortedTemplates.length - 1} className={`p-0.5 transition-colors ${idx === sortedTemplates.length - 1 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-gray-700'}`}><ChevronDown className="w-3.5 h-3.5" /></button>
                         </div>
                         <span>{template.template_name}</span>
                       </div>
@@ -531,7 +534,8 @@ export default function Management() {
                   </CardContent>
                 </Card>
               );
-            })}
+            });
+            })()}
           </div>
         </TabsContent>
 
