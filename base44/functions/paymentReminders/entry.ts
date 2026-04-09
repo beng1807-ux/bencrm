@@ -74,7 +74,7 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
     .replace(/{customer_name}/g, contact.contact_name || '')
     .replace(/{contact_name}/g, contact.contact_name || '')
     .replace(/{event_date}/g, eventDateFormatted)
-    .replace(/{balance}/g, event.balance_amount?.toLocaleString() || '0')
+    .replace(/{price_total}/g, event.price_total?.toLocaleString() || '0')
     .replace(/{owner_name}/g, signature)
     .replace(/{owner_phone}/g, settings.owner_phone || '')
     .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
