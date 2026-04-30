@@ -21,6 +21,19 @@
       "default": "beng1807@gmail.com",
       "description": "\u05de\u05d9\u05d9\u05dc \u05d1\u05e2\u05dc \u05d4\u05e2\u05e1\u05e7 \u05dc\u05e7\u05d1\u05dc\u05ea \u05d4\u05ea\u05e8\u05d0\u05d5\u05ea"
     },
+    "signature_text": {
+      "type": "string",
+      "default": "\u05e7\u05d1\u05d5\u05e6\u05ea \u05e1\u05e7\u05d9\u05e6\u05d4",
+      "description": "\u05d7\u05ea\u05d9\u05de\u05d4 \u05e9\u05ea\u05d5\u05e4\u05d9\u05e2 \u05d1\u05e1\u05d5\u05e3 \u05db\u05dc \u05d4\u05d5\u05d3\u05e2\u05d4 \u05d1\u05de\u05e7\u05d5\u05dd \u05e9\u05dd \u05d4\u05d1\u05e2\u05dc\u05d9\u05dd"
+    },
+    "logo_url_for_messages": {
+      "type": "string",
+      "description": "URL \u05dc\u05dc\u05d5\u05d2\u05d5 \u05e9\u05d9\u05e6\u05d5\u05e8\u05e3 \u05dc\u05db\u05dc \u05d4\u05d5\u05d3\u05e2\u05ea \u05d5\u05d5\u05d0\u05d8\u05e1\u05d0\u05e4"
+    },
+    "bit_barcode_url": {
+      "type": "string",
+      "description": "URL \u05dc\u05ea\u05de\u05d5\u05e0\u05ea \u05d1\u05e8\u05e7\u05d5\u05d3 \u05d1\u05d9\u05d8 \u05dc\u05ea\u05e9\u05dc\u05d5\u05dd"
+    },
     "brand_primary_color": {
       "type": "string",
       "default": "#e94f1c"
@@ -49,29 +62,19 @@
       "type": "number",
       "default": 0
     },
-    "payment_reminder_1_days_before": {
+    "payment_reminder_1_days_after_event": {
       "type": "number",
-      "default": 14
+      "default": 1,
+      "description": "\u05db\u05de\u05d4 \u05d9\u05de\u05d9\u05dd \u05d0\u05d7\u05e8\u05d9 \u05d1\u05d9\u05e6\u05d5\u05e2 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2 \u05dc\u05e9\u05dc\u05d5\u05d7 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05ea\u05e9\u05dc\u05d5\u05dd \u05e8\u05d0\u05e9\u05d5\u05e0\u05d4"
     },
-    "payment_reminder_2_days_before": {
+    "payment_reminder_2_days_after_first": {
       "type": "number",
-      "default": 7
+      "default": 2,
+      "description": "\u05db\u05de\u05d4 \u05d9\u05de\u05d9\u05dd \u05d0\u05d7\u05e8\u05d9 \u05d4\u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05d4\u05e8\u05d0\u05e9\u05d5\u05e0\u05d4 \u05dc\u05e9\u05dc\u05d5\u05d7 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05e9\u05e0\u05d9\u05d9\u05d4"
     },
     "event_reminder_days_before": {
       "type": "number",
       "default": 1
-    },
-    "thank_you_days_after": {
-      "type": "number",
-      "default": 1
-    },
-    "quote_followup_hours": {
-      "type": "number",
-      "default": 24
-    },
-    "dj_missing_days_before": {
-      "type": "number",
-      "default": 7
     },
     "whatsapp_send_mode": {
       "type": "string",
@@ -80,6 +83,15 @@
         "\u05e9\u05dc\u05d9\u05d7\u05d4 \u05d0\u05de\u05d9\u05ea\u05d9\u05ea"
       ],
       "default": "\u05dc\u05d5\u05d2 \u05d1\u05dc\u05d1\u05d3"
+    },
+    "whatsapp_test_phone": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05dc\u05e9\u05dc\u05d9\u05d7\u05ea \u05d1\u05d3\u05d9\u05e7\u05ea WhatsApp \u05d9\u05d7\u05d9\u05d3\u05d4"
+    },
+    "whatsapp_test_message": {
+      "type": "string",
+      "default": "\ud83d\udd14 \u05d4\u05d5\u05d3\u05e2\u05ea \u05d1\u05d3\u05d9\u05e7\u05d4 \u05de\u05e1\u05e7\u05d9\u05e6\u05d4 \u2014 \u05d0\u05dd \u05e7\u05d9\u05d1\u05dc\u05ea\u05dd \u05d0\u05ea \u05d4\u05d4\u05d5\u05d3\u05e2\u05d4, \u05d4\u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05d5\u05d5\u05e6\u05d0\u05e4 \u05ea\u05e7\u05d9\u05df.",
+      "description": "\u05d8\u05e7\u05e1\u05d8 \u05d4\u05d5\u05d3\u05e2\u05ea \u05d1\u05d3\u05d9\u05e7\u05ea WhatsApp"
     },
     "whatsapp_retry_minutes": {
       "type": "number",
@@ -130,10 +142,6 @@
     "dashboard_stat_upcoming_events": {
       "type": "string",
       "default": "\u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd \u05e7\u05e8\u05d5\u05d1\u05d9\u05dd"
-    },
-    "dashboard_stat_monthly_revenue": {
-      "type": "string",
-      "default": "\u05d4\u05db\u05e0\u05e1\u05d4 \u05d7\u05d5\u05d3\u05e9\u05d9\u05ea"
     },
     "dashboard_chart_title": {
       "type": "string",

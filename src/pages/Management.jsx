@@ -27,6 +27,7 @@ export default function Management() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [selectedTemplates, setSelectedTemplates] = useState(new Set());
   const [selectedPackages, setSelectedPackages] = useState(new Set());
+  const [sendingWhatsAppTest, setSendingWhatsAppTest] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -69,6 +70,34 @@ export default function Management() {
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('שגיאה בשמירת ההגדרות');
+    }
+  };
+
+  const sendWhatsAppTest = async () => {
+    if (!settings.whatsapp_test_phone) {
+      toast.error('יש להזין מספר לבדיקה');
+      return;
+    }
+
+    if (!confirm('לשלוח הודעת בדיקה אמיתית רק למספר שהוזן?')) return;
+
+    setSendingWhatsAppTest(true);
+    try {
+      const response = await base44.functions.invoke('debugWhatsApp', {
+        action: 'send_test',
+        phone: settings.whatsapp_test_phone,
+        message: settings.whatsapp_test_message || '🔔 הודעת בדיקה מסקיצה — אם קיבלתם את ההודעה, החיבור לווצאפ תקין.'
+      });
+
+      if (response.data?.success) {
+        toast.success('הודעת הבדיקה נשלחה בהצלחה');
+      } else {
+        toast.error(response.data?.error || 'שליחת הבדיקה נכשלה');
+      }
+    } catch (error) {
+      toast.error(`שליחת הבדיקה נכשלה: ${error.message || 'שגיאה לא ידועה'}`);
+    } finally {
+      setSendingWhatsAppTest(false);
     }
   };
 
@@ -375,6 +404,42 @@ export default function Management() {
                         <SelectItem value="שליחה אמיתית">שליחה אמיתית</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-gray-400 mt-1">מצב זה משפיע רק על התור האוטומטי.</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4 space-y-3">
+                    <div>
+                      <h4 className="font-bold text-orange-700">בדיקת שליחה למספר אחד</h4>
+                      <p className="text-xs text-orange-700/70 mt-1">שולח הודעת בדיקה אמיתית רק למספר הזה, בלי לשנות את מצב התור ובלי לשלוח ללקוחות.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label>מספר לבדיקה</Label>
+                        <Input
+                          value={settings.whatsapp_test_phone || ''}
+                          onChange={e => setSettings({...settings, whatsapp_test_phone: e.target.value})}
+                          placeholder="050-1234567"
+                          dir="ltr"
+                        />
+                      </div>
+                      <div>
+                        <Label>טקסט בדיקה</Label>
+                        <Input
+                          value={settings.whatsapp_test_message || ''}
+                          onChange={e => setSettings({...settings, whatsapp_test_message: e.target.value})}
+                          placeholder="🔔 הודעת בדיקה מסקיצה"
+                          dir="rtl"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={sendWhatsAppTest}
+                      disabled={sendingWhatsAppTest}
+                      className="bg-orange-500 hover:bg-orange-600"
+                    >
+                      {sendingWhatsAppTest ? 'שולח בדיקה...' : 'שלח בדיקת WhatsApp'}
+                    </Button>
                   </div>
                 </div>
               </div>
