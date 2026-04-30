@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (user?.role !== 'admin') return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
 
-    const { file_url, dry_run = true } = await req.json();
+    const { file_url, dry_run = true, max_create = 30 } = await req.json();
     if (!file_url) return Response.json({ error: 'Missing file_url' }, { status: 400 });
 
     const res = await fetch(file_url);
@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     const summary = { total_orders: grouped.size, created: 0, skipped_duplicates: 0, skipped_missing_phone: 0, dry_run, samples: [] };
 
     for (const [docId, group] of grouped.entries()) {
+      if (!dry_run && summary.created >= max_create) break;
       const row = group.first;
       const phone = normalizePhone(row['טלפון לקוח 1']);
       const eventDate = parseDateOnly(row['התחלה']);
