@@ -14,6 +14,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Automations disabled' });
     }
 
+    if (!isWithinSendWindow(settings)) {
+      console.log('Outside send window — skipping automatic queue');
+      return Response.json({ success: true, message: 'Outside send window' });
+    }
+
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -163,4 +168,15 @@ function formatPhone(phone) {
   if (num.startsWith('972')) return num;
   if (num.startsWith('0')) return '972' + num.substring(1);
   return num;
+}
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
 }
