@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     });
     const template = templateList.length > 0 ? templateList[0] : null;
 
-    if (template) {
+    if (template && !contact.whatsapp_opted_out) {
       const eventDateFormatted = contact.event_date ? new Date(contact.event_date).toLocaleDateString('he-IL') : 'טרם נקבע';
       const messageText = template.template_text
         .replace(/{customer_name}/g, contact.contact_name || '')
@@ -105,17 +105,68 @@ Deno.serve(async (req) => {
         .replace(/{deposit_amount}/g, depositAmount.toLocaleString())
         .replace(/{owner_name}/g, settings.owner_name || '')
         .replace(/{owner_phone}/g, settings.owner_phone || '')
-        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '');
+        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
+        .replace(/{signature}/g, settings.signature_text || 'קבוצת סקיצה');
 
-      await base44.asServiceRole.entities.ConversationMessage.create({
-        contact_id: contact.id,
-        event_id: newEvent.id,
-        channel: 'SYSTEM',
-        sender: 'SYSTEM',
-        message_text: messageText,
-        timestamp: new Date().toISOString(),
-      });
-      console.log('[dealClosedHandler] Message logged');
+      if (settings.whatsapp_send_mode === 'לוג בלבד') {
+        await base44.asServiceRole.entities.ConversationMessage.create({
+          contact_id: contact.id,
+          event_id: newEvent.id,
+          channel: 'SYSTEM',
+          sender: 'SYSTEM',
+          message_text: messageText,
+          timestamp: new Date().toISOString(),
+        });
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_name: 'Contact',
+          entity_id: contact.id,
+          action: 'SEND_MESSAGE',
+          diff_summary: 'הודעת סגירת עסקה נרשמה בלוג',
+          metadata: { template_key: 'DEAL_CLOSED', simulated: true },
+        });
+        console.log('[dealClosedHandler] DEAL_CLOSED logged immediately');
+      } else {
+        const GREEN_ID = Deno.env.get('GREEN_ID');
+        const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
+        if (!GREEN_ID || !GREEN_TOKEN) throw new Error('GREEN API לא מוגדר');
+        if (!contact.phone) throw new Error('אין מספר טלפון באיש קשר');
+
+        const phoneNumber = formatPhone(contact.phone);
+        const whatsappResponse = await fetch(`https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, message: messageText }),
+        });
+        const whatsappResult = await whatsappResponse.json();
+        if (!whatsappResponse.ok || !whatsappResult.idMessage) {
+          throw new Error(`WhatsApp send failed: ${JSON.stringify(whatsappResult)}`);
+        }
+
+        if (settings.logo_url_for_messages) {
+          await fetch(`https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: settings.logo_url_for_messages, fileName: 'skitza-logo.png', caption: '' }),
+          });
+        }
+
+        await base44.asServiceRole.entities.ConversationMessage.create({
+          contact_id: contact.id,
+          event_id: newEvent.id,
+          channel: 'WHATSAPP',
+          sender: 'OWNER',
+          message_text: messageText,
+          timestamp: new Date().toISOString(),
+        });
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_name: 'Contact',
+          entity_id: contact.id,
+          action: 'SEND_MESSAGE',
+          diff_summary: 'הודעת סגירת עסקה נשלחה בוואטסאפ',
+          metadata: { template_key: 'DEAL_CLOSED', whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
+        });
+        console.log('[dealClosedHandler] DEAL_CLOSED sent immediately');
+      }
     }
 
     // Create AuditLog entry so it shows in Dashboard activity
@@ -140,3 +191,10 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function formatPhone(phone) {
+  let num = String(phone).replace(/[^0-9]/g, '');
+  if (num.startsWith('972')) return num;
+  if (num.startsWith('0')) return '972' + num.substring(1);
+  return num;
+}

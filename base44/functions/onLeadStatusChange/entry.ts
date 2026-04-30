@@ -27,11 +27,6 @@ Deno.serve(async (req) => {
     }
     const settings = settingsList[0];
 
-    if (!isWithinSendWindow(settings)) {
-      console.log('Outside send window — skipping');
-      return Response.json({ message: 'Outside send window' });
-    }
-
     // ── DJ_SKITZA: Send DJ booking form link ──
     if (lead.status === 'DJ_SKITZA') {
       console.log('[onLeadStatusChange] 🎵 DJ_SKITZA status - sending DJ booking form');
@@ -158,16 +153,6 @@ Deno.serve(async (req) => {
   }
 });
 
-function isWithinSendWindow(settings) {
-  const startHour = settings.send_window_start_hour ?? 9;
-  const endHour = settings.send_window_end_hour ?? 20;
-  const localHour = Number(new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Hebron',
-    hour: 'numeric',
-    hour12: false,
-  }).format(new Date()));
-  return localHour >= startHour && localHour < endHour;
-}
 
 async function wasRecentlySent(base44, contactId, templateKey) {
   const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
