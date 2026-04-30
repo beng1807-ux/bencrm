@@ -12,6 +12,11 @@ Deno.serve(async (req) => {
     const signature = settings.signature_text || 'קבוצת סקיצה';
     const logoUrl = settings.logo_url_for_messages || '';
 
+    if (!isWithinSendWindow(settings)) {
+      console.log('Outside send window — skipping');
+      return Response.json({ message: 'Outside send window' });
+    }
+
     const now = new Date();
     const events = await base44.asServiceRole.entities.Event.list();
     const contacts = await base44.asServiceRole.entities.Contact.list();
@@ -63,6 +68,14 @@ async function sendEventReminder(base44, event, contacts, djs, settings, signatu
   const contact = contacts.find((c) => c.id === event.contact_id);
   const dj = djs.find((d) => d.id === event.dj_id);
   if (!contact) return;
+  if (contact.whatsapp_opted_out) {
+    console.log(`Opted out — skipping ${contact.contact_name}`);
+    return;
+  }
+  if (await wasRecentlySent(base44, contact.id, 'EVENT_REMINDER')) {
+    console.log(`Duplicate blocked: EVENT_REMINDER already sent to ${contact.id} in last 24h`);
+    return;
+  }
 
   const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
     template_key: 'EVENT_REMINDER',
@@ -120,8 +133,8 @@ async function sendEventReminder(base44, event, contacts, djs, settings, signatu
         });
 
         await base44.asServiceRole.entities.AuditLog.create({
-          entity_name: 'Event',
-          entity_id: event.id,
+          entity_name: 'Contact',
+          entity_id: contact.id,
           action: 'SEND_MESSAGE',
           diff_summary: 'תזכורת אירוע נשלחה בוואטסאפ',
           metadata: { template_key: 'EVENT_REMINDER', whatsapp_id: result.idMessage, phone: phoneNumber },
@@ -141,8 +154,8 @@ async function sendEventReminder(base44, event, contacts, djs, settings, signatu
     });
 
     await base44.asServiceRole.entities.AuditLog.create({
-      entity_name: 'Event',
-      entity_id: event.id,
+      entity_name: 'Contact',
+      entity_id: contact.id,
       action: 'SEND_MESSAGE',
       diff_summary: 'תזכורת אירוע נרשמה',
       metadata: { template_key: 'EVENT_REMINDER', simulated: true },
@@ -161,6 +174,14 @@ async function sendEventReminder(base44, event, contacts, djs, settings, signatu
 async function sendThankYou(base44, event, contacts, settings, signature, logoUrl) {
   const contact = contacts.find((c) => c.id === event.contact_id);
   if (!contact) return;
+  if (contact.whatsapp_opted_out) {
+    console.log(`Opted out — skipping ${contact.contact_name}`);
+    return;
+  }
+  if (await wasRecentlySent(base44, contact.id, 'THANK_YOU')) {
+    console.log(`Duplicate blocked: THANK_YOU already sent to ${contact.id} in last 24h`);
+    return;
+  }
 
   const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
     template_key: 'THANK_YOU',
@@ -214,8 +235,8 @@ async function sendThankYou(base44, event, contacts, settings, signature, logoUr
         });
 
         await base44.asServiceRole.entities.AuditLog.create({
-          entity_name: 'Event',
-          entity_id: event.id,
+          entity_name: 'Contact',
+          entity_id: contact.id,
           action: 'SEND_MESSAGE',
           diff_summary: 'הודעת תודה נשלחה בוואטסאפ',
           metadata: { template_key: 'THANK_YOU', whatsapp_id: result.idMessage, phone: phoneNumber },
@@ -235,8 +256,8 @@ async function sendThankYou(base44, event, contacts, settings, signature, logoUr
     });
 
     await base44.asServiceRole.entities.AuditLog.create({
-      entity_name: 'Event',
-      entity_id: event.id,
+      entity_name: 'Contact',
+      entity_id: contact.id,
       action: 'SEND_MESSAGE',
       diff_summary: 'הודעת תודה נרשמה',
       metadata: { template_key: 'THANK_YOU', simulated: true },
@@ -257,4 +278,27 @@ function formatPhone(phone) {
   if (num.startsWith('972')) { /* already international */ }
   else if (num.startsWith('0')) num = '972' + num.substring(1);
   return num;
+}
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
+}
+
+async function wasRecentlySent(base44, contactId, templateKey) {
+  const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
+    entity_id: contactId,
+    action: 'SEND_MESSAGE',
+  });
+  return recentLogs.some(l =>
+    l.metadata?.template_key === templateKey &&
+    l.created_date &&
+    (Date.now() - new Date(l.created_date).getTime()) < 24 * 60 * 60 * 1000
+  );
 }

@@ -36,6 +36,15 @@ Deno.serve(async (req) => {
     const settings = settingsList[0];
     console.log(`[onNewLead] ✓ Settings loaded. WhatsApp mode: ${settings.whatsapp_send_mode}`);
 
+    if (!isWithinSendWindow(settings)) {
+      console.log('Outside send window — skipping');
+      return Response.json({ message: 'Outside send window' });
+    }
+    if (await wasRecentlySent(base44, lead.id, 'NEW_LEAD')) {
+      console.log(`Duplicate blocked: NEW_LEAD already sent to ${lead.id} in last 24h`);
+      return Response.json({ message: 'Duplicate blocked' });
+    }
+
     // בדיקת כפילויות
     if (lead.phone && lead.event_date) {
       console.log(`[onNewLead] 🔍 Checking duplicates: ${lead.phone} / ${lead.event_date}`);
@@ -206,3 +215,26 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
+}
+
+async function wasRecentlySent(base44, contactId, templateKey) {
+  const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
+    entity_id: contactId,
+    action: 'SEND_MESSAGE',
+  });
+  return recentLogs.some(l =>
+    l.metadata?.template_key === templateKey &&
+    l.created_date &&
+    (Date.now() - new Date(l.created_date).getTime()) < 24 * 60 * 60 * 1000
+  );
+}

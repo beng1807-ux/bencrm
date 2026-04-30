@@ -63,6 +63,19 @@ Deno.serve(async (req) => {
         return Response.json({ message: 'Contact not found' });
       }
 
+      if (contact.whatsapp_opted_out) {
+        console.log(`Opted out — skipping ${contact.contact_name}`);
+        return Response.json({ message: 'Contact opted out' });
+      }
+      if (!isWithinSendWindow(settings)) {
+        console.log('Outside send window — skipping');
+        return Response.json({ message: 'Outside send window' });
+      }
+      if (await wasRecentlySent(base44, contact.id, 'PAY_CONFIRMED')) {
+        console.log(`Duplicate blocked: PAY_CONFIRMED already sent to ${contact.id} in last 24h`);
+        return Response.json({ message: 'Duplicate blocked' });
+      }
+
       const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
         template_key: 'PAY_CONFIRMED',
         active: true,
@@ -103,8 +116,8 @@ Deno.serve(async (req) => {
           });
 
           await base44.asServiceRole.entities.AuditLog.create({
-            entity_name: 'Event',
-            entity_id: eventData.id,
+            entity_name: 'Contact',
+            entity_id: contact.id,
             action: 'SEND_MESSAGE',
             diff_summary: 'אישור תשלום נרשם בלוג',
             metadata: { template_key: 'PAY_CONFIRMED', simulated: true },
@@ -162,8 +175,8 @@ Deno.serve(async (req) => {
             });
 
             await base44.asServiceRole.entities.AuditLog.create({
-              entity_name: 'Event',
-              entity_id: eventData.id,
+              entity_name: 'Contact',
+              entity_id: contact.id,
               action: 'SEND_MESSAGE',
               diff_summary: 'אישור תשלום נשלח בוואטסאפ',
               metadata: { template_key: 'PAY_CONFIRMED', whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
@@ -197,4 +210,27 @@ function formatPhone(phone) {
   if (num.startsWith('972')) { /* already international */ }
   else if (num.startsWith('0')) num = '972' + num.substring(1);
   return num;
+}
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
+}
+
+async function wasRecentlySent(base44, contactId, templateKey) {
+  const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
+    entity_id: contactId,
+    action: 'SEND_MESSAGE',
+  });
+  return recentLogs.some(l =>
+    l.metadata?.template_key === templateKey &&
+    l.created_date &&
+    (Date.now() - new Date(l.created_date).getTime()) < 24 * 60 * 60 * 1000
+  );
 }

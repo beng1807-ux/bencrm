@@ -27,9 +27,19 @@ Deno.serve(async (req) => {
     }
     const settings = settingsList[0];
 
+    if (!isWithinSendWindow(settings)) {
+      console.log('Outside send window — skipping');
+      return Response.json({ message: 'Outside send window' });
+    }
+
     // ── DJ_SKITZA: Send DJ booking form link ──
     if (lead.status === 'DJ_SKITZA') {
       console.log('[onLeadStatusChange] 🎵 DJ_SKITZA status - sending DJ booking form');
+
+      if (await wasRecentlySent(base44, lead.id, 'DJ_BOOKING_FORM')) {
+        console.log(`Duplicate blocked: DJ_BOOKING_FORM already sent to ${lead.id} in last 24h`);
+        return Response.json({ message: 'Duplicate blocked' });
+      }
 
       // Mark lead as DJ lead
       await base44.asServiceRole.entities.Lead.update(lead.id, { is_dj_lead: true });
@@ -147,3 +157,26 @@ Deno.serve(async (req) => {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
+}
+
+async function wasRecentlySent(base44, contactId, templateKey) {
+  const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
+    entity_id: contactId,
+    action: 'SEND_MESSAGE',
+  });
+  return recentLogs.some(l =>
+    l.metadata?.template_key === templateKey &&
+    l.created_date &&
+    (Date.now() - new Date(l.created_date).getTime()) < 24 * 60 * 60 * 1000
+  );
+}

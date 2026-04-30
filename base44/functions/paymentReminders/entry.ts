@@ -12,6 +12,11 @@ Deno.serve(async (req) => {
     const signature = settings.signature_text || 'קבוצת סקיצה';
     const logoUrl = settings.logo_url_for_messages || '';
 
+    if (!isWithinSendWindow(settings)) {
+      console.log('Outside send window — skipping');
+      return Response.json({ message: 'Outside send window' });
+    }
+
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr);
     console.log(`[paymentReminders] 📅 Today: ${todayStr}`);
@@ -61,6 +66,14 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
   if (!contact) return;
 
   const templateKey = reminderNumber === 1 ? 'PAY_REMINDER_1' : 'PAY_REMINDER_2';
+  if (contact.whatsapp_opted_out) {
+    console.log(`Opted out — skipping ${contact.contact_name}`);
+    return;
+  }
+  if (await wasRecentlySent(base44, contact.id, templateKey)) {
+    console.log(`Duplicate blocked: ${templateKey} already sent to ${contact.id} in last 24h`);
+    return;
+  }
   const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
     template_key: templateKey,
     active: true,
@@ -92,8 +105,8 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
       });
 
       await base44.asServiceRole.entities.AuditLog.create({
-        entity_name: 'Event',
-        entity_id: event.id,
+        entity_name: 'Contact',
+        entity_id: contact.id,
         action: 'SEND_MESSAGE',
         diff_summary: `תזכורת תשלום ${reminderNumber} נרשמה`,
         metadata: { template_key: templateKey, simulated: true },
@@ -141,8 +154,8 @@ async function sendPaymentReminder(base44, event, contacts, settings, signature,
         });
 
         await base44.asServiceRole.entities.AuditLog.create({
-          entity_name: 'Event',
-          entity_id: event.id,
+          entity_name: 'Contact',
+          entity_id: contact.id,
           action: 'SEND_MESSAGE',
           diff_summary: `תזכורת תשלום ${reminderNumber} נשלחה בוואטסאפ`,
           metadata: { template_key: templateKey, whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
@@ -172,4 +185,27 @@ function formatPhone(phone) {
   if (num.startsWith('972')) { /* already international */ }
   else if (num.startsWith('0')) num = '972' + num.substring(1);
   return num;
+}
+
+function isWithinSendWindow(settings) {
+  const startHour = settings.send_window_start_hour ?? 9;
+  const endHour = settings.send_window_end_hour ?? 20;
+  const localHour = Number(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hebron',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date()));
+  return localHour >= startHour && localHour < endHour;
+}
+
+async function wasRecentlySent(base44, contactId, templateKey) {
+  const recentLogs = await base44.asServiceRole.entities.AuditLog.filter({
+    entity_id: contactId,
+    action: 'SEND_MESSAGE',
+  });
+  return recentLogs.some(l =>
+    l.metadata?.template_key === templateKey &&
+    l.created_date &&
+    (Date.now() - new Date(l.created_date).getTime()) < 24 * 60 * 60 * 1000
+  );
 }
