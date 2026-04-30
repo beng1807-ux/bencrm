@@ -59,6 +59,8 @@ export default function Events() {
   const [filterThisMonth, setFilterThisMonth] = useState(false);
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+
+  const sanitizePhone = (value) => value.replace(/[^0-9+\-\s()]/g, '');
   const [creating, setCreating] = useState(false);
   const [eventSettings, setEventSettings] = useState({});
   const [appSettings, setAppSettings] = useState({});
@@ -219,6 +221,10 @@ export default function Events() {
   const createCustomer = async () => {
     if (!newCustomer.name || !newCustomer.phone || !newCustomer.email) {
       toast.error('יש למלא את כל השדות');
+      return;
+    }
+    if (!/^[-+()\s0-9]{7,15}$/.test(newCustomer.phone)) {
+      toast.error('מספר הטלפון לא תקין');
       return;
     }
     const created = await base44.entities.Contact.create({ contact_name: newCustomer.name, phone: newCustomer.phone, email: newCustomer.email, status: 'DEAL_CLOSED', contact_type: 'customer' });
@@ -599,7 +605,7 @@ export default function Events() {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-2xl" dir="rtl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader><DialogTitle>{eventSettings.create_dialog_title || 'אירוע חדש'}</DialogTitle></DialogHeader>
           {(() => {
             const visFields = eventSettings.create_visible_fields || ['customer_id','event_date','event_type','package_id','location'];
@@ -667,7 +673,7 @@ export default function Events() {
             </div>
             <div>
               <Label>טלפון *</Label>
-              <Input value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="050-1234567" />
+              <Input inputMode="tel" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: sanitizePhone(e.target.value)})} placeholder="050-1234567" />
             </div>
             <div>
               <Label>אימייל *</Label>

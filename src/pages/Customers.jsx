@@ -50,6 +50,7 @@ const EVENT_TYPE_ICONS = {
 };
 
 const EVENT_TYPES = ['בר מצווה','בת מצווה','חתונה','יום הולדת','אירוע פרטי','אירוע חברה','חינה','ברית מילה','אחר'];
+const sanitizePhone = (value) => value.replace(/[^0-9+\-\s()]/g, '');
 
 // ── KanbanColumn ────────────────────────────────────────────────
 function KanbanColumn({ col, leads, onCardClick, onEdit, onDelete, phase, selected, onSelect, onCloseDeal }) {
@@ -381,6 +382,10 @@ export default function Customers() {
   const saveEdit = async () => {
     const oldLead = leads.find(l => l.id === editData.id);
     const name = editData.contact_name || '';
+    if (editData.phone && !/^[-+()\s0-9]{7,15}$/.test(editData.phone)) {
+      toast.error('מספר הטלפון לא תקין');
+      return;
+    }
     try {
       await base44.entities.Contact.update(editData.id, editData);
 
@@ -408,6 +413,10 @@ export default function Customers() {
   const createLead = async () => {
     if (!newLead.contact_name || !newLead.phone || !newLead.email || !newLead.event_date || !newLead.event_type) {
       toast.error('יש למלא את כל שדות החובה');
+      return;
+    }
+    if (!/^[-+()\s0-9]{7,15}$/.test(newLead.phone)) {
+      toast.error('מספר הטלפון לא תקין');
       return;
     }
     try {
@@ -630,7 +639,8 @@ export default function Customers() {
                     {selectedLead.celebrant_name && <div><Label className="text-xs text-gray-400">שם החוגג/ת</Label><p className="font-bold">{selectedLead.celebrant_name}</p></div>}
                     {selectedLead.guests_count && <div><Label className="text-xs text-gray-400">מוזמנים</Label><p className="font-bold">{selectedLead.guests_count}</p></div>}
                     <div><Label className="text-xs text-gray-400">מקור</Label><p className="font-bold">{SOURCE_LABELS[selectedLead.source] || selectedLead.source || '—'}</p></div>
-                    <div><Label className="text-xs text-gray-400">תאריך יצירה</Label><p className="font-bold">{selectedLead.created_date ? new Date(selectedLead.created_date).toLocaleDateString('he-IL') : '—'}</p></div>
+                    <div><Label className="text-xs text-gray-400">אולם</Label><p className="font-bold">{selectedLead.venue_hall || '—'}</p></div>
+                    <div><Label className="text-xs text-gray-400">תאריך יצירה</Label><p className="font-bold">{(selectedLead.event_square_updated_at || selectedLead.created_date) ? new Date(selectedLead.event_square_updated_at || selectedLead.created_date).toLocaleDateString('he-IL') : '—'}</p></div>
                   </div>
 
                   <Collapsible>
@@ -726,7 +736,7 @@ export default function Customers() {
           <DialogHeader><DialogTitle>עריכת רשומה</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div><Label>שם איש קשר</Label><Input value={editData.contact_name || ''} onChange={e => setEditData({...editData, contact_name: e.target.value})} /></div>
-            <div><Label>טלפון</Label><Input value={editData.phone || ''} onChange={e => setEditData({...editData, phone: e.target.value})} /></div>
+            <div><Label>טלפון</Label><Input inputMode="tel" value={editData.phone || ''} onChange={e => setEditData({...editData, phone: sanitizePhone(e.target.value)})} /></div>
             <div><Label>אימייל</Label><Input type="email" value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} /></div>
             <div><Label>תאריך אירוע</Label><Input type="date" value={editData.event_date || ''} onChange={e => setEditData({...editData, event_date: e.target.value})} /></div>
             <div>
@@ -748,6 +758,16 @@ export default function Customers() {
                 <SelectContent>
                   {ALL_COLS.map(c => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}
                   <SelectItem value="CANCELLED">בוטל</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label>אולם</Label>
+              <Select value={editData.venue_hall || ''} onValueChange={v => setEditData({...editData, venue_hall: v})}>
+                <SelectTrigger><SelectValue placeholder="בחר אולם" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="אולם קטן">אולם קטן</SelectItem>
+                  <SelectItem value="אולם גדול">אולם גדול</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -796,7 +816,7 @@ export default function Customers() {
           <DialogHeader><DialogTitle>הוסף איש קשר חדש</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div><Label>שם איש קשר *</Label><Input value={newLead.contact_name || ''} onChange={e => setNewLead({...newLead, contact_name: e.target.value})} /></div>
-            <div><Label>טלפון *</Label><Input value={newLead.phone || ''} onChange={e => setNewLead({...newLead, phone: e.target.value})} /></div>
+            <div><Label>טלפון *</Label><Input inputMode="tel" value={newLead.phone || ''} onChange={e => setNewLead({...newLead, phone: sanitizePhone(e.target.value)})} /></div>
             <div><Label>אימייל *</Label><Input type="email" value={newLead.email || ''} onChange={e => setNewLead({...newLead, email: e.target.value})} /></div>
             <div><Label>תאריך אירוע *</Label><Input type="date" value={newLead.event_date || ''} onChange={e => setNewLead({...newLead, event_date: e.target.value})} /></div>
             <div className="col-span-2">
@@ -804,6 +824,16 @@ export default function Customers() {
               <Select value={newLead.event_type || ''} onValueChange={v => setNewLead({...newLead, event_type: v})}>
                 <SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger>
                 <SelectContent>{EVENT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label>אולם</Label>
+              <Select value={newLead.venue_hall || ''} onValueChange={v => setNewLead({...newLead, venue_hall: v})}>
+                <SelectTrigger><SelectValue placeholder="בחר אולם" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="אולם קטן">אולם קטן</SelectItem>
+                  <SelectItem value="אולם גדול">אולם גדול</SelectItem>
+                </SelectContent>
               </Select>
             </div>
             <div className="col-span-2">

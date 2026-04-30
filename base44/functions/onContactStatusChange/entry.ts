@@ -49,127 +49,26 @@ Deno.serve(async (req) => {
         console.log('[onContactStatusChange] ℹ DJ_BOOKING_FORM already sent - skipping');
         return Response.json({ message: 'DJ_BOOKING_FORM already sent' });
       }
-      console.log('[onContactStatusChange] 🎵 DJ_SKITZA status - sending DJ booking form');
+      console.log('[onContactStatusChange] 🎵 DJ_SKITZA status - adding DJ booking form to queue');
 
       // Mark contact as DJ lead
       await base44.asServiceRole.entities.Contact.update(contact.id, { is_dj_lead: true });
 
-      // Get DJ_BOOKING_FORM template
-      const templateList = await base44.asServiceRole.entities.MessageTemplate.filter({
+      const existingQueue = await base44.asServiceRole.entities.MessageQueue.filter({
+        contact_id: contact.id,
         template_key: 'DJ_BOOKING_FORM',
-        active: true,
       });
-
-      if (templateList.length === 0) {
-        console.warn('[onContactStatusChange] ⚠ No DJ_BOOKING_FORM template found');
-        return Response.json({ message: 'No DJ_BOOKING_FORM template' });
-      }
-
-      // Get booking form link
-      const bfSettings = await base44.asServiceRole.entities.BookingFormSettings.list();
-      const appId = Deno.env.get('BASE44_APP_ID') || '';
-      const formLink = bfSettings[0]?.form_link || `https://preview-sandbox--${appId}.base44.app/BookingForm`;
-      console.log(`[onContactStatusChange] 🔗 Form link: ${formLink}`);
-
-      const template = templateList[0];
-      const eventDateFormatted = contact.event_date ? new Date(contact.event_date).toLocaleDateString('he-IL') : '';
-      const messageText = template.template_text
-        .replace(/{contact_name}/g, contact.contact_name || '')
-        .replace(/{event_date}/g, eventDateFormatted)
-        .replace(/{event_type}/g, contact.event_type || '')
-        .replace(/{form_link}/g, formLink)
-        .replace(/{owner_name}/g, signature)
-        .replace(/{owner_phone}/g, settings.owner_phone || '')
-        .replace(/{owner_whatsapp_phone}/g, settings.owner_whatsapp_phone || settings.owner_phone || '')
-        .replace(/{signature}/g, signature);
-
-      console.log(`[onContactStatusChange] 📝 Message prepared (${messageText.length} chars)`);
-
-      try {
-        if (settings.whatsapp_send_mode === 'לוג בלבד') {
-          console.log('[onContactStatusChange] ℹ Log-only mode');
-          await base44.asServiceRole.entities.ConversationMessage.create({
-            contact_id: contact.id,
-            channel: 'SYSTEM',
-            sender: 'SYSTEM',
-            message_text: messageText,
-            timestamp: new Date().toISOString(),
-          });
-
-          await base44.asServiceRole.entities.AuditLog.create({
-            entity_name: 'Contact',
-            entity_id: contact.id,
-            action: 'SEND_MESSAGE',
-            diff_summary: 'הודעת DJ_BOOKING_FORM נרשמה בלוג',
-            metadata: { template_key: 'DJ_BOOKING_FORM', simulated: true },
-          });
-        } else {
-          console.log('[onContactStatusChange] 📱 Sending via GREEN API');
-          const GREEN_ID = Deno.env.get('GREEN_ID');
-          const GREEN_TOKEN = Deno.env.get('GREEN_TOKEN');
-
-          if (!GREEN_ID || !GREEN_TOKEN) {
-            throw new Error('GREEN API לא מוגדר');
-          }
-          if (!contact.phone) {
-            throw new Error('אין מספר טלפון באיש קשר');
-          }
-
-          let phoneNumber = formatPhone(contact.phone);
-
-          const greenApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendMessage/${GREEN_TOKEN}`;
-          const whatsappResponse = await fetch(greenApiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, message: messageText }),
-          });
-
-          const whatsappResult = await whatsappResponse.json();
-          if (whatsappResponse.ok && whatsappResult.idMessage) {
-            console.log(`[onContactStatusChange] ✅ WhatsApp sent: ${whatsappResult.idMessage}`);
-
-            // Send logo
-            if (logoUrl) {
-              try {
-                const logoApiUrl = `https://api.green-api.com/waInstance${GREEN_ID}/sendFileByUrl/${GREEN_TOKEN}`;
-                await fetch(logoApiUrl, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ chatId: `${phoneNumber}@c.us`, urlFile: logoUrl, fileName: 'skitza-logo.png', caption: '' }),
-                });
-              } catch (logoErr) {
-                console.error(`[onContactStatusChange] ⚠ Logo send failed: ${logoErr.message}`);
-              }
-            }
-
-            await base44.asServiceRole.entities.ConversationMessage.create({
-              contact_id: contact.id,
-              channel: 'WHATSAPP',
-              sender: 'OWNER',
-              message_text: messageText,
-              timestamp: new Date().toISOString(),
-            });
-
-            await base44.asServiceRole.entities.AuditLog.create({
-              entity_name: 'Contact',
-              entity_id: contact.id,
-              action: 'SEND_MESSAGE',
-              diff_summary: 'הודעת DJ_BOOKING_FORM נשלחה בוואטסאפ',
-              metadata: { template_key: 'DJ_BOOKING_FORM', whatsapp_id: whatsappResult.idMessage, phone: phoneNumber },
-            });
-          } else {
-            throw new Error(`WhatsApp send failed: ${JSON.stringify(whatsappResult)}`);
-          }
-        }
-      } catch (msgError) {
-        console.error(`[onContactStatusChange] ✖ Message error: ${msgError.message}`);
-        await base44.asServiceRole.entities.AuditLog.create({
-          entity_name: 'Contact',
-          entity_id: contact.id,
-          action: 'SEND_FAILED',
-          diff_summary: `כשל בשליחת DJ_BOOKING_FORM: ${msgError.message}`,
-          metadata: { template_key: 'DJ_BOOKING_FORM', error_message: msgError.message },
+      if (existingQueue.length === 0) {
+        await base44.asServiceRole.entities.MessageQueue.create({
+          contact_id: contact.id,
+          template_key: 'DJ_BOOKING_FORM',
+          status: 'PENDING',
+          scheduled_for: new Date().toISOString(),
+          metadata: { source: 'DJ_SKITZA_STATUS_CHANGE' },
         });
+        console.log('[onContactStatusChange] ✓ DJ_BOOKING_FORM added to safe message queue');
+      } else {
+        console.log('[onContactStatusChange] ℹ DJ_BOOKING_FORM already exists in queue - skipping');
       }
     }
 

@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "properties": {
+    "contact_id": {
+      "type": "string",
+      "description": "\u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8 \u05dc\u05e9\u05dc\u05d9\u05d7\u05d4"
+    },
+    "template_key": {
+      "type": "string",
+      "enum": [
+        "NEW_LEAD",
+        "QUOTE_SENT",
+        "DEAL_CLOSED",
+        "PAY_REMINDER_1",
+        "PAY_REMINDER_2",
+        "PAY_CONFIRMED",
+        "DJ_ASSIGNED",
+        "DJ_BOOKING_CONFIRM",
+        "DJ_BOOKING_FORM",
+        "EVENT_REMINDER",
+        "THANK_YOU"
+      ],
+      "description": "\u05ea\u05d1\u05e0\u05d9\u05ea \u05d4\u05d5\u05d3\u05e2\u05d4"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "SENT",
+        "FAILED",
+        "SKIPPED"
+      ],
+      "default": "PENDING",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d1\u05ea\u05d5\u05e8"
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05d4 earliest"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05d4 \u05d1\u05e4\u05d5\u05e2\u05dc"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e0\u05d9\u05e1\u05d9\u05d5\u05e0\u05d5\u05ea"
+    },
+    "last_error": {
+      "type": "string",
+      "description": "\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d0\u05d7\u05e8\u05d5\u05e0\u05d4"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "\u05de\u05d9\u05d3\u05e2 \u05e0\u05d5\u05e1\u05e3"
+    }
+  },
+  "required": [
+    "contact_id",
+    "template_key"
+  ],
+  "name": "MessageQueue",
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

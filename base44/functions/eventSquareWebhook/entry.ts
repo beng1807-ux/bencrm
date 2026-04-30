@@ -64,7 +64,6 @@ Deno.serve(async (req) => {
     const email = pick(incoming, ['Contact1EMail', 'Contact2EMail', 'email']);
     const eventType = pick(incoming, ['EventTypeName', 'event_type']);
     const externalId = pick(incoming, ['DocID', 'DocNumber', 'Event_ExternalID', 'external_event_id']);
-    const guestsCount = pick(incoming, ['OpenQty', 'guests_count']);
     const location = pick(incoming, ['ResourceName', 'location']);
     const eventDate = parseEventDate(pick(incoming, ['isoResourceStartTime', 'ResourceStartTime', 'event_date']));
 
@@ -103,7 +102,7 @@ Deno.serve(async (req) => {
     if (eventType) contactData.event_type = eventType;
     if (eventDate) contactData.event_date = eventDate;
     if (externalId) contactData.external_event_id = externalId;
-    if (guestsCount) contactData.guests_count = Number(guestsCount);
+    if (location === 'אולם קטן' || location === 'אולם גדול') contactData.venue_hall = location;
 
     const created = await base44.asServiceRole.entities.Contact.create(contactData);
     console.log(`[webhook] ✅ Contact created: ${created.id}`);
