@@ -62,21 +62,25 @@ Deno.serve(async (req) => {
 
     // הכנסת הודעה לתור במקום שליחה מיידית
     try {
-      const existingQueue = await base44.asServiceRole.entities.MessageQueue.filter({
-        contact_id: contact.id,
-        template_key: 'NEW_LEAD',
-      });
-      if (existingQueue.length === 0) {
-        await base44.asServiceRole.entities.MessageQueue.create({
+      if (contact.whatsapp_opted_out) {
+        console.log(`Opted out — not queuing message for ${contact.contact_name}`);
+      } else {
+        const existingQueue = await base44.asServiceRole.entities.MessageQueue.filter({
           contact_id: contact.id,
           template_key: 'NEW_LEAD',
-          status: 'PENDING',
-          scheduled_for: new Date().toISOString(),
-          metadata: { source: contact.source || 'CONTACT_CREATE' },
         });
-        console.log('[onNewContact] ✓ NEW_LEAD added to safe message queue');
-      } else {
-        console.log('[onNewContact] ℹ NEW_LEAD already exists in queue - skipping');
+        if (existingQueue.length === 0) {
+          await base44.asServiceRole.entities.MessageQueue.create({
+            contact_id: contact.id,
+            template_key: 'NEW_LEAD',
+            status: 'PENDING',
+            scheduled_for: new Date().toISOString(),
+            metadata: { source: contact.source || 'CONTACT_CREATE' },
+          });
+          console.log('[onNewContact] ✓ NEW_LEAD added to safe message queue');
+        } else {
+          console.log('[onNewContact] ℹ NEW_LEAD already exists in queue - skipping');
+        }
       }
     } catch (msgError) {
       console.error(`[onNewContact] ✖ Queue error: ${msgError.message}`);

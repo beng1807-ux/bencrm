@@ -65,13 +65,17 @@ Deno.serve(async (req) => {
       if (summary.samples.length < 5) summary.samples.push(contactData);
       if (!dry_run) {
         const created = await base44.asServiceRole.entities.Contact.create(contactData);
-        await base44.asServiceRole.entities.MessageQueue.create({
-          contact_id: created.id,
-          template_key: 'NEW_LEAD',
-          status: 'PENDING',
-          scheduled_for: new Date().toISOString(),
-          metadata: { source: 'event_square_import_file', external_event_id: externalId },
-        });
+        if (created.whatsapp_opted_out) {
+          console.log(`Opted out — not queuing message for ${created.contact_name}`);
+        } else {
+          await base44.asServiceRole.entities.MessageQueue.create({
+            contact_id: created.id,
+            template_key: 'NEW_LEAD',
+            status: 'PENDING',
+            scheduled_for: new Date().toISOString(),
+            metadata: { source: 'event_square_import_file', external_event_id: externalId },
+          });
+        }
         existingExternalIds.add(externalId);
         if (phone && eventDate) existingPhoneDate.add(`${phone}|${eventDate}`);
       }

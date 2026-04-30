@@ -51,6 +51,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Contact not found' }, { status: 404 });
     }
 
+    if (contact.whatsapp_opted_out) {
+      await base44.asServiceRole.entities.MessageQueue.update(next.id, {
+        status: 'SKIPPED',
+        last_error: 'Contact opted out from WhatsApp',
+      });
+      return Response.json({ success: true, message: 'Contact opted out - skipped', queue_id: next.id });
+    }
+
     const existingMessages = await base44.asServiceRole.entities.AuditLog.filter({
       entity_id: contact.id,
       action: 'SEND_MESSAGE',

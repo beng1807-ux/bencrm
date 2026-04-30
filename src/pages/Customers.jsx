@@ -111,6 +111,7 @@ function KanbanCard({ lead, colKey, onClick, onEdit, onDelete, isSelected, onSel
           <Checkbox checked={isSelected} onCheckedChange={() => {}} onClick={e => { e.stopPropagation(); onSelect(lead.id); }} className="flex-shrink-0" />
            {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
            {lead.skitza_package_selected && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center" title="חבילת סקיצה"><Sparkles className="w-3 h-3 text-orange-500" /></span>}
+           {lead.whatsapp_opted_out && <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700" title="הוסר משליחות WhatsApp">WhatsApp חסום</span>}
            <h4 className="font-bold text-[#181311] text-sm group-hover:text-primary transition-colors leading-snug truncate">
             {lead.contact_name}
             {lead.celebrant_name ? <span className="font-normal text-[#886c63]"> — {lead.celebrant_name}</span> : ''}
@@ -190,6 +191,7 @@ function TableView({ leads, onRowClick, onEdit, onDelete, phaseFilter, selected,
                    <span className="flex items-center gap-1.5">
                      {lead.is_dj_lead && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-violet-100 inline-flex items-center justify-center" title="DJ סקיצה"><Music className="w-3 h-3 text-violet-600" /></span>}
                      {lead.skitza_package_selected && <span className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 inline-flex items-center justify-center" title="חבילת סקיצה"><Sparkles className="w-3 h-3 text-orange-500" /></span>}
+                     {lead.whatsapp_opted_out && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">WhatsApp חסום</span>}
                      {lead.contact_name}
                      {lead.celebrant_name ? <span className="text-[#886c63] font-normal"> — {lead.celebrant_name}</span> : ''}
                    </span>
@@ -621,6 +623,7 @@ export default function Customers() {
                 <DialogTitle className="text-xl font-black flex items-center gap-2">
                   {selectedLead.contact_name}
                   {selectedLead.is_dj_lead && <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 flex items-center gap-1"><Music className="w-3.5 h-3.5" />DJ סקיצה</span>}
+                  {selectedLead.whatsapp_opted_out && <span className="text-sm font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">הוסר מ-WhatsApp</span>}
                 </DialogTitle>
               </DialogHeader>
               <Tabs defaultValue="info">
@@ -801,6 +804,21 @@ export default function Customers() {
               }`}>
                 <Sparkles className={`w-4 h-4 ${editData.skitza_package_selected ? 'text-orange-600' : 'text-gray-400'}`} />
                 חבילת סקיצה {editData.skitza_package_selected ? '✓' : ''}
+              </label>
+            </div>
+            <div className={`col-span-2 flex items-center gap-3 py-3 px-4 rounded-lg border-2 transition-all duration-200 ${
+              editData.whatsapp_opted_out ? 'bg-red-50 border-red-400' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <Checkbox
+                id="whatsapp-optout-checkbox"
+                checked={editData.whatsapp_opted_out === true}
+                onCheckedChange={v => setEditData(prev => ({...prev, whatsapp_opted_out: !!v}))}
+                className={editData.whatsapp_opted_out ? 'border-red-600 data-[state=checked]:bg-red-600' : ''}
+              />
+              <label htmlFor="whatsapp-optout-checkbox" className={`text-sm font-bold cursor-pointer select-none ${
+                editData.whatsapp_opted_out ? 'text-red-800' : 'text-gray-500'
+              }`}>
+                הסר מרשימת שליחות WhatsApp {editData.whatsapp_opted_out ? '✓' : ''}
               </label>
             </div>
             <div className="col-span-2">
